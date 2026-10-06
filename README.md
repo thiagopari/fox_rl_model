@@ -44,6 +44,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles; `FOX_SERVO_REAL_CFG` adds latency, backlash and the torque-speed line |
 | `isaaclab/fox_sim.py` | launches the robots in Isaac Lab (GUI or headless) and drives the servos |
 | `isaaclab/fox_tasks.py`, `fox_train.py`, `fox_play.py` | RL walking tasks (`Fox-Velocity-Flat`, hardware-ready `Fox-Velocity-Flat-Blind`), PPO training, keyboard driving + eval |
+| `deploy/fox_pi.py` | runs a policy on the robot: Raspberry Pi + BNO055 + PCA9685, 50 Hz, keyboard over SSH; calibration modes |
 | `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2`, `fox_flat_blind_v3` = current), each with its ONNX export and config |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
@@ -227,13 +228,36 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
     the first reading 5 times.
   * Outputs: servo target = 0.25 × output (rad from the CAD stance), in this order: hip FL, FR, RL, RR, then pivot
     FL…RR, then gear FL…RR. Then apply each servo's zero, direction and µs/rad.
-  * Check: `tools/check_policy_io.py <model.pt>` rebuilds this vector from raw signals, and runs the ONNX file
-    against the PyTorch policy (v3: identical observation, actions within 4e-7).
+  * `deploy/fox_pi.py`'s `FoxPolicy` implements exactly this. `tools/check_policy_io.py <model.pt>` runs it closed
+    loop in Isaac Lab: the sim supplies the readings and FoxPolicy's outputs drive the robot. For v3: identical
+    observation, ONNX = PyTorch within 2.4e-7, and it walks 0.18 m/s (cmd 0.2) and turns 0.62 rad/s (cmd 0.6).
 * Isaac Lab 3.0-beta2 bug: `ContactSensor.compute_first_contact` never fires 2–16 s into an episode (float32 sensor time
   vs a 1e-8 tolerance), so the stock `feet_air_time` reward (still in `Fox-Velocity-Flat`) is silent most of each
   episode. The blind task uses `air_time_reward` instead, and `--eval` counts touchdowns from contact-state changes.
 * Body names: feet `.*_foot`, undesired contacts `.*_thigh|.*_calf`; the USD's bodies are flattened (Isaac Lab's
   contact sensor only sees direct children of one parent; the Isaac Sim 6 importer nests them).
+
+## On the robot (Raspberry Pi)
+Copy `deploy/fox_pi.py` and a policy's `policy.onnx` + `policy.onnx.data` to the Pi. Same I2C stack as
+`~/robofox_leg_imu_calibration.py`, plus `pip install numpy onnxruntime` (64-bit Pi OS has onnxruntime wheels; without it the script falls back to `onnx`'s slower reference evaluator).
+`python3 fox_pi.py policy.onnx --dry-run` runs anywhere without hardware.
+1. **Calibrate** the constants at the top of `fox_pi.py`:
+   * `--check-imu`: fix `IMU_TO_BODY` until level reads gravity (0, 0, −1), nose down gives x > 0, left side down
+     gives y > 0, and turning left gives gyro z > 0. The default assumes the January script's upside-down mount.
+   * `--wiggle FL_hip` (and the other 11), with the robot held in the air: if the wrong servo moves, fix `CHANNEL`
+     (the hip/pivot/gear order inside each leg's block is a guess); if it moves the wrong way, fix `DIRECTION`. The
+     script prints which way + should go.
+   * `NEUTRAL_DEG`: the servo angle that puts each joint at the CAD stance. Legs in vertical planes; femur (hip pivot
+     → knee) −20.5° front / +30.5° rear from straight down (+ = knee forward); shin (knee → ankle) +4.5° front /
+     −44.5° rear. Check `DEG_PER_RAD` (servo travel per µs) and `LIMIT_DEG` (safe travel).
+2. **Walk**: hold the robot (the servos jump to the stance at start), run `python3 fox_pi.py policy.onnx`, put it
+   down. W/S, A/D, Q/E step the command by 0.1 m/s / 0.1 m/s / 0.5 rad/s; space = stop; Ctrl-C = limp. It also
+   stops (limp) if tilted past 60°. It prints how many 50 Hz steps ran over budget.
+3. **Bench values for the simulator** (then retrain with `fox_train.py --task Fox-Velocity-Flat-Blind --headless`):
+   * speed: film `--wiggle FL_gear --amplitude 1.0` at 240 fps; 1 rad ÷ the travel time → `velocity_limit`;
+   * backlash: servos holding the stance, rock each leg by hand; play at the knee or foot ÷ 75 mm → `backlash`;
+   * latency: keep 5–25 ms unless measured;
+   * all three go in `isaaclab/fox_cfg.py` (`FOX_SERVO_CFG` / `FOX_SERVO_REAL_CFG`).
 
 ## Regenerate
 Each `tools/fusion/*` folder is a one-shot add-in: copy it into Fusion's `API/AddIns`, start Fusion, wait for its result
@@ -266,11 +290,13 @@ All checks pass (reports in `validation/`):
 | Isaac Sim: servo map in PhysX (held robot) + foot mimics | gear → shin −0.30, pivot → femur +0.30, pendulum; mimic error 0.0015 rad |
 | `FoxServoActuator.compute()` vs the servo map | 1e-8 N·m, power balance holds |
 | `FOX_SERVO_REAL_CFG`: latency, backlash, torque-speed line (`tools/test_fox_actuator.py`) | target delayed exactly N steps, no torque within the play, half the stall torque at half the no-load speed |
-| Policy interface for the Pi (`tools/check_policy_io.py`, v3) | observation rebuilt from raw signals = Isaac Lab's (0 error); ONNX = PyTorch (3.6e-7) |
+| Pi code in the loop (`tools/check_policy_io.py`, v3): `deploy/fox_pi.py`'s FoxPolicy + ONNX drive the sim | observation = Isaac Lab's (0 error), actions = PyTorch (2.4e-7), output order = servo joints; walks 0.18 m/s (cmd 0.2), turns 0.62 rad/s (cmd 0.6) |
+| `deploy/fox_pi.py --dry-run` (fake hardware, 150 steps at 50 Hz) | 0 steps over the 20 ms budget (ONNX via onnx's reference evaluator) |
 | Isaac Lab 3.0.0-beta2 (`isaaclab/fox_sim.py`, 4 robots, servo motions) | runs headless and in the Kit viewer; all upright (≥ 0.945) |
 
 Renders: `validation/mujoco_servo_roles.png` (rows: gear servo, pivot servo, pendulum), `mujoco_hip_abduction.png`,
 `mujoco_front_left.png`, `mujoco_poses.png`, `isaacsim_stand.png`.
 Re-run: `~/.venvs/fox_rl/bin/python tools/validate_mujoco.py`, `tools/mechanism_mujoco.py`, `tools/pose_test_mujoco.py`,
 `tools/random_actions_mujoco.py`; `~/isaacenv/bin/python tools/test_fox_actuator.py`; Isaac Sim as above;
-`OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v3/model_1999.pt`.
+`OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v3/model_1999.pt`
+(add `--device cpu` when the GPU is busy); `~/isaacenv/bin/python deploy/fox_pi.py policies/fox_flat_blind_v3/policy.onnx --dry-run`.

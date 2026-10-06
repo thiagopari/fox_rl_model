@@ -43,7 +43,8 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `usd/fox.usd` | Isaac Sim 6.0.1 import of the URDF (foot drives zeroed, mimics kept as `NewtonMimicAPI`) |
 | `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles |
 | `isaaclab/fox_sim.py` | launches the robots in Isaac Lab (GUI or headless) and drives the servos |
-| `isaaclab/fox_tasks.py`, `fox_train.py`, `fox_play.py` | RL walking task (`Fox-Velocity-Flat`), PPO training, keyboard driving of the trained policy |
+| `isaaclab/fox_tasks.py`, `fox_train.py`, `fox_play.py` | RL walking tasks (`Fox-Velocity-Flat`, hardware-ready `Fox-Velocity-Flat-Blind`), PPO training, keyboard driving + eval |
+| `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2` = current), each with its ONNX export and config |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
 | `raw/` | raw Fusion export (per-part STLs + `raw.json` with masses, inertia, 40 joints, motion links) |
@@ -181,9 +182,29 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
 * Train (headless, ~15 min for 1000 iterations on this laptop, 2048 robots):
   `cd ~/Documents/fox_rl_model && ~/isaacenv/bin/python isaaclab/fox_train.py --task Fox-Velocity-Flat --headless`
   → `logs/rsl_rl/fox_flat/<date>/model_*.pt` (TensorBoard: `logs/rsl_rl/fox_flat`).
-* Drive: `~/isaacenv/bin/python isaaclab/fox_play.py` → click the viewport, hold W/S (forward/back), A/D (sideways),
-  Q/E (turn), L = stop; the camera follows the robot. `--eval --headless --num_envs 16` prints commanded vs achieved
-  velocities instead. It also exports `exported/policy.onnx` next to the checkpoint (for the Pi).
+* Hardware-ready task `Fox-Velocity-Flat-Blind`: the policy sees only what the robot has (IMU gyro + gravity direction,
+  the remote's command, its own last servo commands, 5-step history); the critic sees the full state (training only).
+  Gait rewards: action-rate penalty, diagonal trot (Spot's `GaitReward`), Spot's `air_time_reward` (each foot phase
+  ~0.15 s; zero command = all feet down, even when drifting). `fox_train.py --task Fox-Velocity-Flat-Blind --headless`, ~20 min.
+* Drive: `~/isaacenv/bin/python isaaclab/fox_play.py --checkpoint policies/fox_flat_blind_v2/model_1499.pt` → click the
+  viewport, hold W/S (forward/back), A/D (sideways), Q/E (turn), L = stop; the camera follows the robot. For v1 add
+  `--task Fox-Velocity-Flat-Play`. `--eval --headless --num_envs 16` prints commanded vs achieved velocities instead.
+  It also exports `exported/policy.onnx` next to the checkpoint (for the Pi).
+* Policies (`policies/*`: `model_*.pt`, `policy.onnx` for the Pi, `params/` = exact env + agent config), `--eval` results
+  (16 robots, 7 commands × 4 s, mean |error| over the last 2 s of each):
+
+  | Policy | Policy sees | Error vx / vy / yaw | Servo-command change | Swing | At zero command |
+  |---|---|---|---|---|---|
+  | `fox_flat_v1` | joint encoders + body velocity | 0.008 / 0.008 m/s / 0.014 rad/s | 0.082 rad/step | 0.072 s | steps 3.4/s, holds position |
+  | `fox_flat_blind_v1` | IMU only | 0.011 / 0.019 / 0.027 | 0.067 | 0.075 s | marches 7.4/s, drifts 8 cm/s |
+  | **`fox_flat_blind_v2`** | IMU only | 0.006 / 0.007 / 0.037 (under-turns ~12%) | 0.059 | 0.107 s | stands (1.4 steps/s, 0.2 cm/s) |
+
+  Blind v1 trotted at 7 Hz because the trot term's timing error is in seconds (short phases score best), and its
+  step-length term was mostly silent (below). v2's first try at zero command drifted at 0.13 m/s, just above the
+  0.1 m/s "moving" threshold, to keep the walking rewards; the threshold is now 1.0 m/s.
+* Isaac Lab 3.0-beta2 bug: `ContactSensor.compute_first_contact` never fires 2–16 s into an episode (float32 sensor time
+  vs a 1e-8 tolerance), so the stock `feet_air_time` reward (still in `Fox-Velocity-Flat`) is silent most of each
+  episode. The blind task uses `air_time_reward` instead, and `--eval` counts touchdowns from contact-state changes.
 * Body names: feet `.*_foot`, undesired contacts `.*_thigh|.*_calf`; the USD's bodies are flattened (Isaac Lab's
   contact sensor only sees direct children of one parent; the Isaac Sim 6 importer nests them).
 

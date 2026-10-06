@@ -1,7 +1,9 @@
 """Fox walking task for Isaac Lab 3.0-beta2: flat ground, track a (vx, vy, yaw-rate) command.
 
-Registers  Fox-Velocity-Flat       training (2048 robots, randomized)
-           Fox-Velocity-Flat-Play  driving / evaluation (few robots, no pushes or noise)
+Registers  Fox-Velocity-Flat             training (2048 robots, randomized); policy sees joint states + body velocity
+           Fox-Velocity-Flat-Blind       hardware-ready: the policy sees only the IMU (gyro, gravity), the command and
+                                         its own last servo commands (5-step history); smoother, trotting gait
+           Fox-...-Play variants         driving / evaluation (few robots, no pushes or noise)
 Built on Isaac Lab's quadruped velocity task (the Go1 recipe), re-scaled for a 0.54 kg, 15 cm tall robot. The policy
 outputs the 12 SERVO targets (hip, pivot, gear servo angles around the stance, scale 0.25 rad) that FoxServoActuator
 (fox_cfg.py) turns into joint torques through the leg mechanism. 50 Hz policy, 200 Hz physics.
@@ -9,12 +11,16 @@ Train with isaaclab/fox_train.py, drive with isaaclab/fox_play.py.
 """
 import gymnasium as gym
 
+from isaaclab.managers import ObservationGroupCfg as ObsGroup
+from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.sim import SimulationCfg
 from isaaclab.utils.configclass import configclass
+from isaaclab.utils.noise import UniformNoiseCfg as Unoise
 from isaaclab_physx.physics import PhysxCfg
 from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg
+import isaaclab_tasks.manager_based.locomotion.velocity.config.spot.mdp as spot_mdp
 import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
 from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
 
@@ -96,7 +102,87 @@ class FoxFlatPPORunnerCfg(RslRlOnPolicyRunnerCfg):
                                      gamma=0.99, lam=0.95, desired_kl=0.01, max_grad_norm=1.0)
 
 
-for _id, _cfg in (("Fox-Velocity-Flat", "FoxFlatEnvCfg"), ("Fox-Velocity-Flat-Play", "FoxFlatEnvCfg_PLAY")):
+@configclass
+class FoxBlindObsCfg:
+    @configclass
+    class PolicyCfg(ObsGroup):
+        """What the real robot has: the BNO055 IMU, the remote's command and the servo commands it sent itself."""
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
+        projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))
+        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
+        actions = ObsTerm(func=mdp.last_action)
+
+        def __post_init__(self):
+            self.enable_corruption, self.concatenate_terms = True, True
+            self.history_length = 5      # 0.1 s of past readings stands in for the missing joint encoders
+
+    @configclass
+    class CriticCfg(ObsGroup):
+        """Privileged (training only): the full state helps the critic judge a blind actor."""
+        base_lin_vel = ObsTerm(func=mdp.base_lin_vel)
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel)
+        projected_gravity = ObsTerm(func=mdp.projected_gravity)
+        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
+        joint_pos = ObsTerm(func=mdp.joint_pos_rel)
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel)
+        actions = ObsTerm(func=mdp.last_action)
+
+        def __post_init__(self):
+            self.enable_corruption, self.concatenate_terms = False, True
+
+    policy: PolicyCfg = PolicyCfg()
+    critic: CriticCfg = CriticCfg()
+
+
+@configclass
+class FoxBlindEnvCfg(FoxFlatEnvCfg):
+    observations: FoxBlindObsCfg = FoxBlindObsCfg()
+
+    def __post_init__(self):
+        super().__post_init__()
+        # smooth, servo-friendly commands and a clean trot (v1 shuffled: steps < 0.2 s, jittery targets)
+        self.rewards.action_rate_l2.weight = -0.05
+        self.rewards.dof_acc_l2.weight = -1.0e-7
+        # Spot's air-time term instead of feet_air_time: each foot phase should last ~0.15 s (a ~3 Hz trot), and at zero
+        # command all feet stay down. Blind v1 (policies/fox_flat_blind_v1) trotted at 7 Hz, 0.06 s swings, because the gait
+        # term's error is in seconds so short phases score best, and it marched in place when told to stop (drift 7 cm/s).
+        # (Isaac Lab's feet_air_time also goes silent 2-16 s into each episode: float32 sensor time.) velocity_threshold
+        # 1.0 m/s, beyond the Fox's speed: zero command always means stand; at 0.1 the policy drifted at 0.13 m/s to keep
+        # collecting the walking rewards
+        self.rewards.feet_air_time = None
+        self.rewards.air_time = RewTerm(func=spot_mdp.air_time_reward, weight=3.0, params={
+            "mode_time": 0.15, "velocity_threshold": 1.0,
+            "asset_cfg": SceneEntityCfg("robot"), "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot")})
+        self.rewards.gait = RewTerm(func=spot_mdp.GaitReward, weight=1.0, params={
+            "std": 0.1, "max_err": 0.2, "velocity_threshold": 1.0,
+            "synced_feet_pair_names": (("FL_foot", "RR_foot"), ("FR_foot", "RL_foot")),   # diagonal pairs = trot
+            "asset_cfg": SceneEntityCfg("robot"), "sensor_cfg": SceneEntityCfg("contact_forces")})
+        self.commands.base_velocity.rel_standing_envs = 0.2                                # more practice standing still
+
+
+@configclass
+class FoxBlindEnvCfg_PLAY(FoxBlindEnvCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.scene.num_envs, self.scene.env_spacing = 4, 1.0
+        self.episode_length_s = 1.0e6
+        self.observations.policy.enable_corruption = False
+        self.events.push_robot = None
+        self.events.base_external_force_torque = None
+        self.events.reset_base.params["pose_range"] = {"x": (0.0, 0.0), "y": (0.0, 0.0), "yaw": (0.0, 0.0)}
+
+
+@configclass
+class FoxBlindPPORunnerCfg(FoxFlatPPORunnerCfg):
+    max_iterations = 1500
+    experiment_name = "fox_flat_blind"
+    obs_groups = {"actor": ["policy"], "critic": ["critic"]}
+
+
+for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunnerCfg"),
+                          ("Fox-Velocity-Flat-Play", "FoxFlatEnvCfg_PLAY", "FoxFlatPPORunnerCfg"),
+                          ("Fox-Velocity-Flat-Blind", "FoxBlindEnvCfg", "FoxBlindPPORunnerCfg"),
+                          ("Fox-Velocity-Flat-Blind-Play", "FoxBlindEnvCfg_PLAY", "FoxBlindPPORunnerCfg")):
     if _id not in gym.registry:
         gym.register(id=_id, entry_point="isaaclab.envs:ManagerBasedRLEnv", disable_env_checker=True,
-                     kwargs={"env_cfg_entry_point": f"{__name__}:{_cfg}", "rsl_rl_cfg_entry_point": f"{__name__}:FoxFlatPPORunnerCfg"})
+                     kwargs={"env_cfg_entry_point": f"{__name__}:{_cfg}", "rsl_rl_cfg_entry_point": f"{__name__}:{_agent}"})

@@ -1,6 +1,8 @@
 """Drive the trained Fox walking policy with the keyboard in Isaac Lab (Kit viewer).
 
-    cd ~/Documents/fox_rl_model && ~/isaacenv/bin/python isaaclab/fox_play.py [--checkpoint path/to/model_999.pt]
+    cd ~/Documents/fox_rl_model && ~/isaacenv/bin/python isaaclab/fox_play.py [--checkpoint path/to/model.pt]
+Default: the hardware-ready policy (--task Fox-Velocity-Flat-Blind-Play, IMU-only observations). The first policy:
+    --task Fox-Velocity-Flat-Play --checkpoint policies/fox_flat_v1/model_999.pt
 
 Click into the viewport first (the window needs keyboard focus), then hold:
     W / S  or  Up / Down      forward / backward   (0.3 m/s)
@@ -9,7 +11,7 @@ Click into the viewport first (the window needs keyboard focus), then hold:
     L                         stop (zero command)
 Keys add up while held. The camera follows robot 0; green/blue arrows show commanded vs actual velocity.
 Check without a keyboard: add --eval --headless --num_envs 16 (scripted commands, prints achieved velocities).
-Default checkpoint: the newest model_*.pt under logs/rsl_rl/fox_flat. Also writes exported/policy.onnx next to it
+Default checkpoint: the newest model_*.pt under logs/rsl_rl/<the task's experiment>. Also writes exported/policy.onnx next to it
 (the file the Raspberry Pi would run).
 """
 import argparse
@@ -21,7 +23,8 @@ from isaaclab.app import AppLauncher
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 parser = argparse.ArgumentParser(description="Keyboard teleop of the Fox walking policy.")
-parser.add_argument("--checkpoint", default=None, help="model_*.pt (default: newest in logs/rsl_rl/fox_flat)")
+parser.add_argument("--task", default="Fox-Velocity-Flat-Blind-Play", help="a Fox-...-Play task (fox_tasks.py)")
+parser.add_argument("--checkpoint", default=None, help="model_*.pt (default: newest for the task's experiment)")
 parser.add_argument("--num_envs", type=int, default=1, help="robots in the scene (robot 0 is the one the camera follows)")
 parser.add_argument("--eval", action="store_true", help="no keyboard: run scripted commands and print commanded vs achieved velocity")
 AppLauncher.add_app_launcher_args(parser)
@@ -46,7 +49,7 @@ from isaaclab_tasks.utils import load_cfg_from_registry, parse_env_cfg  # noqa: 
 sys.path.insert(0, HERE)
 import fox_tasks  # noqa: E402,F401  (registers the Fox tasks)
 
-TASK = "Fox-Velocity-Flat-Play"
+TASK = args.task
 
 
 class FoxKeyboard(Se2Keyboard):
@@ -58,10 +61,10 @@ class FoxKeyboard(Se2Keyboard):
         m.update({"W": m["UP"], "S": m["DOWN"], "A": m["LEFT"], "D": m["RIGHT"], "Q": m["Z"], "E": m["X"]})
 
 
-def newest_checkpoint() -> str:
-    runs = sorted(glob.glob(os.path.join(os.getcwd(), "logs", "rsl_rl", "fox_flat", "*", "model_*.pt")), key=os.path.getmtime)
+def newest_checkpoint(experiment: str) -> str:
+    runs = sorted(glob.glob(os.path.join(os.getcwd(), "logs", "rsl_rl", experiment, "*", "model_*.pt")), key=os.path.getmtime)
     if not runs:
-        raise SystemExit("No checkpoint found under logs/rsl_rl/fox_flat - train first (isaaclab/fox_train.py) or pass --checkpoint")
+        raise SystemExit("No checkpoint under logs/rsl_rl/%s - train first (isaaclab/fox_train.py) or pass --checkpoint" % experiment)
     return runs[-1]
 
 
@@ -73,7 +76,7 @@ def main():
     env_cfg.viewer.eye, env_cfg.viewer.lookat = (-0.55, -0.55, 0.35), (0.0, 0.0, 0.0)
     agent_cfg = handle_deprecated_rsl_rl_cfg(load_cfg_from_registry(TASK, "rsl_rl_cfg_entry_point"), metadata.version("rsl-rl-lib"))
     env = RslRlVecEnvWrapper(gym.make(TASK, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
-    path = args.checkpoint or newest_checkpoint()
+    path = args.checkpoint or newest_checkpoint(agent_cfg.experiment_name)
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
     runner.load(path)
     policy = runner.get_inference_policy(device=env.unwrapped.device)
@@ -101,8 +104,15 @@ def main():
 
 
 def evaluate(env, policy, term):
-    """Hold each command 4 s; report the mean achieved base velocity (body frame) over the last 2 s, all robots."""
-    robot, obs = env.unwrapped.scene["robot"], env.get_observations()
+    """Hold each command 4 s; report the mean achieved base velocity (body frame) over the last 2 s, all robots,
+    plus smoothness: mean servo-command change per policy step (rad), mean foot swing (air) time at touchdown, and
+    touchdowns per foot per second while commanded to stand (0 = stands still)."""
+    u = env.unwrapped
+    robot, obs, errs, total_falls = u.scene["robot"], env.get_observations(), [], 0
+    cs = u.scene["contact_forces"]
+    feet, _ = cs.find_bodies(".*_foot")
+    steps, swings, taps = [], [], 0
+    down = cs.data.current_contact_time.torch[:, feet] > 0
     for c in ((0.0, 0.0, 0.0), (0.2, 0.0, 0.0), (0.3, 0.0, 0.0), (-0.2, 0.0, 0.0), (0.0, 0.15, 0.0), (0.0, 0.0, 0.8), (0.2, 0.0, 0.5)):
         acc, falls = [], 0
         for k in range(200):
@@ -110,10 +120,23 @@ def evaluate(env, policy, term):
                 term.vel_command_b[:] = torch.tensor(c, device=env.unwrapped.device)
                 obs, _, dones, _ = env.step(policy(obs))
             falls += int(dones.sum())
+            now = cs.data.current_contact_time.torch[:, feet] > 0
+            first, down = now & ~down, now   # touchdowns; compute_first_contact misses all of them 2-16 s into an episode
+            if k >= 100 and any(c):          # (Isaac Lab 3.0-beta2: float32 sensor time vs a 1e-8 tolerance)
+                steps.append(float((u.action_manager.action - u.action_manager.prev_action).abs().mean()) * 0.25)  # x action scale
+                swings += cs.data.last_air_time.torch[:, feet][first].tolist()
+            if k >= 100 and not any(c):                      # standing still = no steps
+                taps += int(first.sum())
             if k >= 100:
                 acc.append(torch.cat([robot.data.root_lin_vel_b.torch[:, :2], robot.data.root_ang_vel_b.torch[:, 2:]], 1).mean(0))
         got = torch.stack(acc).mean(0).cpu().numpy()
+        errs.append(np.abs(got - np.array(c)))
+        total_falls += falls
         print("[EVAL] command vx %+.2f vy %+.2f yaw %+.2f  ->  achieved vx %+.3f vy %+.3f yaw %+.3f  (falls %d)" % (*c, *got, falls), flush=True)
+    e = np.mean(errs, axis=0)
+    print("[EVAL] SCORE mean |error|: vx %.3f m/s  vy %.3f m/s  yaw %.3f rad/s  | falls %d" % (*e, total_falls), flush=True)
+    print("[EVAL] SMOOTH mean servo-command change %.4f rad/step | mean foot swing %.3f s (%d steps) | at zero command %.1f steps/foot/s"
+          % (np.mean(steps), np.mean(swings) if swings else 0.0, len(swings), taps / (u.num_envs * len(feet) * 100 * u.step_dt)), flush=True)
     env.close()
 
 

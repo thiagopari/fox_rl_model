@@ -13,9 +13,9 @@ joints (virtual work):  tau_hip = t_hip,  tau_thigh = t_pivot - t_gear,  tau_cal
 The foot joints carry no actuator; their <mimic> constraint (NewtonMimicAPI in the USD) moves them.
 Body names for the velocity task: base = "base", feet = ".*_foot", undesired contacts = ".*_thigh|.*_calf".
 
-USD: tools/isaacsim_import.py writes usd/fox.usd (Isaac Sim 6.0.1 URDF importer, foot drives zeroed). Not run under
-Isaac Lab here; the servo map is checked in MuJoCo (tools/mechanism_mujoco.py) and Isaac Sim (tools/isaacsim_stand_test.py),
-and this class's compute() by tools/test_fox_actuator.py.
+USD: tools/isaacsim_import.py writes usd/fox.usd (Isaac Sim 6.0.1 URDF importer, foot drives zeroed). Runs under
+Isaac Lab 3.0.0-beta2 (isaaclab/fox_sim.py); the servo map is also checked in MuJoCo (tools/mechanism_mujoco.py), Isaac Sim
+(tools/isaacsim_stand_test.py), and this class's compute() by tools/test_fox_actuator.py.
 """
 from __future__ import annotations
 

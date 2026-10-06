@@ -42,6 +42,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `urdf/fox.urdf` | that tree for Isaac (URDF cannot hold loops): 17 links, 16 revolute joints; foot joints are `<mimic>` of the knee |
 | `usd/fox.usd` | Isaac Sim 6.0.1 import of the URDF (foot drives zeroed, mimics kept as `NewtonMimicAPI`) |
 | `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles |
+| `isaaclab/fox_sim.py` | launches the robots in Isaac Lab (GUI or headless) and drives the servos |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
 | `raw/` | raw Fusion export (per-part STLs + `raw.json` with masses, inertia, 40 joints, motion links) |
@@ -156,11 +157,17 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
   step on all 12 servos saturates them together and the robot can hop and flip.
 * **Isaac Sim** (`~/isaacenv`, 6.0.1): `OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py`, then
   `tools/isaacsim_stand_test.py` (servo PD applied with `set_dof_efforts`, two robots: standing + bolted in the air).
-* **Isaac Lab**: `from fox_cfg import FOX_CFG`; joint position actions on `.*_hip_joint`, `.*_thigh_joint`,
+* **Isaac Lab** (installed: `~/IsaacLab`, tag `v3.0.0-beta2.patch1` = the release for Isaac Sim 6.0.1, pip-installed
+  into `~/isaacenv` with torch 2.11+cu130 kept): `~/isaacenv/bin/python isaaclab/fox_sim.py --viz kit` opens the viewer
+  with 4 robots, one servo motion each (crouch, sway, pendulum swing, shin swing); `--headless --duration 10` for a quick
+  check. In your own tasks: `from fox_cfg import FOX_CFG`; joint position actions on `.*_hip_joint`, `.*_thigh_joint`,
   `.*_calf_joint` are servo targets (hip, pivot, gear); `FoxServoActuator.servo_angles()` gives the servo angles from
   joint angles for observations. Velocity task: base `base`, feet `.*_foot`, undesired contacts `.*_thigh|.*_calf`,
-  small commands (≈0.3 m/s), target height ~0.14 m. Not run under Isaac Lab here (not installed): its `compute()` is
-  checked by `tools/test_fox_actuator.py`, the same map in PhysX by the Isaac Sim test.
+  small commands (≈0.3 m/s), target height ~0.14 m. Notes for this laptop (8 GB GPU): Isaac Lab 3.0 runs headless
+  unless `--viz kit` is given; keep the Kit window small (full screen at 3200x2000 renders ~1.7 s/frame — the script
+  defaults to 1280x800); the first GUI launch compiles shaders for minutes; close other GPU apps (Fusion) if RTX runs
+  out of memory; PhysX GPU buffers are shrunk in `fox_sim.py` (the defaults reserve ~1 GB); don't switch "Simulation
+  Output" to USD in the GUI (deadlocks Isaac Sim 6.0.1).
 * Hardware: send pivot = thigh, gear = −thigh − knee (radians from the stance, then your servo's zero/scale/direction).
 
 ## Regenerate
@@ -193,6 +200,7 @@ All checks pass (reports in `validation/`):
 | Isaac Sim: stands 4 s with the servo map (GPU PhysX, 200 Hz) | base 0.155 → 0.14684 m, upright 0.999514 |
 | Isaac Sim: servo map in PhysX (held robot) + foot mimics | gear → shin −0.30, pivot → femur +0.30, pendulum; mimic error 0.0015 rad |
 | `FoxServoActuator.compute()` vs the servo map | 1e-8 N·m, power balance holds |
+| Isaac Lab 3.0.0-beta2 (`isaaclab/fox_sim.py`, 4 robots, servo motions) | runs headless and in the Kit viewer; all upright (≥ 0.945) |
 
 Renders: `validation/mujoco_servo_roles.png` (rows: gear servo, pivot servo, pendulum), `mujoco_hip_abduction.png`,
 `mujoco_front_left.png`, `mujoco_poses.png`, `isaacsim_stand.png`.

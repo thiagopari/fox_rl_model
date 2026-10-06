@@ -48,6 +48,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2`, `fox_flat_blind_v3`, `fox_flat_blind_v4` = current), each with its ONNX export and config |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
+| `print/FL_gear.stl` | the FL gear (CAD body "Spur Gear (15 teeth):2"), print-ready: mm, crank-arm face flat on the bed, gear centre at x = y = 0 |
 | `raw/` | raw Fusion export (per-part STLs + `raw.json` with masses, inertia, 40 joints, motion links) |
 | `analysis/` | hole/pin scan of the CAD (`screw_scan.json`) and the part map (`link_map.json`) |
 | `tools/` | `screw_graph.py`, `build_robot.py`, MuJoCo + Isaac checks, `check_policy_io.py` (the Pi's policy interface), Fusion add-ins |

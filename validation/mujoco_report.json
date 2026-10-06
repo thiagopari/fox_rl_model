@@ -1,0 +1,80 @@
+{
+ "nq": 19,
+ "nv": 18,
+ "nu": 12,
+ "njnt": 13,
+ "nbody": 14,
+ "total_mass_kg": 0.542571,
+ "joints": [
+  "root",
+  "FL_hip_joint",
+  "FL_thigh_joint",
+  "FL_calf_joint",
+  "FR_hip_joint",
+  "FR_thigh_joint",
+  "FR_calf_joint",
+  "RL_hip_joint",
+  "RL_thigh_joint",
+  "RL_calf_joint",
+  "RR_hip_joint",
+  "RR_thigh_joint",
+  "RR_calf_joint"
+ ],
+ "foot_heights_at_zero_pose_m": {
+  "FL_calf": 0.002000194970262534,
+  "FR_calf": 0.0020001942639593026,
+  "RL_calf": 0.0020001898040781715,
+  "RR_calf": 0.0020001885644816975
+ },
+ "standing": {
+  "base_z_start_m": 0.152839,
+  "base_z_end_m": 0.1498203660045807,
+  "upright_cos": 0.999999429050968,
+  "max_joint_err_rad": 0.01826270150930185,
+  "contacts_end": 16,
+  "finite": true,
+  "trace": [
+   [
+    0.0,
+    0.1528,
+    1.0
+   ],
+   [
+    1.0,
+    0.1499,
+    1.0
+   ],
+   [
+    2.0,
+    0.1499,
+    1.0
+   ],
+   [
+    3.0,
+    0.1498,
+    1.0
+   ]
+  ]
+ },
+ "actuator_force_end_Nm": [
+  -0.0152,
+  0.0087,
+  0.0327,
+  0.0148,
+  0.0085,
+  0.032,
+  -0.0244,
+  0.0365,
+  -0.0214,
+  0.0238,
+  0.0355,
+  -0.0208
+ ],
+ "renders": true,
+ "checks": {
+  "structure (free base + 12 hinges, 12 actuators)": true,
+  "all four feet within 5 mm of the floor": true,
+  "stands for 4 s (upright, <15 mm sag, finite)": true,
+  "servo torque stays within 0.47 N m": true
+ }
+}

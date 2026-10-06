@@ -1,0 +1,11 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "9a9c9d14-3135-4634-850b-50171d2a2e01",
+    "author": "local",
+    "description": {"": "One-shot, read-only: scan every visible body for holes and pins (rear bracket joins suppressed in memory)."},
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

@@ -1,0 +1,458 @@
+{
+ "links": {
+  "base": {
+   "mass_g": 330.45,
+   "com_link_m": [
+    -0.00063,
+    0.00092,
+    0.0162
+   ],
+   "inertia_eigs_kgm2": [
+    0.0002716582101552836,
+    0.0014968446875882806,
+    0.0016186833646256468
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 624222,
+   "visual_faces": 59998,
+   "hull_faces": 824,
+   "mesh_z_min_world_m": -0.02533663623034954
+  },
+  "FL_hip": {
+   "mass_g": 34.8,
+   "com_link_m": [
+    0.01978,
+    0.00394,
+    -0.00872
+   ],
+   "inertia_eigs_kgm2": [
+    6.398107861109436e-06,
+    7.982232061616396e-06,
+    9.986174571145126e-06
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 71582,
+   "visual_faces": 19998,
+   "hull_faces": 890,
+   "mesh_z_min_world_m": -0.02175608091056347
+  },
+  "FL_thigh": {
+   "mass_g": 7.14,
+   "com_link_m": [
+    -0.01941,
+    0.0,
+    -0.03125
+   ],
+   "inertia_eigs_kgm2": [
+    6.323982474686688e-07,
+    4.422849722766046e-06,
+    5.036575950510892e-06
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 9060,
+   "visual_faces": 9060,
+   "hull_faces": 514,
+   "mesh_z_min_world_m": -0.07142511755228043
+  },
+  "FL_calf": {
+   "mass_g": 10.36,
+   "com_link_m": [
+    0.00398,
+    0.0,
+    -0.03503
+   ],
+   "inertia_eigs_kgm2": [
+    9.748463514297876e-07,
+    9.67825279560532e-06,
+    1.0305738273329491e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 5182,
+   "visual_faces": 5182,
+   "hull_faces": 906,
+   "mesh_z_min_world_m": -0.15083880722522736
+  },
+  "FR_hip": {
+   "mass_g": 34.8,
+   "com_link_m": [
+    0.01975,
+    -0.00386,
+    -0.00868
+   ],
+   "inertia_eigs_kgm2": [
+    6.422157399863298e-06,
+    7.985086984251525e-06,
+    1.0009296979268854e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 71582,
+   "visual_faces": 19998,
+   "hull_faces": 898,
+   "mesh_z_min_world_m": -0.02175608091056347
+  },
+  "FR_thigh": {
+   "mass_g": 7.14,
+   "com_link_m": [
+    -0.01941,
+    -0.0,
+    -0.03125
+   ],
+   "inertia_eigs_kgm2": [
+    6.322764335465613e-07,
+    4.423154257840944e-06,
+    5.03675519679638e-06
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 9060,
+   "visual_faces": 9060,
+   "hull_faces": 514,
+   "mesh_z_min_world_m": -0.07142511755228043
+  },
+  "FR_calf": {
+   "mass_g": 10.69,
+   "com_link_m": [
+    0.00386,
+    0.0,
+    -0.03394
+   ],
+   "inertia_eigs_kgm2": [
+    9.857895654648586e-07,
+    1.0076813738276606e-05,
+    1.0710078027723687e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 6174,
+   "visual_faces": 6174,
+   "hull_faces": 948,
+   "mesh_z_min_world_m": -0.15083880722522736
+  },
+  "RL_hip": {
+   "mass_g": 35.3,
+   "com_link_m": [
+    -0.01798,
+    0.00391,
+    -0.01167
+   ],
+   "inertia_eigs_kgm2": [
+    6.574125715748237e-06,
+    8.181723147050262e-06,
+    1.0098654234391133e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 67256,
+   "visual_faces": 19998,
+   "hull_faces": 834,
+   "mesh_z_min_world_m": -0.03472889959812164
+  },
+  "RL_thigh": {
+   "mass_g": 7.4,
+   "com_link_m": [
+    0.02456,
+    0.0,
+    -0.02831
+   ],
+   "inertia_eigs_kgm2": [
+    6.776774803366938e-07,
+    4.712802565161885e-06,
+    5.368500887181372e-06
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 9704,
+   "visual_faces": 9704,
+   "hull_faces": 564,
+   "mesh_z_min_world_m": -0.0753510445356369
+  },
+  "RL_calf": {
+   "mass_g": 10.43,
+   "com_link_m": [
+    -0.02599,
+    -0.0,
+    -0.03066
+   ],
+   "inertia_eigs_kgm2": [
+    2.5512186842781574e-06,
+    1.0463951664653336e-05,
+    1.2773876829167554e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 13784,
+   "visual_faces": 13784,
+   "hull_faces": 1678,
+   "mesh_z_min_world_m": -0.15083880722522736
+  },
+  "RR_hip": {
+   "mass_g": 36.79,
+   "com_link_m": [
+    -0.01756,
+    -0.00356,
+    -0.01242
+   ],
+   "inertia_eigs_kgm2": [
+    6.890323131946638e-06,
+    8.673416477784624e-06,
+    1.0650805287732303e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 68250,
+   "visual_faces": 20000,
+   "hull_faces": 776,
+   "mesh_z_min_world_m": -0.03472889959812164
+  },
+  "RR_thigh": {
+   "mass_g": 7.31,
+   "com_link_m": [
+    0.02468,
+    -0.0,
+    -0.02842
+   ],
+   "inertia_eigs_kgm2": [
+    6.67263252149318e-07,
+    4.595361660011288e-06,
+    5.24346830501593e-06
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 11138,
+   "visual_faces": 11138,
+   "hull_faces": 494,
+   "mesh_z_min_world_m": -0.0753510445356369
+  },
+  "RR_calf": {
+   "mass_g": 9.97,
+   "com_link_m": [
+    -0.02663,
+    -0.0,
+    -0.0316
+   ],
+   "inertia_eigs_kgm2": [
+    2.511044358315234e-06,
+    9.782343670443173e-06,
+    1.2058840024243303e-05
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 4762,
+   "visual_faces": 4762,
+   "hull_faces": 848,
+   "mesh_z_min_world_m": -0.15083880722522736
+  }
+ },
+ "joints": {
+  "FL_hip_joint": {
+   "parent": "base",
+   "child": "FL_hip",
+   "origin_in_parent_m": [
+    0.07169,
+    0.02424,
+    0.00739
+   ],
+   "axis": [
+    0.984808,
+    0.0,
+    -0.173648
+   ],
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "FL_thigh_joint": {
+   "parent": "FL_hip",
+   "child": "FL_thigh",
+   "origin_in_parent_m": [
+    0.01307,
+    0.01855,
+    -0.00261
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "FL_calf_joint": {
+   "parent": "FL_thigh",
+   "child": "FL_calf",
+   "origin_in_parent_m": [
+    -0.02627,
+    0.00162,
+    -0.07025
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "FR_hip_joint": {
+   "parent": "base",
+   "child": "FR_hip",
+   "origin_in_parent_m": [
+    0.07169,
+    -0.02426,
+    0.00739
+   ],
+   "axis": [
+    0.984808,
+    0.0,
+    -0.173648
+   ],
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "FR_thigh_joint": {
+   "parent": "FR_hip",
+   "child": "FR_thigh",
+   "origin_in_parent_m": [
+    0.01307,
+    -0.01853,
+    -0.00261
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "FR_calf_joint": {
+   "parent": "FR_thigh",
+   "child": "FR_calf",
+   "origin_in_parent_m": [
+    -0.02627,
+    -0.00174,
+    -0.07025
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "RL_hip_joint": {
+   "parent": "base",
+   "child": "RL_hip",
+   "origin_in_parent_m": [
+    -0.07361,
+    0.02424,
+    -0.00035
+   ],
+   "axis": [
+    0.939693,
+    0.0,
+    0.34202
+   ],
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "RL_thigh_joint": {
+   "parent": "RL_hip",
+   "child": "RL_thigh",
+   "origin_in_parent_m": [
+    -0.01239,
+    0.01855,
+    -0.00443
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "RL_calf_joint": {
+   "parent": "RL_thigh",
+   "child": "RL_calf",
+   "origin_in_parent_m": [
+    0.03807,
+    0.00179,
+    -0.06462
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "RR_hip_joint": {
+   "parent": "base",
+   "child": "RR_hip",
+   "origin_in_parent_m": [
+    -0.07338,
+    -0.02424,
+    -0.00019
+   ],
+   "axis": [
+    0.939693,
+    0.0,
+    0.34202
+   ],
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "RR_thigh_joint": {
+   "parent": "RR_hip",
+   "child": "RR_thigh",
+   "origin_in_parent_m": [
+    -0.01262,
+    -0.01853,
+    -0.00459
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "RR_calf_joint": {
+   "parent": "RR_thigh",
+   "child": "RR_calf",
+   "origin_in_parent_m": [
+    0.03807,
+    -0.00168,
+    -0.06462
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  }
+ },
+ "standing_height_base_origin_m": 0.15283880722522736,
+ "total_mass_g": 542.6
+}

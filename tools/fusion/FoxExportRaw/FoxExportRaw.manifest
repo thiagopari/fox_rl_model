@@ -1,0 +1,11 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "60035745-8448-4d99-a49b-171ac5a19df8",
+    "author": "local",
+    "description": { "": "One-shot, read-only: export Fox link meshes + inertial + joint data from Fox_Prototype_03_v6_RL_URDF to C:\\fusion_jobs\\export." },
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

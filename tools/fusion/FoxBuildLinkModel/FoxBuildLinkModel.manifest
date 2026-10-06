@@ -1,0 +1,11 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "d2850ee5-2d7d-41a3-8013-12a4cdecf06a",
+    "author": "local",
+    "description": { "": "One-shot: build the Fox RL link+joint model document from Fox_Prototype_03_v6_RL (read-only on the source)." },
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

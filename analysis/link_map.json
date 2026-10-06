@@ -1,0 +1,2759 @@
+{
+ "scan": "screw_scan.json",
+ "suppressed": [
+  182,
+  187,
+  192
+ ],
+ "conflicts": [],
+ "links": {
+  "root|Body2": [
+   "RL_calf",
+   0.25103
+  ],
+  "root|Body3": [
+   "base",
+   0.05419
+  ],
+  "root|Body4": [
+   "RL_thigh",
+   0.02968
+  ],
+  "root|raspberry_pi_mount": [
+   "base",
+   69.09887
+  ],
+  "root|Body27": [
+   "RR_hip",
+   0.0723
+  ],
+  "root|Body28": [
+   "RR_hip",
+   0.22281
+  ],
+  "root|Body29": [
+   "RL_hip",
+   0.38856
+  ],
+  "Pevis:1+Servo Pelv Upper:1|Body1": [
+   "RL_hip",
+   10.23626
+  ],
+  "Pevis:1+DS-843MG v1:1|Body1": [
+   "RL_hip",
+   5.30607
+  ],
+  "Pevis:1+DS-843MG v1:1|Body2": [
+   "RL_thigh",
+   0.02458
+  ],
+  "Pevis:1+DS-843MG v1:1|Body3": [
+   "RL_hip",
+   0.02345
+  ],
+  "Pevis:1+DS-843MG v1:2|Body1": [
+   "RL_hip",
+   5.30607
+  ],
+  "Pevis:1+DS-843MG v1:2|Body2": [
+   "RL_hip",
+   0.02458
+  ],
+  "Pevis:1+DS-843MG v1:2|Body3": [
+   "RL_hip",
+   0.02345
+  ],
+  "Pevis:1+DS-843MG v1:3|Body1": [
+   "base",
+   5.30607
+  ],
+  "Pevis:1+DS-843MG v1:3|Body2": [
+   "RL_hip",
+   0.02458
+  ],
+  "Pevis:1+DS-843MG v1:3|Body3": [
+   "base",
+   0.02345
+  ],
+  "Pevis:1|Body1": [
+   "base",
+   42.6146
+  ],
+  "Hind Leg:1+Foot:1|Body1": [
+   "RL_calf",
+   1.82144
+  ],
+  "Hind Leg:1+Foot:1|Body2": [
+   "RL_calf",
+   0.65569
+  ],
+  "Hind Leg:1+Calf Link:1|Body1": [
+   "RL_calf",
+   1.65815
+  ],
+  "Hind Leg:1+Femur:1|Body1": [
+   "RL_thigh",
+   3.79973
+  ],
+  "Hind Leg:1+Tibia:1+Component7:1|Body1": [
+   "RL_calf",
+   4.02385
+  ],
+  "Hind Leg:1+Quad Link:1|Body1": [
+   "RL_thigh",
+   2.10865
+  ],
+  "Hind Leg:1+Spur Gear (15 teeth):1|Body1": [
+   "RL_hip",
+   2.03263
+  ],
+  "Hind Leg:1+Spur Gear (15 teeth):1|Body2": [
+   "RL_hip",
+   0.26606
+  ],
+  "Hind Leg:1+Spur Gear (15 teeth):1|Body3": [
+   "RL_hip",
+   0.02604
+  ],
+  "Hind Leg:1+Spur Gear (15 teeth):1|Body4": [
+   "RR_hip",
+   2.03264
+  ],
+  "Hind Leg:1+Spur Gear (15 teeth):1|Body5": [
+   "RR_hip",
+   0.26606
+  ],
+  "Hind Leg:1+Spur Gear (15 teeth):1|Body6": [
+   "RR_hip",
+   0.02604
+  ],
+  "Front Leg:1+Femur(Mirror) (1):1|Body1": [
+   "FL_thigh",
+   3.62128
+  ],
+  "Front Leg:1+Tibia(Mirror) (1):1+Component7(Mirror) (1):1|Body3": [
+   "FL_calf",
+   4.43121
+  ],
+  "Front Leg:1+Quad Link(Mirror) (1):1|Body1": [
+   "FL_thigh",
+   2.10318
+  ],
+  "Front Leg:1+Component77:1|Body1": [
+   "FL_calf",
+   1.89583
+  ],
+  "Front Leg:1+Main Foot Front:1|Body1": [
+   "FL_calf",
+   1.37468
+  ],
+  "Front Leg:1+Main Foot Front:1|Body2": [
+   "FL_calf",
+   0.65569
+  ],
+  "Hind Leg(Mirror):1+Foot(Mirror) (2):1|Body1": [
+   "RR_calf",
+   1.77089
+  ],
+  "Hind Leg(Mirror):1+Foot(Mirror) (2):1|Body2": [
+   "RR_calf",
+   0.65569
+  ],
+  "Hind Leg(Mirror):1+Calf Link(Mirror) (2):1|Body1": [
+   "RR_calf",
+   1.62175
+  ],
+  "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1": [
+   "RR_thigh",
+   3.78068
+  ],
+  "Hind Leg(Mirror):1+Tibia(Mirror) (2):1+Component7(Mirror) (2):1|Body1": [
+   "RR_calf",
+   3.99493
+  ],
+  "Hind Leg(Mirror):1+Quad Link(Mirror) (2):1|Body1": [
+   "RR_thigh",
+   2.08563
+  ],
+  "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body1": [
+   "RR_hip",
+   5.30607
+  ],
+  "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2": [
+   "RR_thigh",
+   0.0234
+  ],
+  "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body3": [
+   "RR_hip",
+   0.02345
+  ],
+  "12Channel PWM v2:1|Body1": [
+   "base",
+   0.00175
+  ],
+  "12Channel PWM v2:1|Body2": [
+   "base",
+   0.00175
+  ],
+  "12Channel PWM v2:1|Body3": [
+   "base",
+   0.00175
+  ],
+  "12Channel PWM v2:1|Body4": [
+   "base",
+   0.00175
+  ],
+  "12Channel PWM v2:1|Body5": [
+   "base",
+   0.00175
+  ],
+  "12Channel PWM v2:1|Body6": [
+   "base",
+   0.00175
+  ],
+  "12Channel PWM v2:1|Body7": [
+   "base",
+   3.41764
+  ],
+  "DS-843MG v1(Mirror) (1):2|Body1": [
+   "RR_hip",
+   5.30607
+  ],
+  "DS-843MG v1(Mirror) (1):2|Body2": [
+   "RR_hip",
+   0.0234
+  ],
+  "DS-843MG v1(Mirror) (1):2|Body3": [
+   "RR_hip",
+   0.02345
+  ],
+  "DS-843MG v1(Mirror) (1):3|Body1": [
+   "base",
+   5.30607
+  ],
+  "DS-843MG v1(Mirror) (1):3|Body2": [
+   "RR_hip",
+   0.0234
+  ],
+  "DS-843MG v1(Mirror) (1):3|Body3": [
+   "base",
+   0.02345
+  ],
+  "Component40(Mirror) (1):1|Body1": [
+   "RR_hip",
+   7.32947
+  ],
+  "Component41(Mirror) (1):1|Body1": [
+   "RR_hip",
+   4.20473
+  ],
+  "Spur Gear (15 teeth):2|Body1": [
+   "FL_hip",
+   2.03263
+  ],
+  "Spur Gear (15 teeth):2|Body2": [
+   "FL_hip",
+   0.26606
+  ],
+  "Spur Gear (15 teeth):2|Body3": [
+   "FL_hip",
+   0.02604
+  ],
+  "Spur Gear (15 teeth):2|Body4": [
+   "FR_hip",
+   2.03264
+  ],
+  "Spur Gear (15 teeth):2|Body5": [
+   "FR_hip",
+   0.26606
+  ],
+  "Spur Gear (15 teeth):2|Body6": [
+   "FR_hip",
+   0.02604
+  ],
+  "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body1": [
+   "FL_hip",
+   4.29143
+  ],
+  "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body2": [
+   "FR_hip",
+   4.29143
+  ],
+  "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body1": [
+   "FL_hip",
+   5.93037
+  ],
+  "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body2": [
+   "FR_hip",
+   5.93037
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body1": [
+   "FL_hip",
+   5.30607
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body2": [
+   "FL_thigh",
+   0.02459
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body3": [
+   "FL_hip",
+   0.02345
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):2|Body1": [
+   "FL_hip",
+   5.30607
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):2|Body2": [
+   "FL_hip",
+   0.02459
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):2|Body3": [
+   "FL_hip",
+   0.02345
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body1": [
+   "base",
+   5.30607
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body2": [
+   "FL_hip",
+   0.02459
+  ],
+  "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body3": [
+   "base",
+   0.02345
+  ],
+  "Pevis(Mirror) (1):1+m(Mirror):1|Body1": [
+   "FL_hip",
+   1.80422
+  ],
+  "Pevis(Mirror) (1):1+m(Mirror):1|Body2": [
+   "FR_hip",
+   1.80388
+  ],
+  "Pevis(Mirror) (1):1|Body1": [
+   "base",
+   49.20414
+  ],
+  "Raspberry Pi 4 Model B:1+PCB, RPi4ModelB:1|Body1": [
+   "base",
+   7.50613
+  ],
+  "Raspberry Pi 4 Model B:1+Broadcom BCM2711B0 CPU, RPi4ModelB:1|Body1": [
+   "base",
+   0.1125
+  ],
+  "Raspberry Pi 4 Model B:1+Broadcom BCM2711B0 CPU, RPi4ModelB:1|Body2": [
+   "base",
+   0.32302
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, POE, 2X2, RPi4ModelB:1|Body1": [
+   "base",
+   0.04901
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, POE, 2X2, RPi4ModelB:1|Body2": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, POE, 2X2, RPi4ModelB:1|Body3": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, POE, 2X2, RPi4ModelB:1|Body4": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, POE, 2X2, RPi4ModelB:1|Body5": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body1": [
+   "base",
+   0.49726
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body2": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body3": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body4": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body5": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body6": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body7": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body8": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body9": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body10": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body11": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body12": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body13": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body14": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body15": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body16": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body17": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body18": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body19": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body20": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body21": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body22": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body23": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body24": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body25": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body26": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body27": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body28": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body29": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body30": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body31": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body32": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body33": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body34": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body35": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body36": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body37": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body38": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body39": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body40": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB:1|Body41": [
+   "base",
+   0.00453
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body1": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body2": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body3": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body4": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body5": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body6": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body7": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body8": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body9": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body10": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body11": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body12": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body13": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body14": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body15": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body16": [
+   "base",
+   0.17461
+  ],
+  "Raspberry Pi 4 Model B:1+Camera Connector, RPi4ModelB:1|Body17": [
+   "base",
+   0.08744
+  ],
+  "Raspberry Pi 4 Model B:1+Microphone Plug, RPi4ModelB:1|Body1": [
+   "base",
+   0.02528
+  ],
+  "Raspberry Pi 4 Model B:1+Microphone Plug, RPi4ModelB:1|Body2": [
+   "base",
+   0.00933
+  ],
+  "Raspberry Pi 4 Model B:1+Microphone Plug, RPi4ModelB:1|Body3": [
+   "base",
+   0.00904
+  ],
+  "Raspberry Pi 4 Model B:1+Microphone Plug, RPi4ModelB:1|Body4": [
+   "base",
+   0.28041
+  ],
+  "Raspberry Pi 4 Model B:1+Microphone Plug, RPi4ModelB:1|Body5": [
+   "base",
+   0.00719
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body1": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body2": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body3": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body4": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body5": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body6": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body7": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body8": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body9": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body10": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body11": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body12": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body13": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body14": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body15": [
+   "base",
+   0.00156
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body16": [
+   "base",
+   0.17461
+  ],
+  "Raspberry Pi 4 Model B:1+Display Connector, RPi4ModelB:1|Body17": [
+   "base",
+   0.08744
+  ],
+  "Raspberry Pi 4 Model B:1+Gigabit Ethernet Port, RPi4ModelB:1|Body1": [
+   "base",
+   3.49102
+  ],
+  "Raspberry Pi 4 Model B:1+Female Micro HDMI Connector, RPi4ModelB:1|Body1": [
+   "base",
+   0.06281
+  ],
+  "Raspberry Pi 4 Model B:1+Female USB Type C Connector, RPi4ModelB:1|Body1": [
+   "base",
+   0.12968
+  ],
+  "Raspberry Pi 4 Model B:1+2X USB3.0 PORTS, RPi4ModelB:1|Body1": [
+   "base",
+   2.45232
+  ],
+  "Raspberry Pi 4 Model B:1+91D77 D9WHV 778K, 4 GB LPDDR4 SDRAM, RPi4ModelB:1|Body1": [
+   "base",
+   0.11595
+  ],
+  "Raspberry Pi 4 Model B:1+Cypress CYW43455 Wireless Module Cover, RPi4ModelB:1|Body1": [
+   "base",
+   0.03872
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body1": [
+   "base",
+   0.01735
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body2": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body3": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body4": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body5": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body6": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body7": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body8": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body9": [
+   "base",
+   0.00041
+  ],
+  "Raspberry Pi 4 Model B:1+SD Card Slot, RPi4ModelB:1|Body10": [
+   "base",
+   0.0648
+  ],
+  "Raspberry Pi 4 Model B:1+VIA VL805 PCIe USB 3.0 controller, RPi4ModelB:1|Body1": [
+   "base",
+   0.05172
+  ],
+  "Raspberry Pi 4 Model B:1+2X USB2.0 PORTS, RPi4ModelB:1|Body1": [
+   "base",
+   2.64627
+  ],
+  "Raspberry Pi 4 Model B:1+Broadcom BCM54213PE Gigabit Ethernet Transceiver, RPi4ModelB:1|Body1": [
+   "base",
+   0.03613
+  ],
+  "Raspberry Pi 4 Model B:1+MxL7704 Universal PMIC, RPi4ModelB:1|Body1": [
+   "base",
+   0.02006
+  ],
+  "Raspberry Pi 4 Model B:1+Female Micro HDMI Connector, RPi4ModelB:2|Body1": [
+   "base",
+   0.06281
+  ],
+  "arduino nano:1|Body1": [
+   "base",
+   0.04371
+  ],
+  "arduino nano:1|Body2": [
+   "base",
+   0.09411
+  ],
+  "arduino nano:1|Body3": [
+   "base",
+   0.0014
+  ],
+  "arduino nano:1|Body4": [
+   "base",
+   0.0014
+  ],
+  "arduino nano:1|Body5": [
+   "base",
+   0.0014
+  ],
+  "arduino nano:1|Body6": [
+   "base",
+   0.0014
+  ],
+  "arduino nano:1|Body7": [
+   "base",
+   0.0014
+  ],
+  "arduino nano:1|Body8": [
+   "base",
+   0.01711
+  ],
+  "arduino nano:1|Body9": [
+   "base",
+   0.00281
+  ],
+  "arduino nano:1|Body10": [
+   "base",
+   1.26399
+  ],
+  "arduino nano:1|Body11": [
+   "base",
+   0.04122
+  ],
+  "arduino nano:1|Body12": [
+   "base",
+   0.04122
+  ],
+  "arduino nano:1|Body13": [
+   "base",
+   0.04122
+  ],
+  "arduino nano:1|Body14": [
+   "base",
+   0.30975
+  ],
+  "arduino nano:1|Body15": [
+   "base",
+   0.30975
+  ],
+  "arduino nano:1|Body16": [
+   "base",
+   0.05212
+  ],
+  "arduino nano:1|Body17": [
+   "base",
+   0.09409
+  ],
+  "arduino nano:1|Body18": [
+   "base",
+   0.00242
+  ],
+  "arduino nano:1|Body19": [
+   "base",
+   0.00242
+  ],
+  "arduino nano:1|Body20": [
+   "base",
+   0.00242
+  ],
+  "arduino nano:1|Body21": [
+   "base",
+   0.00242
+  ],
+  "arduino nano:1|Body22": [
+   "base",
+   0.00242
+  ],
+  "arduino nano:1|Body23": [
+   "base",
+   0.00131
+  ],
+  "arduino nano:1|Body24": [
+   "base",
+   0.00078
+  ],
+  "arduino nano:1|Body25": [
+   "base",
+   0.00131
+  ],
+  "arduino nano:1|Body26": [
+   "base",
+   0.00078
+  ],
+  "arduino nano:1|Body27": [
+   "base",
+   0.00131
+  ],
+  "arduino nano:1|Body28": [
+   "base",
+   0.00078
+  ],
+  "arduino nano:1|Body29": [
+   "base",
+   0.00131
+  ],
+  "arduino nano:1|Body30": [
+   "base",
+   0.00078
+  ],
+  "arduino nano:1|Body31": [
+   "base",
+   0.00315
+  ],
+  "arduino nano:1|Body32": [
+   "base",
+   0.00993
+  ],
+  "arduino nano:1|Body33": [
+   "base",
+   0.00993
+  ],
+  "arduino nano:1|Body34": [
+   "base",
+   0.03676
+  ],
+  "arduino nano:1|Body35": [
+   "base",
+   0.00719
+  ],
+  "arduino nano:1|Body36": [
+   "base",
+   0.00113
+  ],
+  "arduino nano:1|Body37": [
+   "base",
+   0.00046
+  ],
+  "arduino nano:1|Body38": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body39": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body40": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body41": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body42": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body43": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body44": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body45": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body46": [
+   "base",
+   0.00113
+  ],
+  "arduino nano:1|Body47": [
+   "base",
+   0.00046
+  ],
+  "arduino nano:1|Body48": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body49": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body50": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body51": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body52": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body53": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body54": [
+   "base",
+   6e-05
+  ],
+  "arduino nano:1|Body55": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Basetta:1|Body1": [
+   "base",
+   2.10318
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body1": [
+   "base",
+   0.33782
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body2": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body3": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body4": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body5": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body6": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:1|Body7": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:1|Body1": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:1|Body2": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:1|Body3": [
+   "base",
+   0.10533
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:1|Body4": [
+   "base",
+   0.74073
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Trimpot 3296W v1:1|Body1": [
+   "base",
+   0.42002
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DO-214AB v1:1|Body1": [
+   "base",
+   0.00288
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DO-214AB v1:1|Body2": [
+   "base",
+   0.00288
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DO-214AB v1:1|Body3": [
+   "base",
+   0.1053
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body1": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body2": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body3": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body4": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body5": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body6": [
+   "base",
+   0.06953
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+XL4015 TO263-5-1 v1:1|Body7": [
+   "base",
+   0.28495
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body1": [
+   "base",
+   0.03281
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body2": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body3": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body4": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body5": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body6": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body7": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body8": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LM358 SOIC08 v1:1|Body9": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Toro:1|Body1": [
+   "base",
+   0.45191
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:1|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+SpiraCodA:1|Body1": [
+   "base",
+   0.00773
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+SpiraCpdB:1|Body1": [
+   "base",
+   0.00773
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:2|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:3|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:4|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:5|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:6|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:7|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:8|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:9|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:10|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:11|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:12|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:13|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:14|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:15|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:16|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:17|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:18|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:19|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:20|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:21|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Coil v9:1+Spira:22|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SOT-89 v1:1|Body1": [
+   "base",
+   0.00019
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SOT-89 v1:1|Body2": [
+   "base",
+   0.00184
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SOT-89 v1:1|Body3": [
+   "base",
+   0.00019
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SOT-89 v1:1|Body4": [
+   "base",
+   0.01325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SC-59A v1:1|Body1": [
+   "base",
+   0.0069
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SC-59A v1:1|Body2": [
+   "base",
+   9e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SC-59A v1:1|Body3": [
+   "base",
+   9e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+SC-59A v1:1|Body4": [
+   "base",
+   9e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:1|Body1": [
+   "base",
+   8e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:1|Body2": [
+   "base",
+   0.00107
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:1|Body3": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:1|Body4": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:1|Body5": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body1": [
+   "base",
+   0.33782
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body2": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body3": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body4": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body5": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body6": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+DG301-5.0-02 v1:2|Body7": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:2|Body1": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:2|Body2": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:2|Body3": [
+   "base",
+   0.10533
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+CAPACITOR 10x10 SMD v1:2|Body4": [
+   "base",
+   0.74073
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+Trimpot 3296W v1:2|Body1": [
+   "base",
+   0.42002
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:2|Body1": [
+   "base",
+   8e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:2|Body2": [
+   "base",
+   0.00107
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:2|Body3": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:2|Body4": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:2|Body5": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:3|Body1": [
+   "base",
+   8e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:3|Body2": [
+   "base",
+   0.00107
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:3|Body3": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:3|Body4": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:2+LED v1:3|Body5": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Basetta:1|Body1": [
+   "base",
+   2.10318
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body1": [
+   "base",
+   0.33782
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body2": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body3": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body4": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body5": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body6": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:1|Body7": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:1|Body1": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:1|Body2": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:1|Body3": [
+   "base",
+   0.10533
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:1|Body4": [
+   "base",
+   0.74073
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Trimpot 3296W v1:1|Body1": [
+   "base",
+   0.42002
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DO-214AB v1:1|Body1": [
+   "base",
+   0.00288
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DO-214AB v1:1|Body2": [
+   "base",
+   0.00288
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DO-214AB v1:1|Body3": [
+   "base",
+   0.1053
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body1": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body2": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body3": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body4": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body5": [
+   "base",
+   0.00325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body6": [
+   "base",
+   0.06953
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+XL4015 TO263-5-1 v1:1|Body7": [
+   "base",
+   0.28495
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body1": [
+   "base",
+   0.03281
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body2": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body3": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body4": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body5": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body6": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body7": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body8": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LM358 SOIC08 v1:1|Body9": [
+   "base",
+   0.00025
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Toro:1|Body1": [
+   "base",
+   0.45191
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:1|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+SpiraCodA:1|Body1": [
+   "base",
+   0.00773
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+SpiraCpdB:1|Body1": [
+   "base",
+   0.00773
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:2|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:3|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:4|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:5|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:6|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:7|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:8|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:9|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:10|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:11|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:12|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:13|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:14|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:15|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:16|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:17|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:18|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:19|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:20|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:21|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Coil v9:1+Spira:22|Body1": [
+   "base",
+   0.00757
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SOT-89 v1:1|Body1": [
+   "base",
+   0.00019
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SOT-89 v1:1|Body2": [
+   "base",
+   0.00184
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SOT-89 v1:1|Body3": [
+   "base",
+   0.00019
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SOT-89 v1:1|Body4": [
+   "base",
+   0.01325
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SC-59A v1:1|Body1": [
+   "base",
+   0.0069
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SC-59A v1:1|Body2": [
+   "base",
+   9e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SC-59A v1:1|Body3": [
+   "base",
+   9e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+SC-59A v1:1|Body4": [
+   "base",
+   9e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:1|Body1": [
+   "base",
+   8e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:1|Body2": [
+   "base",
+   0.00107
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:1|Body3": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:1|Body4": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:1|Body5": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body1": [
+   "base",
+   0.33782
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body2": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body3": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body4": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body5": [
+   "base",
+   0.04864
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body6": [
+   "base",
+   0.00459
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+DG301-5.0-02 v1:2|Body7": [
+   "base",
+   0.03022
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:2|Body1": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:2|Body2": [
+   "base",
+   0.0004
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:2|Body3": [
+   "base",
+   0.10533
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+CAPACITOR 10x10 SMD v1:2|Body4": [
+   "base",
+   0.74073
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+Trimpot 3296W v1:2|Body1": [
+   "base",
+   0.42002
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:2|Body1": [
+   "base",
+   8e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:2|Body2": [
+   "base",
+   0.00107
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:2|Body3": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:2|Body4": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:2|Body5": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:3|Body1": [
+   "base",
+   8e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:3|Body2": [
+   "base",
+   0.00107
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:3|Body3": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:3|Body4": [
+   "base",
+   6e-05
+  ],
+  "XL4015 StepDown DC-DC 5A (CC-CV) v1:1+LED v1:3|Body5": [
+   "base",
+   6e-05
+  ],
+  "DS-843MG v1(Mirror) (2):4|Body1": [
+   "base",
+   5.30607
+  ],
+  "DS-843MG v1(Mirror) (2):4|Body2": [
+   "FR_hip",
+   0.02459
+  ],
+  "DS-843MG v1(Mirror) (2):4|Body3": [
+   "base",
+   0.02345
+  ],
+  "Adafruit_BNO055_AP203:1|Body1": [
+   "base",
+   0.01974
+  ],
+  "Adafruit_BNO055_AP203:1|Body2": [
+   "base",
+   0.00216
+  ],
+  "Adafruit_BNO055_AP203:1|Body3": [
+   "base",
+   0.00216
+  ],
+  "Adafruit_BNO055_AP203:1|Body4": [
+   "base",
+   0.00216
+  ],
+  "Adafruit_BNO055_AP203:1|Body5": [
+   "base",
+   0.00216
+  ],
+  "Adafruit_BNO055_AP203:1|Body6": [
+   "base",
+   0.00216
+  ],
+  "Adafruit_BNO055_AP203:1|Body7": [
+   "base",
+   0.00216
+  ],
+  "Adafruit_BNO055_AP203:1|Body8": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body9": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body10": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body11": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body12": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body13": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body14": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body15": [
+   "base",
+   0.0015
+  ],
+  "Adafruit_BNO055_AP203:1|Body16": [
+   "base",
+   0.00492
+  ],
+  "Adafruit_BNO055_AP203:1|Body17": [
+   "base",
+   7e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body18": [
+   "base",
+   7e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body19": [
+   "base",
+   7e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body20": [
+   "base",
+   7e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body21": [
+   "base",
+   7e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body22": [
+   "base",
+   0.00398
+  ],
+  "Adafruit_BNO055_AP203:1|Body23": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body24": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body25": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body26": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body27": [
+   "base",
+   0.00398
+  ],
+  "Adafruit_BNO055_AP203:1|Body28": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body29": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body30": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body31": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body32": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body33": [
+   "base",
+   3e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body34": [
+   "base",
+   0.00398
+  ],
+  "Adafruit_BNO055_AP203:1|Body35": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body36": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body37": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body38": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body39": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body40": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body41": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body42": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body43": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body44": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body45": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body46": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body47": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body48": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body49": [
+   "base",
+   4e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body50": [
+   "base",
+   4e-05
+  ],
+  "Adafruit_BNO055_AP203:1|Body51": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body52": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body53": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body54": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body55": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body56": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body57": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body58": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body59": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body60": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body61": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body62": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body63": [
+   "base",
+   0.00012
+  ],
+  "Adafruit_BNO055_AP203:1|Body64": [
+   "base",
+   0.00038
+  ],
+  "Adafruit_BNO055_AP203:1|Body65": [
+   "base",
+   0.06971
+  ],
+  "Adafruit_BNO055_AP203:1|Body66": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body67": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body68": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body69": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body70": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body71": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body72": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body73": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body74": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body75": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body76": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body77": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body78": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body79": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body80": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body81": [
+   "base",
+   0.00026
+  ],
+  "Adafruit_BNO055_AP203:1|Body82": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body83": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body84": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body85": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body86": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body87": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body88": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body89": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body90": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body91": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body92": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body93": [
+   "base",
+   0.00037
+  ],
+  "Adafruit_BNO055_AP203:1|Body94": [
+   "base",
+   0.83703
+  ],
+  "m(Mirror):2|Body1": [
+   "RL_hip",
+   1.80422
+  ],
+  "m(Mirror):2|Body2": [
+   "RR_hip",
+   1.80388
+  ],
+  "Front Leg(Mirror):1+Femur(Mirror) (1)(Mirror):1|Body1": [
+   "FR_thigh",
+   3.62128
+  ],
+  "Front Leg(Mirror):1+Tibia(Mirror) (1)(Mirror):1+Component7(Mirror) (1)(Mirror):1|Body2": [
+   "FR_calf",
+   4.43072
+  ],
+  "Front Leg(Mirror):1+Tibia(Mirror) (1)(Mirror):1|Body1": [
+   "FR_calf",
+   0.26606
+  ],
+  "Front Leg(Mirror):1+Quad Link(Mirror) (1)(Mirror):1|Body1": [
+   "FR_thigh",
+   2.10318
+  ],
+  "Front Leg(Mirror):1+Component77(Mirror):1|Body1": [
+   "FR_calf",
+   1.89583
+  ],
+  "Front Leg(Mirror):1+Main Foot Front(Mirror):1|Body1": [
+   "FR_calf",
+   1.37468
+  ],
+  "Front Leg(Mirror):1+Main Foot Front(Mirror):1|Body2": [
+   "FR_calf",
+   0.65569
+  ],
+  "DS-843MG FR pivot servo:1|Body1": [
+   "FR_hip",
+   5.30606
+  ],
+  "DS-843MG FR pivot servo:1|Body2": [
+   "FR_thigh",
+   0.02459
+  ],
+  "DS-843MG FR pivot servo:1|Body3": [
+   "FR_hip",
+   0.02345
+  ],
+  "DS-843MG FR gear servo:1|Body1": [
+   "FR_hip",
+   5.30606
+  ],
+  "DS-843MG FR gear servo:1|Body2": [
+   "FR_hip",
+   0.02459
+  ],
+  "DS-843MG FR gear servo:1|Body3": [
+   "FR_hip",
+   0.02345
+  ]
+ },
+ "abduction_axes": {
+  "RL": {
+   "point_cm": [
+    -0.05266,
+    -1.23945,
+    1.20299
+   ],
+   "dir": [
+    0.0,
+    -0.939693,
+    0.34202
+   ]
+  },
+  "RR": {
+   "point_cm": [
+    -4.9003,
+    -1.26179,
+    1.21934
+   ],
+   "dir": [
+    -0.0,
+    -0.939693,
+    0.34202
+   ]
+  },
+  "FL": {
+   "point_cm": [
+    -0.05266,
+    -15.76864,
+    1.97707
+   ],
+   "dir": [
+    -0.0,
+    -0.984808,
+    -0.173648
+   ]
+  },
+  "FR": {
+   "point_cm": [
+    -4.90266,
+    -15.76864,
+    1.97707
+   ],
+   "dir": [
+    -0.0,
+    -0.984808,
+    -0.173648
+   ]
+  }
+ },
+ "moved_vs_previous_rule": [
+  [
+   "root|Body2",
+   "base",
+   "RL_calf",
+   0.25103,
+   [
+    "Hind Leg:1+Tibia:1+Component7:1|Body1",
+    0.4
+   ]
+  ],
+  [
+   "root|Body4",
+   "base",
+   "RL_thigh",
+   0.02968,
+   null
+  ],
+  [
+   "root|Body27",
+   "base",
+   "RR_hip",
+   0.0723,
+   [
+    "Component41(Mirror) (1):1|Body1",
+    0.4121
+   ]
+  ],
+  [
+   "root|Body28",
+   "base",
+   "RR_hip",
+   0.22281,
+   null
+  ],
+  [
+   "root|Body29",
+   "base",
+   "RL_hip",
+   0.38856,
+   null
+  ],
+  [
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "base",
+   "RL_hip",
+   10.23626,
+   null
+  ],
+  [
+   "Pevis:1+DS-843MG v1:1|Body2",
+   "RL_hip",
+   "RL_thigh",
+   0.02458,
+   null
+  ],
+  [
+   "Pevis:1+DS-843MG v1:3|Body2",
+   "base",
+   "RL_hip",
+   0.02458,
+   null
+  ],
+  [
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "RR_hip",
+   "RR_thigh",
+   0.0234,
+   null
+  ],
+  [
+   "DS-843MG v1(Mirror) (1):3|Body2",
+   "base",
+   "RR_hip",
+   0.0234,
+   null
+  ],
+  [
+   "Component40(Mirror) (1):1|Body1",
+   "base",
+   "RR_hip",
+   7.32947,
+   null
+  ],
+  [
+   "Component41(Mirror) (1):1|Body1",
+   "base",
+   "RR_hip",
+   4.20473,
+   null
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body1",
+   "base",
+   "FL_hip",
+   4.29143,
+   null
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body2",
+   "base",
+   "FR_hip",
+   4.29143,
+   null
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body1",
+   "base",
+   "FL_hip",
+   5.93037,
+   null
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body2",
+   "base",
+   "FR_hip",
+   5.93037,
+   null
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body2",
+   "FL_hip",
+   "FL_thigh",
+   0.02459,
+   null
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body2",
+   "base",
+   "FL_hip",
+   0.02459,
+   null
+  ],
+  [
+   "DS-843MG v1(Mirror) (2):4|Body2",
+   "base",
+   "FR_hip",
+   0.02459,
+   null
+  ],
+  [
+   "DS-843MG FR pivot servo:1|Body2",
+   "FR_hip",
+   "FR_thigh",
+   0.02459,
+   null
+  ]
+ ],
+ "edges": [
+  [
+   "root|raspberry_pi_mount",
+   "Pevis(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|raspberry_pi_mount",
+   "Pevis(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|raspberry_pi_mount",
+   "Pevis:1|Body1",
+   "screw"
+  ],
+  [
+   "root|raspberry_pi_mount",
+   "Pevis:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body28",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body28",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body28",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body28",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body28",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "root|Body29",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "Pevis:1+DS-843MG v1:2|Body1",
+   "screw"
+  ],
+  [
+   "DS-843MG v1(Mirror) (1):2|Body1",
+   "Component40(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "Pevis:1+DS-843MG v1:1|Body1",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body1",
+   "Component40(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "Pevis:1+DS-843MG v1:2|Body1",
+   "screw"
+  ],
+  [
+   "DS-843MG v1(Mirror) (1):2|Body1",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "Pevis:1+DS-843MG v1:1|Body1",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body1",
+   "Component41(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "screw"
+  ],
+  [
+   "Pevis:1+DS-843MG v1:3|Body1",
+   "Pevis:1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1+DS-843MG v1:3|Body1",
+   "Pevis:1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1|Body1",
+   "DS-843MG v1(Mirror) (1):3|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1|Body1",
+   "DS-843MG v1(Mirror) (1):3|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body1",
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):2|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body2",
+   "DS-843MG FR gear servo:1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Upper(Mirror):1|Body1",
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body1",
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):2|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body2",
+   "DS-843MG FR gear servo:1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body1",
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body1",
+   "Pevis(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body1",
+   "Pevis(Mirror) (1):1|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1|Body1",
+   "DS-843MG v1(Mirror) (2):4|Body1",
+   "screw"
+  ],
+  [
+   "Pevis(Mirror) (1):1|Body1",
+   "DS-843MG v1(Mirror) (2):4|Body1",
+   "screw"
+  ],
+  [
+   "Pevis:1+DS-843MG v1:1|Body2",
+   "root|Body4",
+   "on spline"
+  ],
+  [
+   "Pevis:1+DS-843MG v1:1|Body2",
+   "Hind Leg:1+Femur:1|Body1",
+   "on spline"
+  ],
+  [
+   "Pevis:1+DS-843MG v1:2|Body2",
+   "m(Mirror):2|Body1",
+   "on spline"
+  ],
+  [
+   "Pevis:1+DS-843MG v1:3|Body2",
+   "Pevis:1+Servo Pelv Upper:1|Body1",
+   "on spline"
+  ],
+  [
+   "Hind Leg(Mirror):1+DS-843MG v1(Mirror) (1):1|Body2",
+   "Hind Leg(Mirror):1+Femur(Mirror) (2):1|Body1",
+   "on spline"
+  ],
+  [
+   "DS-843MG v1(Mirror) (1):2|Body2",
+   "m(Mirror):2|Body2",
+   "on spline"
+  ],
+  [
+   "DS-843MG v1(Mirror) (1):3|Body2",
+   "Component40(Mirror) (1):1|Body1",
+   "on spline"
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):1|Body2",
+   "Front Leg:1+Femur(Mirror) (1):1|Body1",
+   "on spline"
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):2|Body2",
+   "Pevis(Mirror) (1):1+m(Mirror):1|Body1",
+   "on spline"
+  ],
+  [
+   "Pevis(Mirror) (1):1+DS-843MG v1(Mirror) (2):3|Body2",
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body1",
+   "on spline"
+  ],
+  [
+   "DS-843MG v1(Mirror) (2):4|Body2",
+   "Pevis(Mirror) (1):1+Servo Pelv Lower(Mirror):1|Body2",
+   "on spline"
+  ],
+  [
+   "DS-843MG FR pivot servo:1|Body2",
+   "Front Leg(Mirror):1+Femur(Mirror) (1)(Mirror):1|Body1",
+   "on spline"
+  ],
+  [
+   "DS-843MG FR gear servo:1|Body2",
+   "Pevis(Mirror) (1):1+m(Mirror):1|Body2",
+   "on spline"
+  ]
+ ]
+}

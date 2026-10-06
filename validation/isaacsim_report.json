@@ -1,0 +1,399 @@
+{
+ "api": {
+  "importer": "isaacsim.asset.importer.urdf.URDFImporter + URDFImporterConfig (extension 3.11.2, urdf-usd-converter 0.1.3)",
+  "isaac_sim": "6.0.1",
+  "articulation": "isaacsim.core.experimental.prims.Articulation + isaacsim.core.simulation_manager.SimulationManager (isaacsim.core.prims is deprecated in 6.0)"
+ },
+ "import": {
+  "config": {
+   "urdf_path": "/home/thiago/Documents/fox_rl_model/urdf/fox.urdf",
+   "merge_fixed_joints": false,
+   "merge_mesh": false,
+   "debug_mode": false,
+   "collision_from_visuals": false,
+   "collision_type": "Convex Hull",
+   "allow_self_collision": false,
+   "ros_package_paths": [],
+   "robot_type": "Quadruped",
+   "fix_base": false,
+   "link_density": null,
+   "joint_drive_type": "force",
+   "joint_target_type": "position",
+   "override_joint_stiffness": 2.0,
+   "override_joint_damping": 0.05,
+   "run_asset_transformer": true,
+   "run_multi_physics_conversion": true,
+   "output": "/home/thiago/Documents/fox_rl_model/usd/fox.usd",
+   "stiffness_Nm_per_rad": 2.0,
+   "damping_Nms_per_rad": 0.05,
+   "post_fix": "drive stiffness/damping re-set to KP*pi/180, KD*pi/180 on the flattened layer",
+   "flattened": "single binary USD, Physics variant 'physx', instanceable meshes kept"
+  },
+  "result": {
+   "default_prim": "/fox",
+   "meters_per_unit": 1.0,
+   "up_axis": "Z",
+   "articulation_root": [
+    "/fox/Geometry/base"
+   ],
+   "self_collision_enabled": [
+    false
+   ],
+   "rigid_bodies": 13,
+   "revolute_joints": [
+    "FL_hip_joint",
+    "FL_thigh_joint",
+    "FL_calf_joint",
+    "FR_hip_joint",
+    "FR_thigh_joint",
+    "FR_calf_joint",
+    "RL_hip_joint",
+    "RL_thigh_joint",
+    "RL_calf_joint",
+    "RR_hip_joint",
+    "RR_thigh_joint",
+    "RR_calf_joint"
+   ],
+   "colliders": 13,
+   "collider_approximations": [
+    "convexHull"
+   ],
+   "instanceable_prims": 39,
+   "total_mass_kg": 0.542571,
+   "drive_usd_joint0": {
+    "type": "force",
+    "stiffness_Nm_per_deg": 0.03490658476948738,
+    "damping_Nms_per_deg": 0.0008726646192371845,
+    "max_force_Nm": 0.4699999988079071,
+    "target_position_deg": 0.0,
+    "armature": 0.0,
+    "joint_friction": 0.0,
+    "max_velocity_deg_s": 601.605712890625
+   },
+   "file_size_MB": 4.02
+  },
+  "error": null,
+  "ok": true
+ },
+ "articulation_properties": {
+  "dof_count": 12,
+  "dof_names": [
+   "FL_hip_joint",
+   "FR_hip_joint",
+   "RL_hip_joint",
+   "RR_hip_joint",
+   "FL_thigh_joint",
+   "FR_thigh_joint",
+   "RL_thigh_joint",
+   "RR_thigh_joint",
+   "FL_calf_joint",
+   "FR_calf_joint",
+   "RL_calf_joint",
+   "RR_calf_joint"
+  ],
+  "link_count": 13,
+  "link_names": [
+   "base",
+   "FL_hip",
+   "FR_hip",
+   "RL_hip",
+   "RR_hip",
+   "FL_thigh",
+   "FR_thigh",
+   "RL_thigh",
+   "RR_thigh",
+   "FL_calf",
+   "FR_calf",
+   "RL_calf",
+   "RR_calf"
+  ],
+  "collision_shapes": 13,
+  "total_mass_kg": 0.542571,
+  "dof_stiffness_Nm_per_rad": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ],
+  "dof_damping_Nms_per_rad": [
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806,
+   0.05000000074505806
+  ],
+  "dof_max_effort_Nm": [
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071,
+   0.4699999988079071
+  ],
+  "dof_limits_rad": [
+   [
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -1.2000000476837158,
+    -1.2000000476837158,
+    -1.2000000476837158,
+    -1.2000000476837158,
+    -1.2000000476837158,
+    -1.2000000476837158,
+    -1.2000000476837158,
+    -1.2000000476837158
+   ],
+   [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    1.2000000476837158,
+    1.2000000476837158,
+    1.2000000476837158,
+    1.2000000476837158,
+    1.2000000476837158,
+    1.2000000476837158,
+    1.2000000476837158,
+    1.2000000476837158
+   ]
+  ],
+  "dof_armature": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "self_collisions_enabled": false,
+  "physics": {
+   "engine": "physx",
+   "device": "cuda:0",
+   "dt_s": 0.005,
+   "duration_s": 3.0
+  }
+ },
+ "stand_test": {
+  "spawn_base_z_m": 0.155,
+  "base_z_trace_t_z_upcos": [
+   [
+    0.0,
+    0.15426,
+    1.0
+   ],
+   [
+    0.1,
+    0.14959,
+    1.0
+   ],
+   [
+    0.2,
+    0.1496,
+    1.0
+   ],
+   [
+    0.3,
+    0.1497,
+    1.0
+   ],
+   [
+    0.4,
+    0.14963,
+    1.0
+   ],
+   [
+    0.5,
+    0.14961,
+    1.0
+   ],
+   [
+    0.6,
+    0.14964,
+    1.0
+   ],
+   [
+    0.7,
+    0.14964,
+    1.0
+   ],
+   [
+    0.8,
+    0.14963,
+    1.0
+   ],
+   [
+    0.9,
+    0.14963,
+    1.0
+   ],
+   [
+    1.0,
+    0.14963,
+    1.0
+   ],
+   [
+    1.1,
+    0.14963,
+    1.0
+   ],
+   [
+    1.2,
+    0.14963,
+    1.0
+   ],
+   [
+    1.3,
+    0.14963,
+    1.0
+   ],
+   [
+    1.4,
+    0.14963,
+    1.0
+   ],
+   [
+    1.5,
+    0.14963,
+    1.0
+   ],
+   [
+    1.6,
+    0.14963,
+    1.0
+   ],
+   [
+    1.7,
+    0.14963,
+    1.0
+   ],
+   [
+    1.8,
+    0.14963,
+    1.0
+   ],
+   [
+    1.9,
+    0.14963,
+    1.0
+   ],
+   [
+    2.0,
+    0.14963,
+    1.0
+   ],
+   [
+    2.1,
+    0.14963,
+    1.0
+   ],
+   [
+    2.2,
+    0.14963,
+    1.0
+   ],
+   [
+    2.3,
+    0.14963,
+    1.0
+   ],
+   [
+    2.4,
+    0.14963,
+    1.0
+   ],
+   [
+    2.5,
+    0.14963,
+    1.0
+   ],
+   [
+    2.6,
+    0.14963,
+    1.0
+   ],
+   [
+    2.7,
+    0.14963,
+    1.0
+   ],
+   [
+    2.8,
+    0.14963,
+    1.0
+   ],
+   [
+    2.9,
+    0.14963,
+    1.0
+   ],
+   [
+    3.0,
+    0.14963,
+    1.0
+   ]
+  ],
+  "final_base_z_m": 0.14963,
+  "min_base_z_m": 0.14945,
+  "final_upright_cos": 0.999999,
+  "min_upright_cos": 0.999982,
+  "final_base_xy_m": [
+   -0.0037899999879300594,
+   9.999999747378752e-06
+  ],
+  "max_abs_joint_pos_rad": 0.05562,
+  "final_joint_pos_rad": {
+   "FL_hip_joint": 9.999999747378752e-06,
+   "FR_hip_joint": 9.999999747378752e-06,
+   "RL_hip_joint": 1.9999999494757503e-05,
+   "RR_hip_joint": 1.9999999494757503e-05,
+   "FL_thigh_joint": -0.0008500000112690032,
+   "FR_thigh_joint": -0.0009599999757483602,
+   "RL_thigh_joint": -0.03319000080227852,
+   "RR_thigh_joint": -0.033070001751184464,
+   "FL_calf_joint": -0.046160001307725906,
+   "FR_calf_joint": -0.04597000032663345,
+   "RL_calf_joint": 0.009669999592006207,
+   "RR_calf_joint": 0.009460000321269035
+  },
+  "final_max_abs_joint_vel_rad_s": 0.7543,
+  "static_holding_torque_max_Nm": 0.0923,
+  "finite": true
+ },
+ "checks": {
+  "a_import_succeeded": true,
+  "b_12_dofs_expected_names": true,
+  "c_stands_3s_upright_cos_gt_0.95_and_base_z_gt_0.10": true
+ },
+ "render_png": "/home/thiago/Documents/fox_rl_model/validation/isaacsim_stand.png",
+ "pass": true
+}

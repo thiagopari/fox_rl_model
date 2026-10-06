@@ -1,0 +1,117 @@
+{
+ "servo_roles": {
+  "gear servo +0.3 (pivot holds)": {
+   "FL": {
+    "swing_rad": -0.1832,
+    "extension_m": -0.0155,
+    "femur_rad": -0.0,
+    "shin_rad": -0.3,
+    "knee_rad": -0.3,
+    "gear_rad": -0.3
+   },
+   "FR": {
+    "swing_rad": -0.1772,
+    "extension_m": -0.0127,
+    "femur_rad": -0.0,
+    "shin_rad": -0.3,
+    "knee_rad": -0.3,
+    "gear_rad": -0.3
+   },
+   "RL": {
+    "swing_rad": -0.1008,
+    "extension_m": 0.0161,
+    "femur_rad": -0.0,
+    "shin_rad": -0.3,
+    "knee_rad": -0.3,
+    "gear_rad": -0.3
+   },
+   "RR": {
+    "swing_rad": -0.0916,
+    "extension_m": 0.0172,
+    "femur_rad": -0.0,
+    "shin_rad": -0.3,
+    "knee_rad": -0.3,
+    "gear_rad": -0.3
+   }
+  },
+  "pivot servo +0.3 (gear holds)": {
+   "FL": {
+    "swing_rad": 0.1168,
+    "extension_m": -0.0155,
+    "femur_rad": 0.3,
+    "shin_rad": -0.0,
+    "knee_rad": -0.3,
+    "gear_rad": 0.0
+   },
+   "FR": {
+    "swing_rad": 0.1228,
+    "extension_m": -0.0127,
+    "femur_rad": 0.3,
+    "shin_rad": 0.0,
+    "knee_rad": -0.3,
+    "gear_rad": 0.0
+   },
+   "RL": {
+    "swing_rad": 0.1992,
+    "extension_m": 0.0161,
+    "femur_rad": 0.3,
+    "shin_rad": -0.0,
+    "knee_rad": -0.3,
+    "gear_rad": 0.0
+   },
+   "RR": {
+    "swing_rad": 0.2084,
+    "extension_m": 0.0172,
+    "femur_rad": 0.3,
+    "shin_rad": -0.0,
+    "knee_rad": -0.3,
+    "gear_rad": 0.0
+   }
+  },
+  "pendulum: pivot +0.3, gear -0.3": {
+   "FL": {
+    "swing_rad": 0.3,
+    "extension_m": -0.0,
+    "femur_rad": 0.3,
+    "shin_rad": 0.3,
+    "knee_rad": -0.0,
+    "gear_rad": 0.3
+   },
+   "FR": {
+    "swing_rad": 0.3,
+    "extension_m": -0.0,
+    "femur_rad": 0.3,
+    "shin_rad": 0.3,
+    "knee_rad": -0.0,
+    "gear_rad": 0.3
+   },
+   "RL": {
+    "swing_rad": 0.3,
+    "extension_m": 0.0,
+    "femur_rad": 0.3,
+    "shin_rad": 0.3,
+    "knee_rad": -0.0,
+    "gear_rad": 0.3
+   },
+   "RR": {
+    "swing_rad": 0.3,
+    "extension_m": 0.0,
+    "femur_rad": 0.3,
+    "shin_rad": 0.3,
+    "knee_rad": -0.0,
+    "gear_rad": 0.3
+   }
+  }
+ },
+ "checks": {
+  "gear servo: gear turns 1:1 reversed, shin turns with the crank, femur stays": true,
+  "pivot servo: femur turns, shin keeps its angle (knee bends)": true,
+  "pivot +a with gear -a: rigid pendulum swing (knee fixed, hip-foot length kept)": true,
+  "reduced tree matches the exact mechanism (feet < 1 mm, standing height < 1 mm)": true
+ },
+ "reduced_vs_exact_max_foot_error_m": 3.6614960915995366e-05,
+ "standing_base_z_m": {
+  "scene.xml": 0.14501,
+  "scene_reduced.xml": 0.14555
+ }
+}

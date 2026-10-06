@@ -1,151 +1,200 @@
 # Fox quadruped — RL-ready model
 
-Link-ready model of the Fox quadruped (Fusion design `Fox_Prototype_03_v6`) for reinforcement learning in
-**Isaac Lab / Isaac Sim** (URDF → USD) and **MuJoCo** (MJCF). Generated on 2026-10-06 from the design copy
-`Fox_Prototype_03_v6_RL` (v14). The original design was never modified.
+Link-ready model of the Fox quadruped (Fusion design `Fox_Prototype_03_v6`) for reinforcement learning in **MuJoCo** and
+**Isaac Sim / Isaac Lab**, with the real leg mechanism: three servos per leg, a 1:1 gear pair, a parallelogram linkage
+and a foot four-bar. Generated 2026-10-06 from the design copy `Fox_Prototype_03_v6_RL` (v14). The original design was never
+modified. Previous checkpoint (screw-consistent serial model): git tag `checkpoint-screw-links`.
+
+## The leg mechanism (what each servo does)
+Per leg, three DS-843MG servos sit in the hip bracket:
+* **Hip servo** (inboard): turns the whole leg about its own spline axis = abduction. The axes are tilted in the CAD:
+  front (0.985, 0, −0.174), rear (0.940, 0, 0.342).
+* **Pivot servo** ("adjacent"): its spline carries the **femur** (hip axis H).
+* **Gear servo** ("outer"): its spline carries a 12-tooth pinion that drives a 12-tooth gear on the same hip axis H
+  (module 1.5 mm, centre distance 18.00 mm, so **1:1, opposite direction**; the CAD names it "15 teeth", the geometry has
+  12). The gear's crank arm (H→Q1, 15 mm) moves the **Quad Link** (Q1→Q2, 75 mm) which moves the **tibia** at Q2.
+  Hip–crank–Quad Link–knee is an exact **parallelogram** (femur 75.0 mm = Quad Link, crank 15.0 mm = tibia offset), so the
+  shin always keeps the crank's angle.
+* **Foot**: hangs from the ankle and is steered by a second loop. On the rear legs it is a parallelogram with the
+  Calf Link, so the foot stays parallel to the femur. On the front legs, Component77 forms a non-parallel four-bar:
+  foot angle relative to the tibia = f(knee) ≈ 0.359·knee − 0.155·knee².
+
+Servo map (pitch angles about +y, zero = CAD stance): **thigh = pivot, knee = −gear − pivot, foot = f(knee)**. So:
+* the **gear servo alone** swings the shin (and foot) about the knee, like a pendulum; with the pivot servo unpowered it
+  swings the whole leg (that is what Fusion shows when you drag it);
+* the **pivot servo alone** turns the femur while the shin keeps its angle: the knee bends, the leg extends/retracts;
+* **pivot +a with gear −a** swings the whole leg rigidly about the hip.
+
+| Command (body held, pivot / gear servo) | Femur | Shin | Knee | FL foot: swing / extension | RL foot: swing / extension |
+|---|---|---|---|---|---|
+| gear servo +0.3 (pivot holds) | -0.00 | -0.30 | -0.30 | -0.183 rad / -15.5 mm | -0.101 rad / +16.1 mm |
+| pivot servo +0.3 (gear holds) | +0.30 | -0.00 | -0.30 | +0.117 rad / -15.5 mm | +0.199 rad / +16.1 mm |
+| pendulum: pivot +0.3, gear -0.3 | +0.30 | +0.30 | -0.00 | +0.300 rad / -0.0 mm | +0.300 rad / +0.0 mm |
+
+Knee range is limited where a loop would reach a dead point (pins in line, 10° margin): rear knee
+[-1.2, 0.74] rad (the rear foot parallelogram folds at +0.92 rad), front ±1.2 rad (placeholder).
 
 ## Contents
 | Path | What |
 |---|---|
-| `urdf/fox.urdf` | URDF: 13 links, 12 revolute joints, inertials, visual + collision meshes |
-| `mjcf/fox.xml`, `mjcf/scene.xml` | MuJoCo model (floating base, 12 position servos, IMU site/sensors) + scene with floor |
-| `usd/fox.usd` | Isaac Sim 6.0.1 import of the URDF (see validation) |
-| `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` (drop-in analogue of `UNITREE_GO1_CFG`) |
-| `meshes/visual`, `meshes/collision` | per-link STL in the link frame (decimated visuals, convex-hull collisions), metres |
-| `raw/` | raw Fusion export (full-resolution STLs + `raw.json` with masses / inertia / joints) |
-| `tools/` | `build_robot.py` (raw → URDF/MJCF/meshes), MuJoCo checks, Isaac Sim import, Fusion add-ins |
+| `mjcf/fox.xml`, `mjcf/scene.xml` | **exact mechanism** for MuJoCo: 33 bodies, 32 hinges, the 8 loop pins as `<connect>`, the 4 gear pairs as joint equalities, 12 position servos (`XX_hip`, `XX_pivot`, `XX_gear`), IMU site/sensors; scene with floor |
+| `mjcf/fox_reduced.xml`, `scene_reduced.xml` | the same robot as a tree (17 bodies): gear servo on a fixed tendon (−thigh − calf), foot via a four-bar joint equality; matches the exact model |
+| `urdf/fox.urdf` | that tree for Isaac (URDF cannot hold loops): 17 links, 16 revolute joints; foot joints are `<mimic>` of the knee |
+| `usd/fox.usd` | Isaac Sim 6.0.1 import of the URDF (foot drives zeroed, mimics kept as `NewtonMimicAPI`) |
+| `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles |
+| `mechanism.json` | servo map, four-bar fits, knee ranges |
+| `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
+| `raw/` | raw Fusion export (per-part STLs + `raw.json` with masses, inertia, 40 joints, motion links) |
+| `analysis/` | hole/pin scan of the CAD (`screw_scan.json`) and the part map (`link_map.json`) |
+| `tools/` | `screw_graph.py`, `build_robot.py`, MuJoCo + Isaac checks, Fusion add-ins |
 | `validation/` | reports + renders |
 
 Fusion documents (cloud, work › Default Project):
 * `Fox_Prototype_03_v6` — original, untouched.
 * `Fox_Prototype_03_v6_RL` — design copy with the fixes (mirrored front leg, rear gear pair, servos, restored tibias, Component77).
-* `Fox_Prototype_03_v6_RL_URDF_v2` — the **link + joint model**: 13 top-level components (one per link, no nesting),
-  RL materials, 12 as-built revolute joints. Open it and drag a leg: every part screwed to a moving part moves with it.
-* `Fox_Prototype_03_v6_RL_URDF` — first link model, **superseded** by `_v2` (brackets stayed on the base); safe to delete.
+* `Fox_Prototype_03_v6_RL_Mechanism` — **current model**: 33 components (base + per leg hip, pinion, gear, femur, quad,
+  tibia, foot, link), 40 as-built revolute joints (per leg `hip_joint`, `femur_joint` = pivot servo, `pinion_joint` = gear
+  servo + 7 free pins, two of them closing the loops) and 4 motion links (pinion → gear, 1:1 reversed). Drag `XX_pinion_joint`
+  to swing the leg; to see the pivot servo extend the leg, **lock `XX_pinion_joint`** (right-click → Lock) and drag
+  `XX_femur_joint` — otherwise Fusion moves both servos together and the leg just swings.
+* `Fox_Prototype_03_v6_RL_URDF_v2` — checkpoint: screw-consistent serial model (no gear relation).
+* `Fox_Prototype_03_v6_RL_URDF` — first model, superseded; safe to delete.
 
 ## Conventions
 * Frame: **x forward** (IMU end), **y left**, **z up**; base origin midway between the four hips at hip-axis height.
-* Zero joint angles = the CAD standing pose; the base origin is **0.1528 m** above the ground there.
-* Joint names follow Unitree: `*_hip_joint` (abduction, ≈+x), `*_thigh_joint` (hip pitch, +y), `*_calf_joint` (knee, +y).
-  Legs: FL, FR, RL, RR. The abduction axes are the real hip-servo spline axes, which the CAD tilts out of the
-  horizontal: **front (0.985, 0, −0.174)** (10° nose-down), **rear (0.940, 0, 0.342)** (20° nose-up). Code that assumes a
-  pure +x abduction axis (e.g. analytic IK) must use these.
-* Feet are the `*_calf` links (tibia + foot + calf link). Total mass **542.6 g** (no battery yet).
+* Zero = the CAD standing pose for every servo and joint; the base origin is **0.1528 m** above the ground there.
+* Legs FL, FR, RL, RR. Total mass **542.6 g** (no battery yet).
 
-## Kinematics and masses
-| Joint | Parent → child | Axis | Origin in parent (m) | Limits (rad) |
-|---|---|---|---|---|
-| FL_hip_joint | base → FL_hip | (0.985, 0, -0.174) | 0.0717 0.0242 0.0074 | -0.50 … 0.50 |
-| FL_thigh_joint | FL_hip → FL_thigh | +y | 0.0131 0.0186 -0.0026 | -1.20 … 1.20 |
-| FL_calf_joint | FL_thigh → FL_calf | +y | -0.0263 0.0016 -0.0703 | -1.20 … 1.20 |
-| FR_hip_joint | base → FR_hip | (0.985, 0, -0.174) | 0.0717 -0.0243 0.0074 | -0.50 … 0.50 |
-| FR_thigh_joint | FR_hip → FR_thigh | +y | 0.0131 -0.0185 -0.0026 | -1.20 … 1.20 |
-| FR_calf_joint | FR_thigh → FR_calf | +y | -0.0263 -0.0017 -0.0703 | -1.20 … 1.20 |
-| RL_hip_joint | base → RL_hip | (0.940, 0, 0.342) | -0.0736 0.0242 -0.0003 | -0.50 … 0.50 |
-| RL_thigh_joint | RL_hip → RL_thigh | +y | -0.0124 0.0186 -0.0044 | -1.20 … 1.20 |
-| RL_calf_joint | RL_thigh → RL_calf | +y | 0.0381 0.0018 -0.0646 | -1.20 … 1.20 |
-| RR_hip_joint | base → RR_hip | (0.940, 0, 0.342) | -0.0734 -0.0242 -0.0002 | -0.50 … 0.50 |
-| RR_thigh_joint | RR_hip → RR_thigh | +y | -0.0126 -0.0185 -0.0046 | -1.20 … 1.20 |
-| RR_calf_joint | RR_thigh → RR_calf | +y | 0.0381 -0.0017 -0.0646 | -1.20 … 1.20 |
+## Reduced tree (URDF / Isaac): joints and masses
+| Joint | Parent → child | Axis | Origin in parent (m) | Limits (rad) | Effort (N·m) |
+|---|---|---|---|---|---|
+| FL_hip_joint | base → FL_hip | (0.985, 0, -0.174) | 0.071686 0.024238 0.007390 | -0.50 … 0.50 | 0.470 |
+| FL_thigh_joint | FL_hip → FL_thigh | +y | 0.013073 0.017273 -0.002610 | -1.20 … 1.20 | 0.940 |
+| FL_calf_joint | FL_thigh → FL_calf | +y | -0.026269 0.000000 -0.070249 | -1.20 … 1.20 | 0.470 |
+| FL_foot_joint | FL_calf → FL_foot | +y | 0.005365 0.002750 -0.067459 | -3.14 … 3.14 | 10.000 |
+| FR_hip_joint | base → FR_hip | (0.985, 0, -0.174) | 0.071686 -0.024262 0.007390 | -0.50 … 0.50 | 0.470 |
+| FR_thigh_joint | FR_hip → FR_thigh | +y | 0.013073 -0.017248 -0.002610 | -1.20 … 1.20 | 0.940 |
+| FR_calf_joint | FR_thigh → FR_calf | +y | -0.026269 0.000000 -0.070249 | -1.20 … 1.20 | 0.470 |
+| FR_foot_joint | FR_calf → FR_foot | +y | 0.005365 -0.002750 -0.067459 | -3.14 … 3.14 | 10.000 |
+| RL_hip_joint | base → RL_hip | (0.940, 0, 0.342) | -0.073606 0.024238 -0.000351 | -0.50 … 0.50 | 0.470 |
+| RL_thigh_joint | RL_hip → RL_thigh | +y | -0.012394 0.017273 -0.004429 | -1.20 … 1.20 | 0.940 |
+| RL_calf_joint | RL_thigh → RL_calf | +y | 0.038069 0.001750 -0.064620 | -1.20 … 0.74 | 0.470 |
+| RL_foot_joint | RL_calf → RL_foot | +y | -0.052566 0.001000 -0.053496 | -3.14 … 3.14 | 10.000 |
+| RR_hip_joint | base → RR_hip | (0.940, 0, 0.342) | -0.073382 -0.024238 -0.000188 | -0.50 … 0.50 | 0.470 |
+| RR_thigh_joint | RR_hip → RR_thigh | +y | -0.012618 -0.017522 -0.004593 | -1.20 … 1.20 | 0.940 |
+| RR_calf_joint | RR_thigh → RR_calf | +y | 0.038069 -0.001500 -0.064620 | -1.20 … 0.74 | 0.470 |
+| RR_foot_joint | RR_calf → RR_foot | +y | -0.052566 -0.001000 -0.053496 | -3.14 … 3.14 | 10.000 |
 
-| Link | Mass (g) | COM in link frame (m) |
+| Link (URDF) | Parts | Mass (g) |
 |---|---|---|
-| base | 330.4 | -0.0006 0.0009 0.0162 |
-| FL_hip | 34.8 | 0.0198 0.0039 -0.0087 |
-| FL_thigh | 7.1 | -0.0194 0.0000 -0.0312 |
-| FL_calf | 10.4 | 0.0040 0.0000 -0.0350 |
-| FR_hip | 34.8 | 0.0198 -0.0039 -0.0087 |
-| FR_thigh | 7.1 | -0.0194 -0.0000 -0.0312 |
-| FR_calf | 10.7 | 0.0039 0.0000 -0.0339 |
-| RL_hip | 35.3 | -0.0180 0.0039 -0.0117 |
-| RL_thigh | 7.4 | 0.0246 0.0000 -0.0283 |
-| RL_calf | 10.4 | -0.0260 -0.0000 -0.0307 |
-| RR_hip | 36.8 | -0.0176 -0.0036 -0.0124 |
-| RR_thigh | 7.3 | 0.0247 -0.0000 -0.0284 |
-| RR_calf | 10.0 | -0.0266 -0.0000 -0.0316 |
+| base | base | 330.4 |
+| FL_hip | hip, pinion, gear | 34.4 |
+| FL_thigh | femur, quad | 7.5 |
+| FL_calf | tibia, link | 7.8 |
+| FL_foot | foot | 2.5 |
+| FR_hip | hip, pinion, gear | 34.4 |
+| FR_thigh | femur, quad | 7.5 |
+| FR_calf | tibia, link | 8.2 |
+| FR_foot | foot | 2.5 |
+| RL_hip | hip, pinion, gear | 34.9 |
+| RL_thigh | femur, quad | 7.8 |
+| RL_calf | tibia, link | 7.4 |
+| RL_foot | foot | 3.1 |
+| RR_hip | hip, pinion, gear | 36.4 |
+| RR_thigh | femur, quad | 7.7 |
+| RR_calf | tibia, link | 7.0 |
+| RR_foot | foot | 3.0 |
 
-## How the CAD maps to links
-Link membership follows the fasteners (`tools/screw_graph.py` on a scan of every hole, pin and spline in the design):
-parts that share a screw line, or that sit on a servo's output spline, are rigidly joined and always land in the same
-link. Pin joints of the leg linkages and the spline axes themselves are pivots, not fasteners. The result is
-`analysis/link_map.json` (one line per body, plus the 4 abduction axes).
-* **base**: both pelvis halves, Pi mount, Raspberry Pi 4, 12-ch PWM board, 2× XL4015, Arduino Nano, BNO055, the bodies
-  of the 4 inboard ("hip") servos that drive abduction, and everything screwed to those.
-* **XX_hip**: the hip bracket that rides on the inboard servo's spline (front: `Servo Pelv Upper/Lower(Mirror)`; rear
-  left: `Servo Pelv Upper`; rear right: `Component40/41(Mirror) (1)`), the rear bracket caps (`Body28`/`Body29`), the
-  two servos clamped in the bracket (leg-pivot servo + gear servo), the gear servo's pinion (`m` gear) and the 15-tooth
-  crank gear.
-* **XX_thigh**: femur + the leg-pivot servo's output spline it is mounted on (+ the horn screw `Body4` on the rear left)
-  + Quad Link riding along as mass.
-* **XX_calf**: tibia, foot, the foot-levelling link (Component77 front, Calf Link hind) and the loose knee pin (`Body2`).
-* Changed vs the first model (`_RL_URDF`): the 4 hip brackets, 2 caps and 4 inboard-servo splines moved base → hip;
-  the 4 leg-pivot splines and the horn screw hip → thigh; the rear-left knee pin base → calf; plus `Body27`, a 0.07 cm³
-  hole-free block on the rear-right leg-pivot servo, assigned by contact (base → RR_hip). Hip links went 22 → 35 g each.
-* Hidden CAD bodies are excluded. Materials: PLA 1.24 g/cm³; each DS-843MG servo 8.5 g; electronics at typical masses
-  (Pi 46 g, PWM 9 g, XL4015 16 g, Nano 7 g, BNO055 3 g).
+Parts of one leg in the exact model (`mjcf/fox.xml`):
 
-## Modelling decisions (made autonomously — review)
-1. **Hip abduction axis** = the output-spline axis of each inboard servo (the bracket turns on it), measured from the CAD:
-   tilted 10° (front) / 20° (rear) from +x as listed above.
-2. **Knee four-bar → serial chain**: the gear servo drives the knee through a pinion, a crank on the 15-tooth gear and the
-   Quad Link. In the model the knee is a direct revolute joint; on hardware map knee angle → servo angle with the
-   four-bar relation. Model the loop only if sim-to-real needs it.
-3. **Limits are placeholders**: abduction ±0.5 rad, thigh ±1.2 rad, calf ±1.2 rad around the standing pose. Measure the
-   real servo travel (DS-843MG is often listed at only ~±20–60°) and mechanical stops, then edit `build_robot.py`.
-4. **Actuators**: DS-843MG at 6 V — 0.47 N·m stall, 10.5 rad/s; Isaac Lab `DCMotorCfg` effort limit 0.30 N·m,
-   stiffness 2.0, damping 0.05, armature 5e-4 kg·m² (estimate of reflected rotor inertia). Gear/linkage ratios not folded in.
-5. **Battery**: the battery bay is hidden in the CAD and no battery is modelled. Add its mass to `base` when known
-   (it will dominate the ~0.33 kg base).
-6. **Joint damping / friction / armature are not in the URDF** (written as 0 on purpose): Isaac Sim's URDF importer writes URDF
-   damping into the per-degree USD field (0.01 would become ~0.57 N·m·s/rad), and URDF cannot carry armature. They live in
-   `isaaclab/fox_cfg.py` (DCMotorCfg) and in the MJCF `<default>`. Without armature, PhysX shows a spurious ~0.75 rad/s joint
-   velocity at rest; with armature 5e-4 it matches MuJoCo.
-7. **Rear brackets un-joined**: in the design copy, `Combine1`/`Combine2` of `Component41(Mirror) (1)` and `Combine2` of
-   `Servo Pelv Upper` join both rear brackets (and caps) into the pelvis, which would weld the rear legs' abduction.
-   The link-model builder suppresses those 3 features **in memory only** (the design copy is closed unsaved); the
-   timeline stays healthy without them. If the joins are meant for printing, nothing changes on your side.
+| Part (MJCF body) | Mass (g) |
+|---|---|
+| base | 330.45 |
+| FL_hip | 29.64 |
+| FL_pinion | 2.28 |
+| FL_gear | 2.52 |
+| FL_femur | 4.89 |
+| FL_quad | 2.61 |
+| FL_tibia | 5.49 |
+| FL_foot | 2.52 |
+| FL_link | 2.35 |
+
+## How the CAD maps to parts
+Membership follows the fasteners (`tools/screw_graph.py` on a scan of every hole, pin and spline): parts that share a
+screw line, or sit on a servo's output spline, are one rigid part; leg-linkage pins and spline axes are pivots.
+* **base**: both pelvis halves, Pi mount, Raspberry Pi 4, 12-ch PWM board, 2× XL4015, Arduino Nano, BNO055, the bodies of
+  the 4 hip servos, and everything screwed to them.
+* **XX_hip**: the bracket riding on the hip-servo spline (front `Servo Pelv Upper/Lower(Mirror)`, rear left `Servo Pelv
+  Upper`, rear right `Component40/41(Mirror) (1)`), rear caps `Body28`/`Body29` (+ `Body27`, by contact), both servo cases.
+* **XX_pinion**: gear-servo spline + `m` gear. **XX_gear**: the 12-tooth gear with its crank arm.
+* **XX_femur**: femur + pivot-servo spline + the gear's spacer and washer (clamped by the horn screw `Body4`, rear left).
+* **XX_quad**: Quad Link. **XX_tibia**: tibia + knee pin (`Body2` rear left). **XX_foot**: foot + pad.
+  **XX_link**: Component77 (front) / Calf Link (rear).
+* In the tree model: hip = hip + pinion + gear, thigh = femur + Quad Link, calf = tibia + link, foot = foot.
+
+## Modelling decisions (review)
+1. **Abduction axis** = the hip-servo spline axis measured from the CAD (tilted 10° front / 20° rear from +x).
+2. **Rear brackets un-joined**: `Combine1`/`Combine2` of `Component41(Mirror) (1)` and `Combine2` of `Servo Pelv Upper` join
+   both rear brackets into the pelvis in the design copy; the builders suppress them **in memory only**.
+3. **Limits are placeholders**: servos ±1.2 rad (hip ±0.5), knee capped by the loop dead points (above). Measure the real
+   servo travel (DS-843MG ~±60°) and mechanical stops.
+4. **Actuators**: DS-843MG at 6 V, 0.47 N·m stall, 10.5 rad/s; PD kp 2.0 / kd 0.05 per servo, armature 5e-4 (estimate).
+   kp 2.0 is soft: the robot sags 8 mm when standing (the pivot and gear servos share the knee load through the
+   parallelogram). Raise kp after bench tests.
+5. **Isaac foot mimic** is the linear part of the four-bar: exact on the rear; front error 0.015 rad within ±0.3 rad of
+   knee motion, 0.06 rad at ±0.6, 0.27 rad at ±1.2 (the MuJoCo models use the full quartic).
+6. **Battery**: hidden in the CAD, not modelled. Add its mass to `base` when known.
+7. **No joint damping/friction/armature in the URDF** (Isaac's importer writes URDF damping into the per-degree USD
+   field); they live in `isaaclab/fox_cfg.py` and the MJCF defaults. The URDF thigh effort limit is 0.94 N·m (= pivot −
+   gear torque) so PhysX does not clip the mapped torque.
+8. **Loops in MuJoCo** use near-hard constraints (`solimp 0.999`): with the default the 2–3 g linkage parts let the pins
+   gap 2 mm under load.
 
 ## Use
-* MuJoCo viewer: `~/.venvs/fox_rl/bin/python -m mujoco.viewer --mjcf ~/Documents/fox_rl_model/mjcf/scene.xml`
-* Isaac Sim (installed: `~/isaacenv`, 6.0.1): regenerate the USD and run the standing test with
-  `OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py` and `... tools/isaacsim_stand_test.py`
-  (importer: `isaacsim.asset.importer.urdf.URDFImporter`, floating base, convex-hull collisions from the collision meshes,
-  position drives kp 2.0 / kd 0.05 per rad, self-collision off; `usd/fox.usd` is self-contained, default prim `/fox`).
-* Isaac Lab: convert with `scripts/tools/convert_urdf.py` (command in `isaaclab/fox_cfg.py`) or use `usd/fox.usd`, then
-  clone the Go1 velocity task: base `base`, feet `.*_calf`, undesired contacts `.*_thigh`, much smaller commands
-  (≈0.3 m/s) and a lower target height (~0.14 m) than Go1.
+* **MuJoCo** (exact): `~/.venvs/fox_rl/bin/python -m mujoco.viewer --mjcf ~/Documents/fox_rl_model/mjcf/scene.xml`.
+  Actions = 12 servo targets (`XX_hip`, `XX_pivot`, `XX_gear`), i.e. what the real servos get. Ramp large changes: a
+  step on all 12 servos saturates them together and the robot can hop and flip.
+* **Isaac Sim** (`~/isaacenv`, 6.0.1): `OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py`, then
+  `tools/isaacsim_stand_test.py` (servo PD applied with `set_dof_efforts`, two robots: standing + bolted in the air).
+* **Isaac Lab**: `from fox_cfg import FOX_CFG`; joint position actions on `.*_hip_joint`, `.*_thigh_joint`,
+  `.*_calf_joint` are servo targets (hip, pivot, gear); `FoxServoActuator.servo_angles()` gives the servo angles from
+  joint angles for observations. Velocity task: base `base`, feet `.*_foot`, undesired contacts `.*_thigh|.*_calf`,
+  small commands (≈0.3 m/s), target height ~0.14 m. Not run under Isaac Lab here (not installed): its `compute()` is
+  checked by `tools/test_fox_actuator.py`, the same map in PhysX by the Isaac Sim test.
+* Hardware: send pivot = thigh, gear = −thigh − knee (radians from the stance, then your servo's zero/scale/direction).
 
 ## Regenerate
 Each `tools/fusion/*` folder is a one-shot add-in: copy it into Fusion's `API/AddIns`, start Fusion, wait for its result
 in `C:\fusion_jobs` (`drive_c/fusion_jobs` in the Wine prefix), then remove the folder again (it runs at every start).
 1. After editing the design copy: `FoxScrewScan` → copy `screw_scan.json` to `analysis/`, run
-   `~/.venvs/fox_rl/bin/python tools/screw_graph.py` (fails on any fastener conflict) and copy `analysis/link_map.json`
-   into `tools/fusion/FoxBuildLinkModel/`.
-2. `FoxBuildLinkModel` writes a new `…_RL_URDF_v2` document (timestamped if the name exists); it refuses to run if any
-   body is missing from `link_map.json`. Wait until the upload finishes (Fusion log: `Uploaded document`) before closing Fusion.
+   `~/.venvs/fox_rl/bin/python tools/screw_graph.py` (fails on a fastener conflict or a non-parallelogram leg) and copy
+   `analysis/link_map.json` into `tools/fusion/FoxBuildLinkModel/`.
+2. `FoxBuildLinkModel` writes a new `…_RL_Mechanism` document (timestamped if the name exists) and saves it only if the
+   drive tests pass. Wait for `Uploaded document` in the Fusion log before closing Fusion.
 3. `FoxExportRaw` → copy `C:\fusion_jobs\export` to `raw/`.
-4. `~/.venvs/fox_rl/bin/python tools/build_robot.py`, then the checks in `tools/`.
+4. `~/.venvs/fox_rl/bin/python tools/build_robot.py`, then the checks below.
 
 ## Validation
 All checks pass (reports in `validation/`):
 
 | Check | Result |
 |---|---|
-| Fasteners: every part sharing a screw line or a spline is in the same link | 380 rigid joins, 0 conflicts, 12/12 splines matched |
-| Fusion link model: 13 links, 12 joints, each joint rotates its child rigidly about the intended axis | error 0.0 cm, all healthy |
-| Exact geometry copy (542 visible bodies) | 0.0 µm vertex deviation; volume preserved |
-| Servo masses | 12 × 8.50 g |
-| URDF parse (yourdfpy) + mesh paths | 13 links, 12 actuated joints, no missing meshes |
-| URDF vs MJCF kinematics | identical (3e-17 m) |
-| MuJoCo: structure | free base + 12 hinges + 12 position servos |
-| MuJoCo: all four feet touch the floor at the zero pose | all at +2 mm |
-| MuJoCo: stands 4 s holding the zero pose | base 0.1528 → 0.1498 m, upright 1.000, max servo torque 0.037 N·m (of 0.47) |
-| MuJoCo: crouch / abduction / single-leg lift | body lowers 8 mm / 10 mm, FL foot lifts 19 mm, stays upright |
-| MuJoCo: 20 s random joint targets (RL exploration) | always finite, contact penetration ≤ 0.6 mm |
-| Isaac Sim 6.0.1 URDF import → `usd/fox.usd` | 12 DOF with the expected names, 13 links |
-| Isaac Sim: stands 3 s (GPU PhysX, dt 1/200) | base 0.155 → 0.1496 m, upright 1.000, holding torque ≤ 0.092 N·m (matches MuJoCo) |
+| Fasteners: every part sharing a screw line or a spline is in the same part | 380 rigid joins, 0 conflicts, 12/12 splines matched |
+| Fusion mechanism: 40 joints + 4 motion links healthy; each hip joint turns its leg rigidly | rigid-rotation error 0.0 cm |
+| Fusion drive tests (gear servo, held femur, held pinion, knee ±0.3): gear = −pinion, shin ∥ crank, Quad Link ∥ femur, rear foot ∥ femur | worst 7 µrad |
+| Four-bar model (`build_robot.py`) vs Fusion's solver, front foot | 0.093 / −0.078 rad at knee +0.3 / −0.2 in both |
+| MuJoCo exact model: structure, feet touch at the zero pose | 39 qpos, 12 servos, 12 equalities; all feet at +2 mm |
+| MuJoCo exact model: stands 4 s | base 0.1528 → 0.1450 m, upright 0.999, loop gap ≤ 0.03 mm, gear error ≤ 0.0003 rad |
+| MuJoCo: servo roles (table above) | gear → shin, pivot → femur/knee, pivot + gear(−) → rigid pendulum |
+| MuJoCo: reduced tree vs exact mechanism (6 random servo poses, held) | feet within 0.04 mm; standing heights 0.14501 / 0.14555 m |
+| MuJoCo: ramped crouch / abduction | body lowers, stays upright |
+| MuJoCo: 20 s random servo targets | always finite |
+| Isaac Sim 6.0.1 import → `usd/fox.usd` | 17 bodies, 16 DOFs, 4 foot mimics |
+| Isaac Sim: stands 4 s with the servo map (GPU PhysX, 200 Hz) | base 0.155 → 0.14684 m, upright 0.999514 |
+| Isaac Sim: servo map in PhysX (held robot) + foot mimics | gear → shin −0.30, pivot → femur +0.30, pendulum; mimic error 0.0015 rad |
+| `FoxServoActuator.compute()` vs the servo map | 1e-8 N·m, power balance holds |
 
-Renders: `validation/mujoco_hip_abduction.png` (hip links turning as one piece), `mujoco_front_left.png`, `mujoco_poses.png`,
-`mujoco_lift_FL.png`, `isaacsim_stand.png`.
-Re-run: `~/.venvs/fox_rl/bin/python tools/validate_mujoco.py`, `tools/pose_test_mujoco.py`, `tools/random_actions_mujoco.py`;
-Isaac Sim: `OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py` then `tools/isaacsim_stand_test.py`.
+Renders: `validation/mujoco_servo_roles.png` (rows: gear servo, pivot servo, pendulum), `mujoco_hip_abduction.png`,
+`mujoco_front_left.png`, `mujoco_poses.png`, `isaacsim_stand.png`.
+Re-run: `~/.venvs/fox_rl/bin/python tools/validate_mujoco.py`, `tools/mechanism_mujoco.py`, `tools/pose_test_mujoco.py`,
+`tools/random_actions_mujoco.py`; `~/isaacenv/bin/python tools/test_fox_actuator.py`; Isaac Sim as above.

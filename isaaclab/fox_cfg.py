@@ -1,30 +1,91 @@
-"""Isaac Lab articulation config for the Fox quadruped (drop-in analogue of UNITREE_GO1_CFG).
+"""Isaac Lab articulation config for the Fox quadruped (analogue of UNITREE_GO1_CFG), driven like the real robot.
 
-Usage inside an Isaac Lab task (tested pattern: isaaclab_tasks/manager_based/locomotion/velocity/config/go1):
-    from fox_cfg import FOX_CFG
-    self.scene.robot = FOX_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-Body names for the velocity task: base = "base", feet = ".*_calf", undesired contacts = ".*_thigh".
-Convert the URDF first (Isaac Lab >= 2.x):
-    ./isaaclab.sh -p scripts/tools/convert_urdf.py ~/Documents/fox_rl_model/urdf/fox.urdf \
-        ~/Documents/fox_rl_model/usd/fox.usd --merge-joints --joint-stiffness 0.0 --joint-damping 0.0 --joint-target-type none
-(or use the USD already produced by tools/isaacsim_import.py if present).
+Each leg has three DS-843MG servos: hip (abduction), pivot (turns the femur) and gear (pinion -> 12:12 gear -> crank ->
+Quad Link; the hip-crank-Quad Link-knee parallelogram keeps the shin at the crank's angle). urdf/fox.urdf is that
+mechanism reduced to a tree (base + per leg hip, thigh, calf, foot); the servo map makes it exact:
+    thigh = pivot        calf = -gear - pivot        foot = mimic of calf (foot four-bar, linear part)
+So the gear servo alone swings the shin, the pivot servo alone bends the knee (extension), and pivot +a with gear -a
+swings the whole leg like a pendulum.
+
+FoxServoActuator reads the position targets of <leg>_hip_joint / _thigh_joint / _calf_joint as the HIP / PIVOT /
+GEAR SERVO angles (rad from the CAD stance), runs one saturated PD per servo, and maps the servo torques onto the
+joints (virtual work):  tau_hip = t_hip,  tau_thigh = t_pivot - t_gear,  tau_calf = -t_gear.
+The foot joints carry no actuator; their <mimic> constraint (NewtonMimicAPI in the USD) moves them.
+Body names for the velocity task: base = "base", feet = ".*_foot", undesired contacts = ".*_thigh|.*_calf".
+
+USD: tools/isaacsim_import.py writes usd/fox.usd (Isaac Sim 6.0.1 URDF importer, foot drives zeroed). Not run under
+Isaac Lab here; the servo map is checked in MuJoCo (tools/mechanism_mujoco.py) and Isaac Sim (tools/isaacsim_stand_test.py),
+and this class's compute() by tools/test_fox_actuator.py.
 """
+from __future__ import annotations
+
 import os
 
+import torch
+
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import DCMotorCfg
+from isaaclab.actuators import ActuatorBase, ActuatorBaseCfg
 from isaaclab.assets.articulation import ArticulationCfg
+from isaaclab.utils import configclass
+from isaaclab.utils.types import ArticulationActions
 
 FOX_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LEGS = ("FL", "FR", "RL", "RR")
 
-# Corona DS-843MG at 6 V: 0.47 N m stall torque, 0.10 s / 60 deg (10.5 rad/s). The hip-pitch servo drives the femur
-# directly; the knee is driven through a gear pair + crank linkage (ratio not modelled -> kept at the servo values).
-FOX_SERVO_CFG = DCMotorCfg(
+
+class FoxServoActuator(ActuatorBase):
+    """Hip, pivot and gear servos of every leg; targets on hip/thigh/calf joints are servo angles (see module doc)."""
+
+    cfg: FoxServoActuatorCfg
+    is_implicit_model = False
+
+    def __init__(self, cfg: FoxServoActuatorCfg, *args, **kwargs):
+        super().__init__(cfg, *args, **kwargs)
+        names = list(self.joint_names)
+        pick = lambda part: [names.index("%s_%s_joint" % (leg, part)) for leg in LEGS]  # noqa: E731
+        self._hip, self._thigh, self._calf = pick("hip"), pick("thigh"), pick("calf")
+
+    def reset(self, env_ids):
+        pass
+
+    def servo_angles(self, joint_pos: torch.Tensor) -> torch.Tensor:
+        """(num_envs, 12) servo angles [hip, pivot, gear] x legs from joint angles (also for observations / hardware)."""
+        return torch.cat([joint_pos[:, self._hip], joint_pos[:, self._thigh],
+                          -(joint_pos[:, self._thigh] + joint_pos[:, self._calf])], dim=1)
+
+    def compute(self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor) -> ArticulationActions:
+        tgt = control_action.joint_positions
+        idx = self._hip + self._thigh + self._calf      # servo k drives through joint idx[k] (gains/limits per servo)
+        kp, kd, lim = self.stiffness[:, idx], self.damping[:, idx], self.effort_limit[:, idx]
+        s, v = self.servo_angles(joint_pos), self.servo_angles(joint_vel)
+        t = torch.clamp(kp * (tgt[:, idx] - s) - kd * v, -lim, lim)
+        n = len(LEGS)
+        t_hip, t_pivot, t_gear = t[:, :n], t[:, n:2 * n], t[:, 2 * n:]
+        effort = torch.zeros_like(joint_pos)
+        effort[:, self._hip] = t_hip
+        effort[:, self._thigh] = t_pivot - t_gear
+        effort[:, self._calf] = -t_gear
+        self.computed_effort = effort
+        self.applied_effort = effort
+        control_action.joint_efforts = effort
+        control_action.joint_positions = None
+        control_action.joint_velocities = None
+        return control_action
+
+
+@configclass
+class FoxServoActuatorCfg(ActuatorBaseCfg):
+    class_type: type = FoxServoActuator
+
+
+# Corona DS-843MG at 6 V: 0.47 N m stall, 0.10 s / 60 deg (10.5 rad/s). The 12:12 gear passes the gear servo's torque
+# to the crank unchanged; the parallelogram passes it to the shin.
+FOX_SERVO_CFG = FoxServoActuatorCfg(
     joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
-    saturation_effort=0.47,
-    effort_limit=0.30,      # continuous-ish limit (~65% of stall); tune after bench tests
+    effort_limit=0.47,      # per servo (stall); lower it for a continuous rating after bench tests
+    effort_limit_sim=2.0,   # PhysX joint clip above the mapped torques (thigh gets pivot - gear: up to 0.94 N m)
     velocity_limit=10.5,
-    stiffness=2.0,          # PD gains used by the MuJoCo validation (N m / rad, N m s / rad)
+    stiffness=2.0,          # servo PD gains, same as the MuJoCo models (N m / rad, N m s / rad)
     damping=0.05,
     friction=0.0,
     armature=0.0005,        # reflected rotor inertia estimate for a geared hobby servo (helps solver stability)
@@ -49,10 +110,10 @@ FOX_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.16),          # base origin is 0.1528 m above the feet at the zero (standing) pose
-        joint_pos={".*": 0.0},          # zero = the CAD standing pose
+        joint_pos={".*": 0.0},          # zero = the CAD standing pose (servo angles 0 too)
         joint_vel={".*": 0.0},
     ),
     soft_joint_pos_limit_factor=0.9,
-    actuators={"legs": FOX_SERVO_CFG},
+    actuators={"servos": FOX_SERVO_CFG},
 )
-"""Fox quadruped: 13 links (base + {FL,FR,RL,RR}_{hip,thigh,calf}), 12 revolute joints, 0.542 kg (no battery yet)."""
+"""Fox quadruped: 17 links (base + {FL,FR,RL,RR}_{hip,thigh,calf,foot}), 16 revolute joints (4 foot mimics), 0.54 kg."""

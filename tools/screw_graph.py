@@ -79,6 +79,61 @@ def anchor_and_roles(bodies):
                        'base' if (b['vol'] > 20 or top in ELEC) else None)
 
 
+PART_OF = (('Quad Link', 'quad'), ('Femur', 'femur'), ('Component77', 'link'), ('Calf Link', 'link'), ('Main Foot', 'foot'),
+           ('Foot', 'foot'), ('Spur Gear', 'gear'))
+
+
+def mechanism(bodies, link, edges):
+    """Split each leg link into its mechanism parts and locate the pins (source frame, cm; every pin runs along x).
+    hip: bracket + both clamped servo cases + caps + hip-servo spline | pinion: gear-servo spline + the gear on it
+    gear: the gear it drives (1:1, with the crank arm), turning on the hip axis | femur: femur + pivot-servo spline
+    (+ horn screw + the gear's spacer/washer it clamps) | quad: Quad Link | tibia: tibia + knee pin | foot | link:
+    Component77 (front) / Calf Link (rear). Pins: H hip, K knee, Q1 crank-Quad Link, Q2 Quad Link-tibia, A ankle,
+    C femur-link, Cp link-foot, P gear-servo axis."""
+    is_pinion = lambda b: b['comp'] == 'm' or b['comp'].startswith('m(')
+    pinion_splines = {i for i, j, why in edges if why == 'on spline' and is_pinion(bodies[j])}
+    part = {}
+    for b in bodies:
+        l = link[b['id']]
+        if l == 'base':
+            part[b['id']] = 'base'
+            continue
+        leg, seg = l.split('_')
+        role = next((r for k, r in PART_OF if b['comp'].startswith(k)), None)
+        if is_pinion(b) or b['id'] in pinion_splines:
+            role = 'pinion'
+        elif role == 'gear' and b['vol'] < 1.0:
+            role = 'femur'                               # spacer + washer under the horn screw
+        elif role is None:
+            role = {'hip': 'hip', 'thigh': 'femur', 'calf': 'tibia'}[seg]
+        part[b['id']] = leg + '_' + role
+    pivots = {}
+    for leg in ('FL', 'FR', 'RL', 'RR'):
+        def xl(role, comp=''):
+            return [(p[1], p[2], h[6], iv[0], iv[1]) for b in bodies if part[b['id']] == leg + '_' + role and b['comp'].startswith(comp)
+                    for h in b.get('holes', []) for u, p, iv in [line_key(h)] if abs(u[0]) > 0.999]
+
+        def pin(ra, rb):
+            for y, z, r, a0, a1 in xl(ra):
+                for y2, z2, r2, b0, b1 in xl(rb):
+                    if abs(y - y2) < 0.03 and abs(z - z2) < 0.03:
+                        return [round((min(a0, b0) + max(a1, b1)) / 2, 4), y, z]
+            raise AssertionError('%s: no pin between %s and %s' % (leg, ra, rb))
+        spline = next(np.array(splines_xyz[s]) for s in splines_xyz if part[s] == leg + '_femur')
+        bores = [(y, z, a0, a1) for y, z, r, a0, a1 in xl('femur', 'Femur') if r > 0.13]   # the femur's own hip + knee bores
+        H = min(bores, key=lambda q: np.hypot(q[0] - spline[1], q[1] - spline[2]))
+        K = max(bores, key=lambda q: np.hypot(q[0] - H[0], q[1] - H[1]))
+        P = next(np.array(splines_xyz[s]) for s in splines_xyz if part[s] == leg + '_pinion')
+        pv = {'H': [round((H[2] + H[3]) / 2, 4), H[0], H[1]], 'K': [round((K[2] + K[3]) / 2, 4), K[0], K[1]],
+              'Q1': pin('gear', 'quad'), 'Q2': pin('quad', 'tibia'), 'A': pin('tibia', 'foot'), 'C': pin('femur', 'link'),
+              'Cp': pin('link', 'foot'), 'P': [round(float(P[0]), 4), round(float(P[1]), 5), round(float(P[2]), 5)]}
+        v = {k: np.array(q[1:]) for k, q in pv.items()}
+        err = np.linalg.norm((v['Q1'] - v['H']) - (v['Q2'] - v['K'])) + np.linalg.norm((v['K'] - v['H']) - (v['Q2'] - v['Q1']))
+        assert err < 0.01, '%s: hip-crank-Quad Link-knee loop is not a parallelogram (%.4f cm)' % (leg, err)
+        pivots[leg] = pv
+    return part, pivots
+
+
 def main():
     scan_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'analysis', 'screw_scan.json')
     scan = json.load(open(scan_path))
@@ -90,6 +145,8 @@ def main():
             u, p, _ = line_key(max(b['spline_cyls'], key=lambda h: h[6]))
             ivs = [line_key(h)[2] for h in b['spline_cyls'] if coaxial(u, p, *line_key(h)[:2])]
             splines[b['id']] = (u, p, [min(i[0] for i in ivs), max(i[1] for i in ivs)])
+    global splines_xyz                                  # spline id -> point on its axis at its mid-length (source, cm)
+    splines_xyz = {i: (p + u * (iv[0] + iv[1]) / 2).tolist() for i, (u, p, iv) in splines.items()}
     clusters = []                                       # greedy coaxial clustering of every hole line
     for b in bodies:
         for h in b.get('holes', []):
@@ -165,8 +222,10 @@ def main():
             d = -u if u[1] > 0 else u                  # source -y = model +x (forward)
             q = p + np.dot(np.array(centre(b)) - p, d) * d
             abd_axes[b['leg']] = {'point_cm': np.round(q, 5).tolist(), 'dir': np.round(d / np.linalg.norm(d), 6).tolist()}
+    part, pivots = mechanism(bodies, link, edges)
     out = {'scan': os.path.basename(scan_path), 'suppressed': scan.get('suppressed'), 'conflicts': conflicts,
            'links': {b['src']: [link[b['id']], b['vol']] for b in bodies}, 'abduction_axes': abd_axes,
+           'parts': {b['src']: part[b['id']] for b in bodies}, 'pivots': pivots,
            'moved_vs_previous_rule': moved,
            'edges': [[bodies[i]['src'], bodies[j]['src'], why] for i, j, why in edges if not (bodies[i]['src'].startswith(ELEC) and bodies[j]['src'].startswith(ELEC))]}
     assert sorted(abd_axes) == ['FL', 'FR', 'RL', 'RR'], abd_axes
@@ -181,6 +240,10 @@ def main():
         print('  %-66s %-9s -> %-9s %7.3f %s' % (m[0][:66], m[1], m[2], m[3], m[4] or ''))
     for leg, a in sorted(abd_axes.items()):
         print('  abduction', leg, a)
+    from collections import Counter
+    print('  parts:', dict(sorted(Counter(part.values()).items())))
+    for leg, pv in pivots.items():
+        print('  pivots', leg, {k: [round(c, 3) for c in q] for k, q in pv.items()})
     return out
 
 

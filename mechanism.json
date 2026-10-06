@@ -1,0 +1,103 @@
+{
+ "servo_map": {
+  "thigh": "pivot",
+  "calf": "-gear - pivot",
+  "foot": "f(calf)",
+  "gear_ratio": -1.0,
+  "note": "pitch angles about +y from the CAD stance; gear = 12:12 external mesh"
+ },
+ "legs": {
+  "FL": {
+   "foot_poly": [
+    0.000117,
+    0.358775,
+    -0.155189,
+    -0.037049,
+    0.007424
+   ],
+   "foot_fit_err_rad": 0.0006925702083904195,
+   "knee_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "upper_loop_range_rad": [
+    -1.3962,
+    1.3964
+   ],
+   "parallelogram_err_m": 2.9120439556945557e-06
+  },
+  "FR": {
+   "foot_poly": [
+    0.000117,
+    0.358775,
+    -0.155189,
+    -0.037049,
+    0.007424
+   ],
+   "foot_fit_err_rad": 0.0006925702083917518,
+   "knee_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "upper_loop_range_rad": [
+    -1.3962,
+    1.3964
+   ],
+   "parallelogram_err_m": 2.912043955698368e-06
+  },
+  "RL": {
+   "foot_poly": [
+    0.0,
+    -1.0,
+    0.0,
+    0.0,
+    -0.0
+   ],
+   "foot_fit_err_rad": 2.986499936241671e-14,
+   "knee_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "upper_loop_range_rad": [
+    -1.3963,
+    1.3963
+   ],
+   "parallelogram_err_m": 2.0000000001962892e-07
+  },
+  "RR": {
+   "foot_poly": [
+    0.0,
+    -1.0,
+    0.0,
+    -0.0,
+    -0.0
+   ],
+   "foot_fit_err_rad": 3.186340080674199e-14,
+   "knee_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "upper_loop_range_rad": [
+    -1.3963,
+    1.3963
+   ],
+   "parallelogram_err_m": 2.000000000335067e-07
+  }
+ }
+}

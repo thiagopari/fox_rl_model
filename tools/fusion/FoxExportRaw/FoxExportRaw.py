@@ -1,13 +1,13 @@
 # One-shot, READ-ONLY Fusion add-in. Copy this folder into
 #   <prefix>/drive_c/users/<you>/AppData/Roaming/Autodesk/Autodesk Fusion 360/API/AddIns/
 # start Fusion, wait for C:\fusion_jobs\export\raw.json, then delete the folder again (it runs at every start).
-# From 'Fox_Prototype_03_v6_RL_URDF_v2' it exports one binary STL per link (metres, model frame: x fwd, y left, z up),
+# From 'Fox_Prototype_03_v6_RL_Mechanism' it exports one binary STL per link (metres, model frame: x fwd, y left, z up),
 # each link's mass / COM / inertia (about the world origin, kg cm^2) and every joint's origin / axes / limits;
 # 'axis_measured' is the rotation axis recovered from the child's motion when the joint is turned by 0.1 rad.
 import adsk.core, adsk.fusion, json, math, os, threading, time, traceback
 
 OUT = r'C:\fusion_jobs\export'
-DOC_NAME = 'Fox_Prototype_03_v6_RL_URDF_v2'
+DOC_NAME = 'Fox_Prototype_03_v6_RL_Mechanism'
 EVT = 'FoxExportRawRun'
 _handlers, _res, _done = [], {}, threading.Event()
 
@@ -61,17 +61,22 @@ def _work():
     for i in range(root.asBuiltJoints.count):
         j = root.asBuiltJoints.item(i)
         g, lim = j.geometry, j.jointMotion.rotationLimits
-        j.jointMotion.rotationValue = 0.1
-        adsk.doEvents()
-        m = j.occurrenceOne.transform2.asArray()           # row-major; rotation part R, axis from its skew part
-        j.jointMotion.rotationValue = 0.0
-        adsk.doEvents()
+        try:                                               # loop pins may move other parts instead: then no axis
+            j.jointMotion.rotationValue = 0.1
+            adsk.doEvents()
+            m = j.occurrenceOne.transform2.asArray()       # row-major; rotation part R, axis from its skew part
+            j.jointMotion.rotationValue = 0.0
+            adsk.doEvents()
+        except Exception:
+            m = adsk.core.Matrix3D.create().asArray()
         w = [m[9] - m[6], m[2] - m[8], m[4] - m[1]]
-        n = math.sqrt(sum(c * c for c in w))
+        n = math.sqrt(sum(c * c for c in w)) or None
         joints.append({'name': j.name, 'child': j.occurrenceOne.component.name, 'parent': j.occurrenceTwo.component.name,
                        'origin_cm': v3(g.origin), 'primary': v3(g.primaryAxisVector), 'secondary': v3(g.secondaryAxisVector),
                        'third': v3(g.thirdAxisVector), 'type': j.jointMotion.objectType.split('::')[-1],
-                       'axis_measured': [c / n for c in w], 'measured_angle': math.asin(min(1.0, n / 2)),
+                       'axis_measured': [c / n for c in w] if n and n > 1e-4 else None,
+                       'measured_angle': math.asin(min(1.0, n / 2)) if n else 0.0,
+                       'motion_links': [[ml.jointOne.name, ml.jointTwo.name, ml.isReversed] for ml in j.motionLinks],
                        'lower': lim.minimumValue if lim.isMinimumValueEnabled else None,
                        'upper': lim.maximumValue if lim.isMaximumValueEnabled else None})
     _res.update({'doc_version': doc.dataFile.versionNumber, 'links': links, 'joints': joints, 'status': 'ok',

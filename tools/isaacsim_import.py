@@ -56,8 +56,9 @@ try:
     flat = Usd.Stage.Open(layer)  # keep a reference: a temporary stage expires mid-Traverse()
     for j in flat.Traverse():
         if j.IsA(UsdPhysics.RevoluteJoint):
-            UsdPhysics.DriveAPI(j, "angular").GetStiffnessAttr().Set(KP * DEG)
-            UsdPhysics.DriveAPI(j, "angular").GetDampingAttr().Set(KD * DEG)
+            foot = j.GetName().endswith("_foot_joint")  # passive: its <mimic> (NewtonMimicAPI) moves it with the knee
+            UsdPhysics.DriveAPI(j, "angular").GetStiffnessAttr().Set(0.0 if foot else KP * DEG)
+            UsdPhysics.DriveAPI(j, "angular").GetDampingAttr().Set(0.0 if foot else KD * DEG)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     layer.Export(OUT)
 except Exception as e:
@@ -94,9 +95,11 @@ if error is None:
                              "joint_friction": joints[0].GetAttribute("physxJoint:jointFriction").Get(),
                              "max_velocity_deg_s": joints[0].GetAttribute("physxJoint:maxJointVelocity").Get()},
         "file_size_MB": round(os.path.getsize(OUT) / 1e6, 2),
+        "foot_mimics": {p.GetName(): [p.GetAttribute("newton:mimicCoef1").Get(), [str(t) for t in p.GetRelationship("newton:mimicJoint").GetTargets()]]
+                        for p in joints if p.HasAPI("NewtonMimicAPI")},
     }
-ok = error is None and summary["rigid_bodies"] == 13 and len(summary["revolute_joints"]) == 12 \
-    and summary["colliders"] == 13 and summary["collider_approximations"] == ["convexHull"]
+ok = error is None and summary["rigid_bodies"] == 17 and len(summary["revolute_joints"]) == 16 \
+    and summary["colliders"] == 17 and summary["collider_approximations"] == ["convexHull"] and len(summary["foot_mimics"]) == 4
 config = {k: v for k, v in vars(cfg).items() if k != "usd_path"}
 config.update(output=OUT, stiffness_Nm_per_rad=KP, damping_Nms_per_rad=KD,
               post_fix="drive stiffness/damping re-set to KP*pi/180, KD*pi/180 on the flattened layer",

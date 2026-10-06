@@ -3,36 +3,37 @@
 # start Fusion, wait for C:\fusion_jobs\build_link_model.json, then delete the folder again (it runs at every start).
 #
 # Put link_map.json (written by tools/screw_graph.py from the FoxScrewScan hole scan) next to this file first.
-# From the design copy 'Fox_Prototype_03_v6_RL' it builds a NEW document (NEW_NAME) with:
-#   * one top-level component per RL link: base, {FL,FR,RL,RR}_{hip,thigh,calf}, made of the VISIBLE solid bodies
-#     (copied exactly in place), re-oriented to x-forward / y-left / z-up with the origin between the hips;
-#     which link a body joins comes from link_map.json: parts screwed together, or sitting on a servo spline, share a link;
+# From the design copy 'Fox_Prototype_03_v6_RL' it builds a NEW document (NEW_NAME), the full leg mechanism:
+#   * one top-level component per moving part: base + per leg {hip, pinion, gear, femur, quad, tibia, foot, link}, made of
+#     the VISIBLE solid bodies (copied exactly in place), re-oriented to x-forward / y-left / z-up, origin between the hips;
+#     which part a body joins comes from link_map.json: parts screwed together, or sitting on a servo spline, share a part;
 #   * materials: PLA 1.24 g/cm^3, DS-843MG servos 8.5 g each, electronics at typical real masses;
-#   * 12 revolute as-built joints (Unitree naming); joint frame = sketch circle on the pivot (Z = axis); the abduction
-#     axes are the real (tilted) hip-servo spline axes from link_map.json;
-#   * a verification that every joint rotates its child rigidly about the intended line.
-# The source is only changed in memory (UNJOIN) and closed without saving.
-# Pin axes (HIP, KNEE) and the sagittal plane (MID_X) are measured from the current CAD: update them if legs move.
+#   * 40 revolute as-built joints: per leg the 3 servo joints (hip = abduction about the tilted hip-servo spline,
+#     femur = pivot servo, pinion = gear servo) and 7 free pins (gear on the hip axis, crank pin, knee, Quad Link pin,
+#     foot-link pin, ankle, foot pin); the two pins that close the parallelogram and the foot four-bar make loops;
+#   * 4 motion links: gear-servo pinion -> 12-tooth crank gear, 1:1 reversed;
+#   * checks: each hip joint turns its leg rigidly; driving each servo keeps gear = -pinion, tibia || crank,
+#     Quad Link || femur (and rear foot || femur) - the parallelograms of the CAD.
+# The source is only changed in memory (UNJOIN) and closed without saving. Pins come from link_map.json 'pivots'.
 import adsk.core, adsk.fusion, json, math, os, threading, time, traceback
 
 DRY_RUN = False                       # True: build + verify, then discard instead of saving
 SOURCE_NAME = 'Fox_Prototype_03_v6_RL'
-NEW_NAME = 'Fox_Prototype_03_v6_RL_URDF_v2'
+NEW_NAME = 'Fox_Prototype_03_v6_RL_Mechanism'
 # Combine (join) features that fuse the rear hip brackets into the pelvis, which would stop them turning with their
 # abduction servos: suppressed in memory only (rear-left: 'Servo Pelv Upper'; rear-right: 'Component41(Mirror) (1)').
 UNJOIN = [('Combine1', 'Component41(Mirror) (1)'), ('Combine2', 'Component41(Mirror) (1)'), ('Combine2', 'Servo Pelv Upper')]
 MAP = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'link_map.json')))
 OUT = r'C:\fusion_jobs'
 MID_X, MID_Y = -2.476478, -8.6                           # sagittal plane x / front-rear split y (source frame, cm)
-HIP = {'F': (-17.076, 1.716), 'R': (0.000, 0.760)}      # hip-pitch pin axes (y, z), X-parallel
-KNEE = {'F': (-14.449, -5.309), 'R': (-3.807, -5.702)}  # knee pin axes (y, z)
-Z0 = (HIP['F'][1] + HIP['R'][1]) / 2
-LIMIT = {'hip': 0.5, 'thigh': 1.2, 'calf': 1.2}          # +- rad around the standing pose (placeholders)
+Z0 = (MAP['pivots']['FL']['H'][2] + MAP['pivots']['RL']['H'][2]) / 2   # hip-axis height of the model origin
+LIMIT = {'hip': 0.5, 'femur': 1.2, 'pinion': 1.2}        # servo joints, +- rad around the standing pose (placeholders)
 PLA, SERVO_G = 1.24, 8.5
 ELEC_G = {'Raspberry Pi 4 Model B': 46.0, '12Channel PWM v2': 9.0, 'XL4015 StepDown DC-DC 5A (CC-CV) v1': 16.0,
           'arduino nano': 7.0, 'Adafruit_BNO055_AP203': 3.0}
 LEGS = ['FL', 'FR', 'RL', 'RR']
-LINKS = ['base'] + ['%s_%s' % (l, p) for l in LEGS for p in ('hip', 'thigh', 'calf')]
+PARTS = ('hip', 'pinion', 'gear', 'femur', 'quad', 'tibia', 'foot', 'link')
+LINKS = ['base'] + ['%s_%s' % (l, p) for l in LEGS for p in PARTS]
 EVT = 'FoxBuildLinkModelRun'
 _handlers, _res, _done = [], {'checks': {}}, threading.Event()
 
@@ -77,7 +78,7 @@ def collect(src_root):  # every visible solid body, its link from link_map.json,
         src = (occ.fullPathName if occ else 'root') + '|' + body.name
         leaf = occ.component.name if occ else ''
         top = occ.fullPathName.split('+')[0].rsplit(':', 1)[0] if occ else ''
-        link, vol = MAP['links'].get(src, (None, 0.0))
+        link, vol = MAP['parts'].get(src), MAP['links'].get(src, (None, 0.0))[1]
         if link is None or abs(vol - body.volume) > 1e-4 + 1e-4 * body.volume:
             unmapped.append([src, round(body.volume, 5), vol])
         mat, group = 'pla', None
@@ -234,7 +235,7 @@ def _work():
                 except Exception:
                     pass
     occs['base'].isGrounded = True
-    check('all links have bodies', all(occs[l].component.bRepBodies.count for l in LINKS), {l: occs[l].component.bRepBodies.count for l in LINKS})
+    check('all parts have bodies', all(occs[l].component.bRepBodies.count for l in LINKS), {l: occs[l].component.bRepBodies.count for l in LINKS})
     base_mat = lib_material(app)
     if not check('library plastic material found', base_mat is not None):
         return
@@ -266,26 +267,45 @@ def _work():
         v = adsk.core.Vector3D.create(x, y, z)
         v.transformBy(M)
         return v
-    joints = []
+    joints = []        # (name, child, parent, pin point, axis, +-limit; None = free pin)
     for leg in LEGS:
-        end, ax = leg[0], MAP['abduction_axes'][leg]                          # hip-servo spline axis (source frame)
-        tx = occs[leg + '_thigh'].physicalProperties.centerOfMass.y + MID_X   # back to source x
-        cx = occs[leg + '_calf'].physicalProperties.centerOfMass.y + MID_X
-        joints += [(leg + '_hip_joint', leg + '_hip', 'base', P(*ax['point_cm']), V(*ax['dir']), LIMIT['hip']),
-                   (leg + '_thigh_joint', leg + '_thigh', leg + '_hip', P(tx, *HIP[end]), V(1, 0, 0), LIMIT['thigh']),
-                   (leg + '_calf_joint', leg + '_calf', leg + '_thigh', P(cx, *KNEE[end]), V(1, 0, 0), LIMIT['calf'])]
+        ax, pv, Y = MAP['abduction_axes'][leg], MAP['pivots'][leg], V(1, 0, 0)   # leg pins run along source x
+        pin = lambda k: P(*pv[k])
+        joints += [(leg + '_hip_joint', leg + '_hip', 'base', P(*ax['point_cm']), V(*ax['dir']), LIMIT['hip']),  # hip servo
+                   (leg + '_femur_joint', leg + '_femur', leg + '_hip', pin('H'), Y, LIMIT['femur']),            # pivot servo
+                   (leg + '_pinion_joint', leg + '_pinion', leg + '_hip', pin('P'), Y, LIMIT['pinion']),         # gear servo
+                   (leg + '_gear_joint', leg + '_gear', leg + '_hip', pin('H'), Y, None),
+                   (leg + '_crank_pin_joint', leg + '_quad', leg + '_gear', pin('Q1'), Y, None),
+                   (leg + '_knee_joint', leg + '_tibia', leg + '_femur', pin('K'), Y, None),
+                   (leg + '_quad_pin_joint', leg + '_tibia', leg + '_quad', pin('Q2'), Y, None),   # closes the parallelogram
+                   (leg + '_link_pin_joint', leg + '_link', leg + '_femur', pin('C'), Y, None),
+                   (leg + '_ankle_joint', leg + '_foot', leg + '_tibia', pin('A'), Y, None),
+                   (leg + '_foot_pin_joint', leg + '_foot', leg + '_link', pin('Cp'), Y, None)]    # closes the foot four-bar
+    J = {}
     for jn, child, parent, p, v, lim in joints:
         sk, circ = pivot_circle(nroot, jn, p, v)
         ji = nroot.asBuiltJoints.createInput(occs[child], occs[parent],
                                              adsk.fusion.JointGeometry.createByCurve(circ, adsk.fusion.JointKeyPointTypes.CenterKeyPoint))
         ji.setAsRevoluteJointMotion(adsk.fusion.JointDirections.ZAxisJointDirection)
-        j = nroot.asBuiltJoints.add(ji)
+        j = J[jn] = nroot.asBuiltJoints.add(ji)
         j.name = jn
-        rl = j.jointMotion.rotationLimits
-        rl.isMinimumValueEnabled, rl.minimumValue = True, -lim
-        rl.isMaximumValueEnabled, rl.maximumValue = True, lim
-        rl.isRestValueEnabled, rl.restValue = True, 0.0
+        if lim:
+            rl = j.jointMotion.rotationLimits
+            rl.isMinimumValueEnabled, rl.minimumValue = True, -lim
+            rl.isMaximumValueEnabled, rl.maximumValue = True, lim
+            rl.isRestValueEnabled, rl.restValue = True, 0.0
         sk.isVisible = False
+    for leg in LEGS:   # the gear servo's pinion meshes with the 12-tooth crank gear: 1:1, opposite direction
+        mi = nroot.motionLinks.createInput(J[leg + '_pinion_joint'], J[leg + '_gear_joint'])
+        mi.valueOne = adsk.core.ValueInput.createByString('360 deg')
+        mi.valueTwo = adsk.core.ValueInput.createByString('360 deg')
+        mi.isReversed = True
+        nroot.motionLinks.add(mi).name = leg + ' gear mesh 1-1'
+    adsk.doEvents()
+    sick = [o.name for o in list(nroot.asBuiltJoints) + list(nroot.motionLinks)
+            if o.timelineObject and o.timelineObject.healthState != adsk.fusion.FeatureHealthStates.HealthyFeatureHealthState]
+    check('40 joints + 4 gear motion links, all healthy', nroot.asBuiltJoints.count == 40 and nroot.motionLinks.count == 4 and not sick,
+          {'joints': nroot.asBuiltJoints.count, 'motion_links': nroot.motionLinks.count, 'unhealthy': sick})
 
     def far_vertices(occ):
         for bi in range(occ.bRepBodies.count):
@@ -298,30 +318,64 @@ def _work():
         w = adsk.core.Vector3D.create(q.x - p.x, q.y - p.y, q.z - p.z)
         t = w.dotProduct(a)
         return math.sqrt(max(w.length ** 2 - t * t, 0.0)), t
-    for jn, child, parent, p, v, lim in joints:
-        j = nroot.asBuiltJoints.itemByName(jn)
+
+    def rot_y(occ):    # pitch rotation of a part about model +y, from its placement
+        m = occ.transform2.asArray()
+        return math.atan2(m[2], m[0])
+
+    def drive(jn, value):
+        J[jn].jointMotion.rotationValue = value
+        adsk.doEvents()
+    _res['drive_tests'] = {}
+    for leg in LEGS:
+        # hip servo: the whole leg turns rigidly about the tilted spline axis
+        jn, child, parent, p, v, lim = joints[LEGS.index(leg) * 10]
         a = v.copy()
         a.normalize()
-        before = [q.copy() for q in far_vertices(occs[child])]
-        j.jointMotion.rotationValue = 0.2
-        adsk.doEvents()
-        after = [q.copy() for q in far_vertices(occs[child])]
-        j.jointMotion.rotationValue = 0.0
-        adsk.doEvents()
-        back = [q.copy() for q in far_vertices(occs[child])]
+        before = [q.copy() for q in far_vertices(occs[leg + '_foot'])]
+        drive(jn, 0.2)
+        after = [q.copy() for q in far_vertices(occs[leg + '_foot'])]
+        drive(jn, 0.0)
+        back = [q.copy() for q in far_vertices(occs[leg + '_foot'])]
         err = max([max(abs(radial(qb, p, a)[0] - radial(qa, p, a)[0]), abs(radial(qb, p, a)[1] - radial(qa, p, a)[1]))
                    for qb, qa in zip(before, after)] or [99.0])
-        moved = any(qb.distanceTo(qa) > 1e-3 for qb, qa in zip(before, after))
-        returned = all(qb.distanceTo(qc) < 1e-4 for qb, qc in zip(before, back))
-        check(jn, err < 1e-4 and moved and returned, {'rigid_rotation_err_cm': round(err, 6)})
-    check('12 joints', nroot.asBuiltJoints.count == 12, nroot.asBuiltJoints.count)
+        check(jn + ' turns the leg rigidly', err < 1e-3 and any(qb.distanceTo(qa) > 1e-3 for qb, qa in zip(before, after))
+              and all(qb.distanceTo(qc) < 1e-3 for qb, qc in zip(before, back)), {'rigid_rotation_err_cm': round(err, 6)})
+        # Drive the servos and the knee; the CAD's parallelograms must hold in every state. With the other servo free,
+        # Fusion swings the whole leg rigidly; holding it (limits squeezed to +-1e-4 rad) shows the powered behaviour.
+        def hold(jn, on):
+            rl = J[leg + jn].jointMotion.rotationLimits
+            rl.minimumValue, rl.maximumValue = (-1e-4, 1e-4) if on else (-LIMIT[jn[1:-6]], LIMIT[jn[1:-6]])
+        st, seq = {}, [('start', []), ('gear servo +0.2, femur free', [('_pinion_joint', 0.2)]),
+                       ('gear servo +0.2, femur held', [('_pinion_joint', 0.0), ('hold', '_femur_joint'), ('_pinion_joint', 0.2)]),
+                       ('pivot servo +0.2, pinion held', [('_pinion_joint', 0.0), ('free', '_femur_joint'), ('hold', '_pinion_joint'),
+                                                          ('_femur_joint', 0.2)]),
+                       ('knee +0.3', [('_femur_joint', 0.0), ('free', '_pinion_joint'), ('_knee_joint', 0.3)]),
+                       ('knee -0.3', [('_knee_joint', -0.3)]),
+                       ('end', [('_knee_joint', 0.0), ('_femur_joint', 0.0), ('_pinion_joint', 0.0)])]
+        for tag, steps in seq:
+            for a, b in steps:
+                if a in ('hold', 'free'):
+                    hold(b, a == 'hold')
+                else:
+                    drive(leg + a, b)
+            st[tag] = {q: rot_y(occs[leg + '_' + q]) for q in PARTS}
+            st[tag].update({k + '_joint': J[leg + '_' + k + '_joint'].jointMotion.rotationValue for k in ('femur', 'pinion', 'gear', 'knee')})
+        rear = leg[0] == 'R'
+        worst = max(max(abs(s['gear'] + s['pinion']), abs(s['tibia'] - s['gear']), abs(s['quad'] - s['femur']),
+                        abs(s['foot'] - s['femur']) if rear else 0.0, abs(s['link'] - s['tibia']) if rear else 0.0) for s in st.values())
+        bent = all(abs(st[t]['tibia'] - st[t]['femur'] - v) < 0.01 for t, v in (('knee +0.3', 0.3), ('knee -0.3', -0.3)))
+        home = max(abs(x) for x in st['end'].values()) < 1e-3
+        _res['drive_tests'][leg] = {t: {k: round(x, 5) for k, x in s.items()} for t, s in st.items()}
+        check(leg + ' mechanism: gear 1:1 reversed, tibia || crank, Quad Link || femur' + (', foot || femur' if rear else '') + ' while the knee bends',
+              worst < 5e-3 and bent and home, {'worst_rad': round(worst, 6), 'knee_bends': bent, 'home': home})
 
 
 def _finish():
     new_doc, folder, src_doc = _res.pop('new_doc', None), _res.pop('folder', None), _res.pop('src_doc', None)
     ok = _res['checks'] and all(v['ok'] for v in _res['checks'].values()) and not _res.get('status', '').startswith(('ABORT', 'retry'))
     if new_doc and ok and not DRY_RUN:
-        _res['saved'] = new_doc.saveAs(_res['new_name'], folder, 'RL link+joint model from %s v%s' % (SOURCE_NAME, _res.get('source_version')), '')
+        _res['saved'] = new_doc.saveAs(_res['new_name'], folder, 'RL leg mechanism (servos, gears, linkages) from %s v%s' % (SOURCE_NAME, _res.get('source_version')), '')
         _res['status'] = 'ok'
     elif new_doc:
         _res['status'] = 'ok (dry run, discarded)' if ok else 'FAILED CHECKS: new document discarded'

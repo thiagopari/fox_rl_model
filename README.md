@@ -7,10 +7,10 @@ modified. Previous checkpoint (screw-consistent serial model): git tag `checkpoi
 
 ## The leg mechanism (what each servo does)
 Per leg, three DS-843MG servos sit in the hip bracket:
-* **Hip servo** (inboard): turns the whole leg about its own spline axis = abduction. The axes are tilted in the CAD:
+* **Hip servo** (servo 3, inboard): turns the whole leg about its own spline axis = abduction. The axes are tilted in the CAD:
   front (0.985, 0, −0.174), rear (0.940, 0, 0.342).
-* **Pivot servo** ("adjacent"): its spline carries the **femur** (hip axis H).
-* **Gear servo** ("outer"): its spline carries a 12-tooth pinion that drives a 12-tooth gear on the same hip axis H
+* **Pivot servo** (servo 2, "adjacent"): its spline carries the **femur** (hip axis H); it is not attached to the gear.
+* **Gear servo** (servo 1, "outer", the front-most on FL): its spline carries a 12-tooth pinion that drives a 12-tooth gear on the same hip axis H
   (module 1.5 mm, centre distance 18.00 mm, so **1:1, opposite direction**; the CAD names it "15 teeth", the geometry has
   12). The gear's crank arm (H→Q1, 15 mm) moves the **Quad Link** (Q1→Q2, 75 mm) which moves the **tibia** at Q2.
   Hip–crank–Quad Link–knee is an exact **parallelogram** (femur 75.0 mm = Quad Link, crank 15.0 mm = tibia offset), so the

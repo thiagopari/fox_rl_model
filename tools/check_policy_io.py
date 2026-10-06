@@ -3,7 +3,8 @@
 the sim supplies what the Pi would read (gyro, gravity direction, the remote's command), FoxPolicy builds the
 observation and runs the ONNX file (onnx's reference evaluator here, onnxruntime on the Pi), and its outputs drive the
 simulated robot. Passes when FoxPolicy's observation equals Isaac Lab's, its actions equal the PyTorch policy's, its
-output order matches the env's servo joints, and the robot follows 0.2 m/s forward, then a 0.6 rad/s turn.
+output order matches the env's servo joints, and driven by it the robot walks forward (0.2 m/s commanded) and turns
+(0.6 rad/s) at least half as fast as commanded (how accurately is fox_play.py --eval's job).
 
     OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v3/model_1999.pt
 (add --device cpu when the GPU is busy: one robot runs fine on CPU PhysX)
@@ -35,10 +36,15 @@ from isaaclab_tasks.utils import load_cfg_from_registry, parse_env_cfg  # noqa: 
 
 sys.path[:0] = [os.path.join(ROOT, "isaaclab"), os.path.join(ROOT, "deploy")]
 import fox_tasks  # noqa: E402,F401
-from fox_pi import SERVOS, FoxPolicy, onnx_infer  # noqa: E402
+from fox_pi import SERVOS, FoxPolicy, hips_free, onnx_infer  # noqa: E402
 
 env_cfg = parse_env_cfg(TASK, device=args.device, num_envs=1)
-env_cfg.commands.base_velocity.resampling_time_range = (1.0e9, 1.0e9)
+cmd_cfg = env_cfg.commands.base_velocity
+cmd_cfg.resampling_time_range, cmd_cfg.rel_standing_envs = (1.0e9, 1.0e9), 0.0
+# start on COMMANDS[0], so FoxPolicy and the sim's FoxServoAction apply the hip rule to the same command from step 0. (A
+# command changed between steps is gated again by the sim's action term; COMMANDS go straight -> turning, where that
+# is a no-op. The Pi gates once, with the command it read.)
+cmd_cfg.ranges.lin_vel_x, cmd_cfg.ranges.lin_vel_y, cmd_cfg.ranges.ang_vel_z = ((v, v) for v in COMMANDS[0])
 agent_cfg = handle_deprecated_rsl_rl_cfg(load_cfg_from_registry(TASK, "rsl_rl_cfg_entry_point"), metadata.version("rsl-rl-lib"))
 agent_cfg.device = args.device
 env = RslRlVecEnvWrapper(gym.make(TASK, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
@@ -65,14 +71,16 @@ obs_err, act_err, vel = 0.0, 0.0, []
 for k in range(STEPS * len(COMMANDS)):
     with torch.inference_mode():
         obs_err = max(obs_err, float(np.abs(obs["policy"][0].cpu().numpy() - pi.obs[0]).max()))
-        act_err = max(act_err, float(np.abs(policy(obs)[0].cpu().numpy() - pi.action).max()))
+        a_torch = policy(obs)[0].cpu().numpy()
+        a_torch[:4] *= hips_free(cmd_term.vel_command_b[0].cpu().numpy())                       # hips held when straight
+        act_err = max(act_err, float(np.abs(a_torch - pi.action).max()))
         cmd_term.vel_command_b[:] = torch.tensor(COMMANDS[k // STEPS], device=u.device)          # the remote
         obs, _, _, _ = env.step(torch.tensor(pi.action[None], device=u.device))                 # the Pi code drives
     pi.step(*readings())
     if k % STEPS >= STEPS // 2:
         vel.append([float(robot.data.root_lin_vel_b.torch[0, 0]), float(robot.data.root_ang_vel_b.torch[0, 2])])
 vel = np.array(vel).reshape(len(COMMANDS), -1, 2).mean(1)
-walks = abs(vel[0, 0] - COMMANDS[0][0]) < 0.04 and abs(vel[1, 1] - COMMANDS[1][2]) < 0.12
+walks = vel[0, 0] > 0.5 * COMMANDS[0][0] and vel[1, 1] > 0.5 * COMMANDS[1][2]   # it walks; accuracy: fox_play --eval
 
 print("CHECK observation: %d floats, max |Isaac Lab - FoxPolicy| = %.2e" % (pi.obs.size, obs_err))
 print("CHECK FoxPolicy (ONNX) vs PyTorch policy: max |action difference| = %.2e" % act_err)

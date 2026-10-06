@@ -20,6 +20,7 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.sim import SimulationCfg
 from isaaclab.utils.configclass import configclass
 from isaaclab.utils.noise import UniformNoiseCfg as Unoise
+from isaaclab.utils.string import ResolvableString
 from isaaclab_physx.physics import PhysxCfg
 from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg
 import isaaclab_tasks.manager_based.locomotion.velocity.config.spot.mdp as spot_mdp
@@ -112,7 +113,7 @@ class FoxBlindObsCfg:
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
         projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
-        actions = ObsTerm(func=mdp.last_action)
+        actions = ObsTerm(func=mdp.last_action, params={"action_name": "joint_pos"})   # as sent: hips 0 when held
 
         def __post_init__(self):
             self.enable_corruption, self.concatenate_terms = True, True
@@ -127,7 +128,7 @@ class FoxBlindObsCfg:
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
         joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
-        actions = ObsTerm(func=mdp.last_action)
+        actions = ObsTerm(func=mdp.last_action, params={"action_name": "joint_pos"})
 
         def __post_init__(self):
             self.enable_corruption, self.concatenate_terms = False, True
@@ -167,6 +168,11 @@ class FoxBlindEnvCfg(FoxFlatEnvCfg):
             "asset_cfg": SceneEntityCfg("robot", joint_names=SERVO_JOINTS), "operation": "scale", "distribution": "uniform",
             "stiffness_distribution_params": (0.8, 1.2), "damping_distribution_params": (0.7, 1.3)})
         # v2 under-turned by 12 % (0.8 -> 0.71 rad/s): a 0.1 rad/s yaw error cost only 6 % of a lenient term
+        # v4: forward / backward / standing without moving the hips (FoxServoAction), trained on 30 % straight commands
+        # (fox_mdp.py is imported by name when the env is built: subclassing Isaac Lab's action / command terms imports
+        # USD, which must not load before the simulator starts, and fox_train.py imports this file before that)
+        self.actions.joint_pos.class_type = ResolvableString("fox_mdp:FoxServoAction")
+        self.commands.base_velocity.class_type = ResolvableString("fox_mdp:FoxVelocityCommand")
         self.rewards.track_ang_vel_z_exp.weight, self.rewards.track_ang_vel_z_exp.params["std"] = 1.0, 0.3
 
 

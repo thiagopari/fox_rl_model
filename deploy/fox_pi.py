@@ -48,7 +48,8 @@ DT, MAX_TARGET = 0.02, 0.8   # 50 Hz like training; |target| clamp in rad (train
 class FoxPolicy:
     """policy.onnx's contract, checked in Isaac Lab by tools/check_policy_io.py. Observation (105 floats): per term the
     last 5 readings, oldest first: gyro (rad/s, body), gravity direction (unit, (0, 0, -1) level), command (vx, vy m/s,
-    yaw rad/s), its own previous raw output (12). Output: servo targets = 0.25 * output (rad from the stance), SERVOS order."""
+    yaw rad/s), its own previous output as sent (12). Output: servo targets = 0.25 * output (rad from the stance), SERVOS
+    order. For straight commands (no sideways, no turning) the hip outputs are set to 0: the hips hold the stance."""
 
     H, SCALE = 5, 0.25
 
@@ -58,17 +59,24 @@ class FoxPolicy:
     def reset(self, gyro, gravity, command):
         self.hist = [collections.deque([np.array(x, np.float32)] * self.H, maxlen=self.H)    # copies: callers may
                      for x in (gyro, gravity, command, np.zeros(12))]                              # reuse their buffers
-        return self._act()
+        return self._act(command)
 
     def step(self, gyro, gravity, command):
         for h, x in zip(self.hist, (gyro, gravity, command, self.action)):
             h.append(np.array(x, np.float32))
-        return self._act()
+        return self._act(command)
 
-    def _act(self):
+    def _act(self, command):
         self.obs = np.concatenate([np.concatenate(h) for h in self.hist])[None]
-        self.action = np.asarray(self.infer(self.obs), np.float32).reshape(12)   # raw output: what the policy observes next
+        self.action = np.array(self.infer(self.obs), np.float32).reshape(12)     # as sent: what the policy observes next
+        if not hips_free(command):
+            self.action[:4] = 0.0
         return self.SCALE * self.action
+
+
+def hips_free(command):
+    """Sideways or turning asked for; otherwise the hips hold the stance (= isaaclab/fox_mdp.py hips_free)."""
+    return abs(command[1]) > 1e-3 or abs(command[2]) > 1e-3
 
 
 def onnx_infer(path):

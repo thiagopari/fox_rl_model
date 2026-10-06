@@ -113,6 +113,9 @@ def evaluate(env, policy, term):
     feet, _ = cs.find_bodies(".*_foot")
     steps, swings, taps = [], [], 0
     down = cs.data.current_contact_time.torch[:, feet] > 0
+    act = u.action_manager.get_term("joint_pos")
+    hip_a, hip_j = [i for i, n in enumerate(act._joint_names) if n.endswith("_hip_joint")], robot.find_joints(".*_hip_joint")[0]
+    hip_target = hip_angle = 0.0
     for c in ((0.0, 0.0, 0.0), (0.2, 0.0, 0.0), (0.3, 0.0, 0.0), (-0.2, 0.0, 0.0), (0.0, 0.15, 0.0), (0.0, 0.0, 0.8), (0.2, 0.0, 0.5)):
         acc, falls = [], 0
         for k in range(200):
@@ -127,6 +130,9 @@ def evaluate(env, policy, term):
                 swings += cs.data.last_air_time.torch[:, feet][first].tolist()
             if k >= 100 and not any(c):                      # standing still = no steps
                 taps += int(first.sum())
+            if k >= 100 and any(c) and not any(c[1:]):       # forward / backward: the hips should not move
+                hip_target = max(hip_target, float(act.processed_actions[:, hip_a].abs().max()))
+                hip_angle = max(hip_angle, float(robot.data.joint_pos.torch[:, hip_j].abs().max()))
             if k >= 100:
                 acc.append(torch.cat([robot.data.root_lin_vel_b.torch[:, :2], robot.data.root_ang_vel_b.torch[:, 2:]], 1).mean(0))
         got = torch.stack(acc).mean(0).cpu().numpy()
@@ -137,6 +143,7 @@ def evaluate(env, policy, term):
     print("[EVAL] SCORE mean |error|: vx %.3f m/s  vy %.3f m/s  yaw %.3f rad/s  | falls %d" % (*e, total_falls), flush=True)
     print("[EVAL] SMOOTH mean servo-command change %.4f rad/step | mean foot swing %.3f s (%d steps) | at zero command %.1f steps/foot/s"
           % (np.mean(steps), np.mean(swings) if swings else 0.0, len(swings), taps / (u.num_envs * len(feet) * 100 * u.step_dt)), flush=True)
+    print("[EVAL] HIPS forward/backward: max hip target %.4f rad | max hip joint angle %.4f rad" % (hip_target, hip_angle), flush=True)
     env.close()
 
 

@@ -71,10 +71,10 @@
   "pendulum: pivot +0.3, gear -0.3": {
    "FL": {
     "swing_rad": 0.3,
-    "extension_m": -0.0,
+    "extension_m": 0.0,
     "femur_rad": 0.3,
     "shin_rad": 0.3,
-    "knee_rad": -0.0,
+    "knee_rad": 0.0,
     "gear_rad": 0.3
    },
    "FR": {
@@ -82,23 +82,23 @@
     "extension_m": -0.0,
     "femur_rad": 0.3,
     "shin_rad": 0.3,
-    "knee_rad": -0.0,
+    "knee_rad": 0.0,
     "gear_rad": 0.3
    },
    "RL": {
     "swing_rad": 0.3,
-    "extension_m": 0.0,
+    "extension_m": -0.0,
     "femur_rad": 0.3,
     "shin_rad": 0.3,
-    "knee_rad": -0.0,
+    "knee_rad": 0.0,
     "gear_rad": 0.3
    },
    "RR": {
     "swing_rad": 0.3,
-    "extension_m": 0.0,
+    "extension_m": -0.0,
     "femur_rad": 0.3,
     "shin_rad": 0.3,
-    "knee_rad": -0.0,
+    "knee_rad": 0.0,
     "gear_rad": 0.3
    }
   }
@@ -109,9 +109,9 @@
   "pivot +a with gear -a: rigid pendulum swing (knee fixed, hip-foot length kept)": true,
   "reduced tree matches the exact mechanism (feet < 1 mm, standing height < 1 mm)": true
  },
- "reduced_vs_exact_max_foot_error_m": 3.6614960915995366e-05,
+ "reduced_vs_exact_max_foot_error_m": 6.580534138389939e-06,
  "standing_base_z_m": {
-  "scene.xml": 0.14501,
-  "scene_reduced.xml": 0.14555
+  "scene.xml": 0.14808,
+  "scene_reduced.xml": 0.1485
  }
 }

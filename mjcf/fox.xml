@@ -4,7 +4,7 @@
   <default>
     <joint armature="0.0005" damping="0.01" frictionloss="0.002"/>
     <default class="pin"><joint armature="1e-06" damping="0.0001" frictionloss="0"/></default>
-    <position kp="2" kv="0.05" forcerange="-0.47 0.47" inheritrange="1"/>
+    <position kp="5" kv="0.08" forcerange="-0.47 0.47" inheritrange="1"/>
     <equality solref="0.004 1" solimp="0.999 0.9999 0.0005 0.5 2"/>
     <default class="visual"><geom type="mesh" contype="0" conaffinity="0" group="2" density="0"/></default>
     <default class="collision"><geom type="mesh" contype="1" conaffinity="0" group="3" density="0" friction="1.0 0.02 0.01" condim="3"/></default>

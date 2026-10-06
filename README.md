@@ -43,6 +43,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `usd/fox.usd` | Isaac Sim 6.0.1 import of the URDF (foot drives zeroed, mimics kept as `NewtonMimicAPI`) |
 | `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles |
 | `isaaclab/fox_sim.py` | launches the robots in Isaac Lab (GUI or headless) and drives the servos |
+| `isaaclab/fox_tasks.py`, `fox_train.py`, `fox_play.py` | RL walking task (`Fox-Velocity-Flat`), PPO training, keyboard driving of the trained policy |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
 | `raw/` | raw Fusion export (per-part STLs + `raw.json` with masses, inertia, 40 joints, motion links) |
@@ -139,9 +140,10 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
    both rear brackets into the pelvis in the design copy; the builders suppress them **in memory only**.
 3. **Limits are placeholders**: servos ±1.2 rad (hip ±0.5), knee capped by the loop dead points (above). Measure the real
    servo travel (DS-843MG ~±60°) and mechanical stops.
-4. **Actuators**: DS-843MG at 6 V, 0.47 N·m stall, 10.5 rad/s; PD kp 2.0 / kd 0.05 per servo, armature 5e-4 (estimate).
-   kp 2.0 is soft: the robot sags 8 mm when standing (the pivot and gear servos share the knee load through the
-   parallelogram). Raise kp after bench tests.
+4. **Actuators**: DS-843MG at 6 V, 0.47 N·m stall, 10.5 rad/s; PD kp 5.0 / kd 0.08 per servo (a hobby servo reaches
+   stall within ~5° of error), armature 5e-4 (estimate). The first guess, kp 2.0, was too soft: randomized robots tipped
+   over just standing. The robot sags 4.7 mm when standing. Replace with bench-test values (step response) before
+   sim-to-real.
 5. **Isaac foot mimic** is the linear part of the four-bar: exact on the rear; front error 0.015 rad within ±0.3 rad of
    knee motion, 0.06 rad at ±0.6, 0.27 rad at ±1.2 (the MuJoCo models use the full quartic).
 6. **Battery**: hidden in the CAD, not modelled. Add its mass to `base` when known.
@@ -169,6 +171,21 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
   out of memory; PhysX GPU buffers are shrunk in `fox_sim.py` (the defaults reserve ~1 GB); don't switch "Simulation
   Output" to USD in the GUI (deadlocks Isaac Sim 6.0.1).
 * Hardware: send pivot = thigh, gear = −thigh − knee (radians from the stance, then your servo's zero/scale/direction).
+
+## RL walking + keyboard teleop (Isaac Lab)
+* Task `Fox-Velocity-Flat` (`isaaclab/fox_tasks.py`): Isaac Lab's quadruped velocity task (Go1 recipe) on flat ground,
+  re-scaled for this robot: actions = the 12 servo targets (±0.25 rad around the stance), commands vx ±0.3 m/s,
+  vy ±0.2 m/s, yaw ±1 rad/s, 50 Hz policy / 200 Hz physics, mass +0.2 kg / COM / friction / push randomization.
+  Changes that made it learn: a fall penalty + small alive bonus, a 10× smaller joint-acceleration penalty (the 2–3 g
+  links accelerate a lot), initial action noise 0.5 (1.0 knocks the robot over in 0.5 s), stiffer servos (above).
+* Train (headless, ~15 min for 1000 iterations on this laptop, 2048 robots):
+  `cd ~/Documents/fox_rl_model && ~/isaacenv/bin/python isaaclab/fox_train.py --task Fox-Velocity-Flat --headless`
+  → `logs/rsl_rl/fox_flat/<date>/model_*.pt` (TensorBoard: `logs/rsl_rl/fox_flat`).
+* Drive: `~/isaacenv/bin/python isaaclab/fox_play.py` → click the viewport, hold W/S (forward/back), A/D (sideways),
+  Q/E (turn), L = stop; the camera follows the robot. `--eval --headless --num_envs 16` prints commanded vs achieved
+  velocities instead. It also exports `exported/policy.onnx` next to the checkpoint (for the Pi).
+* Body names: feet `.*_foot`, undesired contacts `.*_thigh|.*_calf`; the USD's bodies are flattened (Isaac Lab's
+  contact sensor only sees direct children of one parent; the Isaac Sim 6 importer nests them).
 
 ## Regenerate
 Each `tools/fusion/*` folder is a one-shot add-in: copy it into Fusion's `API/AddIns`, start Fusion, wait for its result

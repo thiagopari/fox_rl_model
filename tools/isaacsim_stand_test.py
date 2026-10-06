@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Headless Isaac Sim 6.0 test of usd/fox.usd (reduced tree + foot mimics) driven like the real robot: one saturated
-PD per servo (hip / pivot / gear, kp 2.0, kd 0.05, 0.47 N m), mapped onto the joints by the servo map
+PD per servo (hip / pivot / gear, kp 5.0, kd 0.08, 0.47 N m), mapped onto the joints by the servo map
     thigh = pivot, calf = -gear - pivot  ->  tau_thigh = t_pivot - t_gear, tau_calf = -t_gear   (= isaaclab/fox_cfg.py)
 Two robots, GPU PhysX at 200 Hz:
   /World/fox       on the ground (base at z=0.155), all servos at 0 for 3 s: must stand
@@ -36,7 +36,7 @@ REPORT = os.path.join(ROOT, "validation", "isaacsim_report.json")
 PNG = os.path.join(ROOT, "validation", "isaacsim_stand.png")
 MECH = json.load(open(os.path.join(ROOT, "mechanism.json")))
 DT, Z0 = 1.0 / 200.0, 0.155  # feet are 0.1528 m below the base origin at the zero pose
-KP, KD, TMAX, ARM = 2.0, 0.05, 0.47, 0.0005
+KP, KD, TMAX, ARM = 5.0, 0.08, 0.47, 0.0005
 LEGS = ("FL", "FR", "RL", "RR")
 EXPECTED = ["%s_%s_joint" % (leg, part) for leg in LEGS for part in ("hip", "thigh", "calf", "foot")]
 

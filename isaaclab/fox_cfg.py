@@ -85,8 +85,8 @@ FOX_SERVO_CFG = FoxServoActuatorCfg(
     effort_limit=0.47,      # per servo (stall); lower it for a continuous rating after bench tests
     effort_limit_sim=2.0,   # PhysX joint clip above the mapped torques (thigh gets pivot - gear: up to 0.94 N m)
     velocity_limit=10.5,
-    stiffness=2.0,          # servo PD gains, same as the MuJoCo models (N m / rad, N m s / rad)
-    damping=0.05,
+    stiffness=5.0,          # servo PD gains (N m / rad, N m s / rad), same as the MuJoCo models: a DS-843MG reaches
+    damping=0.08,           # stall within ~5 deg of error (~5 N m/rad); kp 2 was too soft (randomized robots tipped over)
     friction=0.0,
     armature=0.0005,        # reflected rotor inertia estimate for a geared hobby servo (helps solver stability)
 )

@@ -248,12 +248,28 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
   contact sensor only sees direct children of one parent; the Isaac Sim 6 importer nests them).
 
 ## On the robot (Raspberry Pi)
-Copy `deploy/fox_pi.py` and a policy's `policy.onnx` + `policy.onnx.data` to the Pi. Same I2C stack as
-`~/robofox_leg_imu_calibration.py`, plus `pip install numpy onnxruntime` (64-bit Pi OS has onnxruntime wheels; without it the script falls back to `onnx`'s slower reference evaluator).
-`python3 fox_pi.py policy.onnx --dry-run` runs anywhere without hardware.
+Status: verified only against the simulator (`tools/check_policy_io.py`); it has not run on the Pi or the servos yet.
+0. **Setup, once:**
+   * **OS:** 64-bit Raspberry Pi OS (`uname -m` prints `aarch64`), which has onnxruntime wheels. Without
+     onnxruntime the script falls back to `onnx`'s slower reference evaluator.
+   * **I2C:** enable it (`sudo raspi-config` → Interface Options → I2C). `i2cdetect -y 1` must show `28` (BNO055)
+     and `40` (PCA9685).
+   * **Python:** the environment `~/robofox_leg_imu_calibration.py` ran in (Blinka, `adafruit-circuitpython-pca9685`,
+     `-bno055`, `-motor`), plus `pip install numpy onnxruntime`. On Bookworm, use a venv:
+     `python3 -m venv --system-site-packages ~/fox`.
+   * **Power:** the servos get their own 6 V supply into the PCA9685's V+ terminal, never the Pi's 5 V pin. Budget
+     about 1 A per servo at peak, and share ground with the Pi. The policy was trained on the 6 V torque and speed;
+     brown-outs reset the Pi and the PCA9685.
+   * **Copy:** `scp deploy/fox_pi.py policies/fox_flat_blind_v4/policy.onnx policies/fox_flat_blind_v4/policy.onnx.data
+     pi@<pi>:~/fox/`. The `.data` file must sit next to the `.onnx`.
+   * **Smoke test:** `python3 fox_pi.py policy.onnx --dry-run` (no hardware) must report 0 steps over the 20 ms budget.
+     On the robot it prints the same count. If the servo writes push the loop over budget, the I2C bus is too slow.
 1. **Calibrate** the constants at the top of `fox_pi.py`:
    * `--check-imu`: fix `IMU_TO_BODY` until level reads gravity (0, 0, −1), nose down gives x > 0, left side down
      gives y > 0, and turning left gives gyro z > 0. The default assumes the January script's upside-down mount.
+     The gyro must read rad/s: about one turn per second by hand should show ~6, not ~360 (old adafruit_bno055
+     releases used deg/s). Frequent "no IMU reading" errors mean the BNO055's clock stretching is failing: lower the
+     bus speed (`dtparam=i2c_arm_baudrate=50000` in `/boot/firmware/config.txt`).
    * `--wiggle FL_hip` (and the other 11), with the robot held in the air: if the wrong servo moves, fix `CHANNEL`
      (the hip/pivot/gear order inside each leg's block is a guess); if it moves the wrong way, fix `DIRECTION`. The
      script prints which way + should go.

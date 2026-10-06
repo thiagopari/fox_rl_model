@@ -103,13 +103,14 @@ class Robot:
     """BNO055 + PCA9685 through Adafruit Blinka, as in ~/robofox_leg_imu_calibration.py."""
 
     def __init__(self):
+        import adafruit_bno055
         import board
         import busio
-        from adafruit_bno055 import BNO055_I2C
         from adafruit_motor import servo
         from adafruit_pca9685 import PCA9685
         i2c = busio.I2C(board.SCL, board.SDA)
-        self.imu = BNO055_I2C(i2c)
+        self.imu = adafruit_bno055.BNO055_I2C(i2c)
+        self.imu.mode = adafruit_bno055.IMUPLUS_MODE    # gyro + accelerometer fusion: no magnetometer near the servo motors
         self.pca = PCA9685(i2c, address=0x40)
         self.pca.frequency = 50
         self.servos = [servo.Servo(self.pca.channels[CHANNEL[n]], min_pulse=500, max_pulse=2500) for n in SERVOS]
@@ -117,7 +118,10 @@ class Robot:
 
     def read(self):
         """(gyro rad/s, gravity unit vector pointing down), body frame; None when the BNO055 drops a reading."""
-        gyro, grav = self.imu.gyro, self.imu.gravity
+        try:
+            gyro, grav = self.imu.gyro, self.imu.gravity
+        except OSError:                                 # BNO055 clock stretching vs the Pi's I2C: retry
+            return None
         if None in gyro or None in grav or not any(grav):
             return None
         down = -(self.rot @ np.array(grav, float))      # the BNO055 reports gravity pointing up (+z when level)

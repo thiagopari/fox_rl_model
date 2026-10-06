@@ -12,6 +12,8 @@ GEAR SERVO angles (rad from the CAD stance), runs one saturated PD per servo, an
 joints (virtual work):  tau_hip = t_hip,  tau_thigh = t_pivot - t_gear,  tau_calf = -t_gear.
 The foot joints carry no actuator; their <mimic> constraint (NewtonMimicAPI in the USD) moves them.
 Body names for the velocity task: base = "base", feet = ".*_foot", undesired contacts = ".*_thigh|.*_calf".
+FOX_SERVO_REAL_CFG adds what the hardware does on top (FOX_SERVO_CFG is the ideal servo): command latency, gear backlash
+(free play) and the DC motor's torque-speed line, each episode drawn at random within the cfg's bounds.
 
 USD: tools/isaacsim_import.py writes usd/fox.usd (Isaac Sim 6.0.1 URDF importer, foot drives zeroed). Runs under
 Isaac Lab 3.0.0-beta2 (isaaclab/fox_sim.py); the servo map is also checked in MuJoCo (tools/mechanism_mujoco.py), Isaac Sim
@@ -27,6 +29,7 @@ import isaaclab.sim as sim_utils
 from isaaclab.actuators import ActuatorBase, ActuatorBaseCfg
 from isaaclab.assets.articulation import ArticulationCfg
 from isaaclab.utils import configclass
+from isaaclab.utils.buffers import DelayBuffer
 from isaaclab.utils.types import ArticulationActions
 
 FOX_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,9 +47,17 @@ class FoxServoActuator(ActuatorBase):
         names = list(self.joint_names)
         pick = lambda part: [names.index("%s_%s_joint" % (leg, part)) for leg in LEGS]  # noqa: E731
         self._hip, self._thigh, self._calf = pick("hip"), pick("thigh"), pick("calf")
+        self._delay = DelayBuffer(cfg.max_delay, self._num_envs, device=self._device)
+        self._play = torch.zeros(self._num_envs, 3 * len(LEGS), device=self._device)   # backlash of each servo, this episode
+        self._play_max = torch.tensor(cfg.backlash, device=self._device).repeat_interleave(len(LEGS))
 
     def reset(self, env_ids):
-        pass
+        n = self._num_envs if env_ids is None or env_ids == slice(None) else len(env_ids)
+        ids = slice(None) if env_ids is None else env_ids
+        self._delay.set_time_lag(torch.randint(self.cfg.min_delay, self.cfg.max_delay + 1, (n,), dtype=torch.int,
+                                               device=self._device), env_ids)
+        self._delay.reset(env_ids)
+        self._play[ids] = torch.rand(n, 3 * len(LEGS), device=self._device) * self._play_max
 
     def servo_angles(self, joint_pos: torch.Tensor) -> torch.Tensor:
         """(num_envs, 12) servo angles [hip, pivot, gear] x legs from joint angles (also for observations / hardware)."""
@@ -54,11 +65,16 @@ class FoxServoActuator(ActuatorBase):
                           -(joint_pos[:, self._thigh] + joint_pos[:, self._calf])], dim=1)
 
     def compute(self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor) -> ArticulationActions:
-        tgt = control_action.joint_positions
+        tgt = self._delay.compute(control_action.joint_positions)      # command latency (physics steps)
         idx = self._hip + self._thigh + self._calf      # servo k drives through joint idx[k] (gains/limits per servo)
-        kp, kd, lim = self.stiffness[:, idx], self.damping[:, idx], self.effort_limit[:, idx]
+        kp, kd, lim, vmax = self.stiffness[:, idx], self.damping[:, idx], self.effort_limit[:, idx], self.velocity_limit[:, idx]
         s, v = self.servo_angles(joint_pos), self.servo_angles(joint_vel)
-        t = torch.clamp(kp * (tgt[:, idx] - s) - kd * v, -lim, lim)
+        e = tgt[:, idx] - s
+        t = torch.where(e.abs() < self._play, 0.0, kp * (e - torch.sign(e) * self._play) - kd * v)   # free play: no torque
+        if self.cfg.torque_speed:                       # DC motor: stall torque at rest, none at the no-load speed
+            t = torch.clamp(t, -lim * torch.clamp(1.0 + v / vmax, 0.0, 1.0), lim * torch.clamp(1.0 - v / vmax, 0.0, 1.0))
+        else:
+            t = torch.clamp(t, -lim, lim)
         n = len(LEGS)
         t_hip, t_pivot, t_gear = t[:, :n], t[:, n:2 * n], t[:, 2 * n:]
         effort = torch.zeros_like(joint_pos)
@@ -76,6 +92,10 @@ class FoxServoActuator(ActuatorBase):
 @configclass
 class FoxServoActuatorCfg(ActuatorBaseCfg):
     class_type: type = FoxServoActuator
+    min_delay: int = 0                  # command latency in physics steps (5 ms), drawn per episode in [min, max]
+    max_delay: int = 0
+    backlash: tuple = (0.0, 0.0, 0.0)   # max free play of the hip / pivot / gear servos (rad), drawn per episode in [0, max]
+    torque_speed: bool = False          # limit torque by speed: stall torque at rest, 0 at velocity_limit (no-load speed)
 
 
 # Corona DS-843MG at 6 V: 0.47 N m stall, 0.10 s / 60 deg (10.5 rad/s). The 12:12 gear passes the gear servo's torque
@@ -90,6 +110,10 @@ FOX_SERVO_CFG = FoxServoActuatorCfg(
     friction=0.0,
     armature=0.0005,        # reflected rotor inertia estimate for a geared hobby servo (helps solver stability)
 )
+# The hardware, as far as it is known before bench tests (measure and set these): Pi -> PCA9685 at 50 Hz -> digital servo
+# is 5-25 ms of command latency (sensor lag included); metal servo gears have ~1 deg of play, and the printed 12T gear
+# pair adds ~1 deg on the gear servo.
+FOX_SERVO_REAL_CFG = FOX_SERVO_CFG.replace(min_delay=1, max_delay=5, backlash=(0.02, 0.02, 0.04), torque_speed=True)
 
 FOX_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(

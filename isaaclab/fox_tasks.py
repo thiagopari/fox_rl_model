@@ -2,7 +2,8 @@
 
 Registers  Fox-Velocity-Flat             training (2048 robots, randomized); policy sees joint states + body velocity
            Fox-Velocity-Flat-Blind       hardware-ready: the policy sees only the IMU (gyro, gravity), the command and
-                                         its own last servo commands (5-step history); smoother, trotting gait
+                                         its own last servo commands (5-step history); realistic servos (latency,
+                                         backlash, torque-speed line, gain spread); smooth trot, stands at zero command
            Fox-...-Play variants         driving / evaluation (few robots, no pushes or noise)
 Built on Isaac Lab's quadruped velocity task (the Go1 recipe), re-scaled for a 0.54 kg, 15 cm tall robot. The policy
 outputs the 12 SERVO targets (hip, pivot, gear servo angles around the stance, scale 0.25 rad) that FoxServoActuator
@@ -11,6 +12,7 @@ Train with isaaclab/fox_train.py, drive with isaaclab/fox_play.py.
 """
 import gymnasium as gym
 
+from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
@@ -24,7 +26,7 @@ import isaaclab_tasks.manager_based.locomotion.velocity.config.spot.mdp as spot_
 import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
 from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
 
-from fox_cfg import FOX_CFG
+from fox_cfg import FOX_CFG, FOX_SERVO_REAL_CFG
 
 SERVO_JOINTS = [".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"]   # = hip / pivot / gear servo targets
 
@@ -158,6 +160,14 @@ class FoxBlindEnvCfg(FoxFlatEnvCfg):
             "synced_feet_pair_names": (("FL_foot", "RR_foot"), ("FR_foot", "RL_foot")),   # diagonal pairs = trot
             "asset_cfg": SceneEntityCfg("robot"), "sensor_cfg": SceneEntityCfg("contact_forces")})
         self.commands.base_velocity.rel_standing_envs = 0.2                                # more practice standing still
+        # the servos as the hardware has them (fox_cfg.FOX_SERVO_REAL_CFG): 5-25 ms latency, gear backlash, torque falling
+        # with speed, and each servo's gains off by up to 20-30 % (unknown internal controller), redrawn every episode
+        self.scene.robot.actuators = {"servos": FOX_SERVO_REAL_CFG}
+        self.events.servo_gains = EventTerm(func=mdp.randomize_actuator_gains, mode="reset", params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names=SERVO_JOINTS), "operation": "scale", "distribution": "uniform",
+            "stiffness_distribution_params": (0.8, 1.2), "damping_distribution_params": (0.7, 1.3)})
+        # v2 under-turned by 12 % (0.8 -> 0.71 rad/s): a 0.1 rad/s yaw error cost only 6 % of a lenient term
+        self.rewards.track_ang_vel_z_exp.weight, self.rewards.track_ang_vel_z_exp.params["std"] = 1.0, 0.3
 
 
 @configclass
@@ -174,7 +184,7 @@ class FoxBlindEnvCfg_PLAY(FoxBlindEnvCfg):
 
 @configclass
 class FoxBlindPPORunnerCfg(FoxFlatPPORunnerCfg):
-    max_iterations = 1500
+    max_iterations = 2000                    # the realistic servos take longer to learn
     experiment_name = "fox_flat_blind"
     obs_groups = {"actor": ["policy"], "critic": ["critic"]}
 

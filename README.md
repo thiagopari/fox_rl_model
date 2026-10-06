@@ -41,15 +41,15 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `mjcf/fox_reduced.xml`, `scene_reduced.xml` | the same robot as a tree (17 bodies): gear servo on a fixed tendon (−thigh − calf), foot via a four-bar joint equality; matches the exact model |
 | `urdf/fox.urdf` | that tree for Isaac (URDF cannot hold loops): 17 links, 16 revolute joints; foot joints are `<mimic>` of the knee |
 | `usd/fox.usd` | Isaac Sim 6.0.1 import of the URDF (foot drives zeroed, mimics kept as `NewtonMimicAPI`) |
-| `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles |
+| `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles; `FOX_SERVO_REAL_CFG` adds latency, backlash and the torque-speed line |
 | `isaaclab/fox_sim.py` | launches the robots in Isaac Lab (GUI or headless) and drives the servos |
 | `isaaclab/fox_tasks.py`, `fox_train.py`, `fox_play.py` | RL walking tasks (`Fox-Velocity-Flat`, hardware-ready `Fox-Velocity-Flat-Blind`), PPO training, keyboard driving + eval |
-| `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2` = current), each with its ONNX export and config |
+| `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2`, `fox_flat_blind_v3` = current), each with its ONNX export and config |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
 | `raw/` | raw Fusion export (per-part STLs + `raw.json` with masses, inertia, 40 joints, motion links) |
 | `analysis/` | hole/pin scan of the CAD (`screw_scan.json`) and the part map (`link_map.json`) |
-| `tools/` | `screw_graph.py`, `build_robot.py`, MuJoCo + Isaac checks, Fusion add-ins |
+| `tools/` | `screw_graph.py`, `build_robot.py`, MuJoCo + Isaac checks, `check_policy_io.py` (the Pi's policy interface), Fusion add-ins |
 | `validation/` | reports + renders |
 
 Fusion documents (cloud, work › Default Project):
@@ -185,23 +185,50 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
 * Hardware-ready task `Fox-Velocity-Flat-Blind`: the policy sees only what the robot has (IMU gyro + gravity direction,
   the remote's command, its own last servo commands, 5-step history); the critic sees the full state (training only).
   Gait rewards: action-rate penalty, diagonal trot (Spot's `GaitReward`), Spot's `air_time_reward` (each foot phase
-  ~0.15 s; zero command = all feet down, even when drifting). `fox_train.py --task Fox-Velocity-Flat-Blind --headless`, ~20 min.
-* Drive: `~/isaacenv/bin/python isaaclab/fox_play.py --checkpoint policies/fox_flat_blind_v2/model_1499.pt` → click the
+  ~0.15 s; zero command = all feet down, even when drifting). `fox_train.py --task Fox-Velocity-Flat-Blind --headless`, ~30 min.
+* Since v3 the blind task (training, play and eval) uses realistic servos, `FOX_SERVO_REAL_CFG`, each drawn at random
+  per robot and episode:
+  * 5–25 ms command latency (Pi → PCA9685 at 50 Hz → servo, sensor lag included);
+  * backlash up to 0.02 rad on the hip and pivot servos, and 0.04 rad on the gear servo (the printed gear pair adds play);
+  * torque that falls linearly from the stall torque at rest to zero at the no-load speed (DS-843MG: 0.47 N·m, 10.5 rad/s);
+  * servo gains off by up to ±20 % (kp) and ±30 % (kd).
+
+  These are estimates: put bench-test values into `fox_cfg.py`. The ideal servo (`FOX_SERVO_CFG`) stays in `Fox-Velocity-Flat`.
+* Drive: `~/isaacenv/bin/python isaaclab/fox_play.py --checkpoint policies/fox_flat_blind_v3/model_1999.pt` → click the
   viewport, hold W/S (forward/back), A/D (sideways), Q/E (turn), L = stop; the camera follows the robot. For v1 add
   `--task Fox-Velocity-Flat-Play`. `--eval --headless --num_envs 16` prints commanded vs achieved velocities instead.
   It also exports `exported/policy.onnx` next to the checkpoint (for the Pi).
 * Policies (`policies/*`: `model_*.pt`, `policy.onnx` for the Pi, `params/` = exact env + agent config), `--eval` results
   (16 robots, 7 commands × 4 s, mean |error| over the last 2 s of each):
 
-  | Policy | Policy sees | Error vx / vy / yaw | Servo-command change | Swing | At zero command |
-  |---|---|---|---|---|---|
-  | `fox_flat_v1` | joint encoders + body velocity | 0.008 / 0.008 m/s / 0.014 rad/s | 0.082 rad/step | 0.072 s | steps 3.4/s, holds position |
-  | `fox_flat_blind_v1` | IMU only | 0.011 / 0.019 / 0.027 | 0.067 | 0.075 s | marches 7.4/s, drifts 8 cm/s |
-  | **`fox_flat_blind_v2`** | IMU only | 0.006 / 0.007 / 0.037 (under-turns ~12%) | 0.059 | 0.107 s | stands (1.4 steps/s, 0.2 cm/s) |
+  | Policy | Policy sees | Eval servos | Error vx / vy / yaw | Servo-command change | Swing | At zero command |
+  |---|---|---|---|---|---|---|
+  | `fox_flat_v1` | joint encoders + body velocity | ideal | 0.008 / 0.008 m/s / 0.014 rad/s | 0.082 rad/step | 0.072 s | steps 3.4/s, holds position |
+  | `fox_flat_blind_v1` | IMU only | ideal | 0.011 / 0.019 / 0.027 | 0.067 | 0.075 s | marches 7.4/s, drifts 8 cm/s |
+  | `fox_flat_blind_v2` | IMU only | ideal | 0.006 / 0.007 / 0.037 (under-turns 12 %) | 0.059 | 0.107 s | stands (1.4 steps/s, 0.2 cm/s) |
+  | `fox_flat_blind_v2` | IMU only | realistic | 0.016 / 0.010 / 0.042 (0.3 → 0.26 m/s, 0.8 → 0.68 rad/s) | 0.059 | 0.104 s | stands (2.3 steps/s) |
+  | **`fox_flat_blind_v3`** | IMU only | realistic | 0.008 / 0.006 / 0.025 (0.3 → 0.27 m/s, 0.8 → 0.83 rad/s) | 0.042 | 0.132 s | stands (0.5 steps/s, 0.2 cm/s) |
 
-  Blind v1 trotted at 7 Hz because the trot term's timing error is in seconds (short phases score best), and its
-  step-length term was mostly silent (below). v2's first try at zero command drifted at 0.13 m/s, just above the
-  0.1 m/s "moving" threshold, to keep the walking rewards; the threshold is now 1.0 m/s.
+  No policy fell in any eval. Why each version changed:
+  * Blind v1 trotted at 7 Hz. The trot term's timing error is in seconds, so short phases score best, and its
+    step-length term was mostly silent (bug below).
+  * v2's first try drifted at 0.13 m/s at zero command, just above the 0.1 m/s "moving" threshold, to keep the
+    walking rewards. The threshold is now 1.0 m/s.
+  * v3 was trained on realistic servos with a tighter yaw term (weight 1.0, std 0.3), for 2000 iterations.
+  * The top speed of about 0.27 m/s is the speed-limited servos: v2 loses 15 % of its speed on them.
+* Running a blind policy on the Pi (`policy.onnx`, 105 inputs → 12 outputs, no input normalization):
+  * Observation: for each term, its last 5 readings, oldest first, terms in this order:
+    * `[0:15]` gyro (rad/s);
+    * `[15:30]` gravity direction as a unit vector, (0, 0, −1) standing level. An accelerometer or the BNO055 gravity
+      output reads +z when level, so negate and normalise it;
+    * `[30:45]` command (vx, vy m/s, yaw rate rad/s);
+    * `[45:105]` the policy's own previous 12 outputs.
+  * Frames are body frame: x forward, y left, z up (rotate the IMU's axes into it). At start, fill the history with
+    the first reading 5 times.
+  * Outputs: servo target = 0.25 × output (rad from the CAD stance), in this order: hip FL, FR, RL, RR, then pivot
+    FL…RR, then gear FL…RR. Then apply each servo's zero, direction and µs/rad.
+  * Check: `tools/check_policy_io.py <model.pt>` rebuilds this vector from raw signals, and runs the ONNX file
+    against the PyTorch policy (v3: identical observation, actions within 4e-7).
 * Isaac Lab 3.0-beta2 bug: `ContactSensor.compute_first_contact` never fires 2–16 s into an episode (float32 sensor time
   vs a 1e-8 tolerance), so the stock `feet_air_time` reward (still in `Fox-Velocity-Flat`) is silent most of each
   episode. The blind task uses `air_time_reward` instead, and `--eval` counts touchdowns from contact-state changes.
@@ -238,9 +265,12 @@ All checks pass (reports in `validation/`):
 | Isaac Sim: stands 4 s with the servo map (GPU PhysX, 200 Hz) | base 0.155 → 0.14684 m, upright 0.999514 |
 | Isaac Sim: servo map in PhysX (held robot) + foot mimics | gear → shin −0.30, pivot → femur +0.30, pendulum; mimic error 0.0015 rad |
 | `FoxServoActuator.compute()` vs the servo map | 1e-8 N·m, power balance holds |
+| `FOX_SERVO_REAL_CFG`: latency, backlash, torque-speed line (`tools/test_fox_actuator.py`) | target delayed exactly N steps, no torque within the play, half the stall torque at half the no-load speed |
+| Policy interface for the Pi (`tools/check_policy_io.py`, v3) | observation rebuilt from raw signals = Isaac Lab's (0 error); ONNX = PyTorch (3.6e-7) |
 | Isaac Lab 3.0.0-beta2 (`isaaclab/fox_sim.py`, 4 robots, servo motions) | runs headless and in the Kit viewer; all upright (≥ 0.945) |
 
 Renders: `validation/mujoco_servo_roles.png` (rows: gear servo, pivot servo, pendulum), `mujoco_hip_abduction.png`,
 `mujoco_front_left.png`, `mujoco_poses.png`, `isaacsim_stand.png`.
 Re-run: `~/.venvs/fox_rl/bin/python tools/validate_mujoco.py`, `tools/mechanism_mujoco.py`, `tools/pose_test_mujoco.py`,
-`tools/random_actions_mujoco.py`; `~/isaacenv/bin/python tools/test_fox_actuator.py`; Isaac Sim as above.
+`tools/random_actions_mujoco.py`; `~/isaacenv/bin/python tools/test_fox_actuator.py`; Isaac Sim as above;
+`OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v3/model_1999.pt`.

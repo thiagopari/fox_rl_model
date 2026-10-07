@@ -117,8 +117,8 @@ def onnx_infer(path):
 
 
 def servo_deg(name, rad):
-    lo, hi = LIMIT_DEG[name]
-    return min(hi, max(lo, NEUTRAL_DEG[name] + DIRECTION[name] * DEG_PER_RAD * rad))
+    lo, hi = LIMIT_DEG[name]                         # and the servo's own 0-180 (adafruit_motor raises outside it)
+    return min(hi, 180.0, max(lo, 0.0, NEUTRAL_DEG[name] + DIRECTION[name] * DEG_PER_RAD * rad))
 
 
 class Robot:

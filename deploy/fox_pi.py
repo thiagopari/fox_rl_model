@@ -141,7 +141,9 @@ class Imu:
         import busio
         self.i2c = i2c or busio.I2C(board.SCL, board.SDA)
         self.imu = adafruit_bno055.BNO055_I2C(self.i2c)
-        self.imu.mode = adafruit_bno055.IMUPLUS_MODE    # gyro + accelerometer fusion: no magnetometer near the servo motors
+        if self.imu.mode != adafruit_bno055.IMUPLUS_MODE:   # gyro + accelerometer fusion: no magnetometer near the servo
+            self.imu.mode = adafruit_bno055.IMUPLUS_MODE    # motors. A mode write restarts the fusion (zeros, ~0.1 s): skip
+                                                            # it when set, so a second program can't upset a running one
         self.rot = IMU_LEVEL @ np.array(IMU_TO_BODY, float)
 
     def read(self):
@@ -239,10 +241,14 @@ def read_retry(robot):
     raise RuntimeError("no IMU reading for 0.5 s")
 
 
-def walk(robot, policy, steps=None, hold_at_end=False):
+def walk(robot, policy, steps=None, hold_at_end=False, log=None):
     """50 Hz policy loop. Ends limp (Ctrl-C, tilt, errors); with hold_at_end a run that reaches `steps` instead ends
-    at home and leaves the servos holding (the PCA9685 keeps pulsing after the program exits)."""
-    keys, overruns, k, finished = Keys(), 0, 0, False
+    at home and leaves the servos holding (the PCA9685 keeps pulsing after the program exits). log: CSV path, one row
+    per step (time, gyro, gravity, command, servo targets in deg)."""
+    keys, overruns, k, finished, tilted = Keys(), 0, 0, False, 0
+    out = open(log, "w") if log else None
+    if out:
+        out.write("t,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,cmd_vx,cmd_vy,cmd_yaw," + ",".join(SERVOS) + "\n")
     try:
         targets = policy.reset(*read_retry(robot), keys.cmd)
         tick = time.perf_counter()
@@ -255,10 +261,16 @@ def walk(robot, policy, steps=None, hold_at_end=False):
             else:
                 overruns += 1
             gyro, down = read_retry(robot)
-            if down[2] > -0.5:                          # tilted past 60 deg: fallen over
+            tilted = tilted + 1 if down[2] > -0.5 else 0
+            if tilted >= 3:                             # past 60 deg for 3 readings (60 ms): fallen over, not a glitch
                 print("tilted over: stopping")
                 break
-            targets = policy.step(gyro, down, keys.poll())
+            cmd = keys.poll()
+            targets = policy.step(gyro, down, cmd)
+            if out:
+                out.write("%.4f,%s,%s,%s,%s\n" % (time.perf_counter(), ",".join("%.4f" % v for v in gyro),
+                          ",".join("%.4f" % v for v in down), ",".join("%.2f" % v for v in cmd),
+                          ",".join("%.1f" % servo_deg(n, t) for n, t in zip(SERVOS, np.clip(targets, -MAX_TARGET, MAX_TARGET)))))
             k += 1
         finished = steps is not None and k >= steps
     finally:
@@ -268,7 +280,9 @@ def walk(robot, policy, steps=None, hold_at_end=False):
             print("time up: servos back at home and still holding (limp them with fox_calib.py L, or power)")
         else:
             robot.limp()
-        print("%d steps, %d over the 20 ms budget" % (k, overruns))
+        print("%d steps, %d over the 20 ms budget%s" % (k, overruns, "; log: " + log if log else ""))
+        if out:
+            out.close()
 
 
 def main():
@@ -280,6 +294,7 @@ def main():
     p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
     p.add_argument("--set", metavar="SERVO=DEG", help="move one servo straight to DEG from its centre, hold 2 s, limp")
     p.add_argument("--seconds", type=float, help="run the policy this long, then return to home and keep holding")
+    p.add_argument("--log", metavar="CSV", help="policy run: write time, IMU, command and servo targets every step")
     p.add_argument("--stand", type=float, metavar="SECONDS", help="all servos to home (no policy), print the body tilt, limp")
     p.add_argument("--level-imu", type=float, metavar="SECONDS", help="stand at home, robot level and untouched: average the "
                    "IMU and save that reading as level (corrects a tilted IMU mount)")
@@ -346,7 +361,7 @@ def main():
         if a.wiggle or a.set or a.stand or (a.dry_run and (a.check_imu or a.level_imu)):
             robot.limp()
     steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
-    walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=steps, hold_at_end=bool(a.seconds))
+    walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=steps, hold_at_end=bool(a.seconds), log=a.log)
 
 
 if __name__ == "__main__":

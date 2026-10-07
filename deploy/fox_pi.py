@@ -239,8 +239,10 @@ def read_retry(robot):
     raise RuntimeError("no IMU reading for 0.5 s")
 
 
-def walk(robot, policy, steps=None):
-    keys, overruns, k = Keys(), 0, 0
+def walk(robot, policy, steps=None, hold_at_end=False):
+    """50 Hz policy loop. Ends limp (Ctrl-C, tilt, errors); with hold_at_end a run that reaches `steps` instead ends
+    at home and leaves the servos holding (the PCA9685 keeps pulsing after the program exits)."""
+    keys, overruns, k, finished = Keys(), 0, 0, False
     try:
         targets = policy.reset(*read_retry(robot), keys.cmd)
         tick = time.perf_counter()
@@ -258,9 +260,14 @@ def walk(robot, policy, steps=None):
                 break
             targets = policy.step(gyro, down, keys.poll())
             k += 1
+        finished = steps is not None and k >= steps
     finally:
         keys.close()
-        robot.limp()
+        if finished and hold_at_end:
+            robot.write(np.zeros(12))
+            print("time up: servos back at home and still holding (limp them with fox_calib.py L, or power)")
+        else:
+            robot.limp()
         print("%d steps, %d over the 20 ms budget" % (k, overruns))
 
 
@@ -272,6 +279,7 @@ def main():
     p.add_argument("--wiggle", choices=SERVOS, help="move one servo +/- around its centre (the others stay limp)")
     p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
     p.add_argument("--set", metavar="SERVO=DEG", help="move one servo straight to DEG from its centre, hold 2 s, limp")
+    p.add_argument("--seconds", type=float, help="run the policy this long, then return to home and keep holding")
     p.add_argument("--stand", type=float, metavar="SECONDS", help="all servos to home (no policy), print the body tilt, limp")
     p.add_argument("--level-imu", type=float, metavar="SECONDS", help="stand at home, robot level and untouched: average the "
                    "IMU and save that reading as level (corrects a tilted IMU mount)")
@@ -337,7 +345,8 @@ def main():
     finally:
         if a.wiggle or a.set or a.stand or (a.dry_run and (a.check_imu or a.level_imu)):
             robot.limp()
-    walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=150 if a.dry_run else None)
+    steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
+    walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=steps, hold_at_end=bool(a.seconds))
 
 
 if __name__ == "__main__":

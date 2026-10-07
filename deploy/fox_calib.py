@@ -64,6 +64,7 @@ def main():
         with open(CALIB_FILE) as f:
             saved = json.load(f)
     limits = {k: list(v) for k, v in saved.get("limit_deg", {}).items() if k in SERVOS}   # only the ones you set
+    stamp = os.path.getmtime(CALIB_FILE) if os.path.exists(CALIB_FILE) else None       # to spot edits made meanwhile
     now = {n: None for n in SERVOS}                                                       # None = limp
     hw, sel = Servos(args.dry_run), 0
 
@@ -71,10 +72,19 @@ def main():
         return limits.get(n, [NEUTRAL_DEG[n] - 50.0, NEUTRAL_DEG[n] + 50.0])
 
     def save():
+        """Write the file, unless something else changed it since this session loaded or saved it: then the session's
+        old copy would overwrite that change, so refuse (the caller says to restart)."""
+        nonlocal stamp
+        if (os.path.getmtime(CALIB_FILE) if os.path.exists(CALIB_FILE) else None) != stamp:
+            return False
         tmp = CALIB_FILE + ".tmp"
         with open(tmp, "w") as f:
             json.dump({"channel": CHANNEL, "home_deg": NEUTRAL_DEG, "direction": DIRECTION, "limit_deg": limits}, f, indent=1)
         os.replace(tmp, CALIB_FILE)
+        stamp = os.path.getmtime(CALIB_FILE)
+        return True
+
+    stale = "NOT SAVED: servo_calib.json was changed outside this session. Quit (q) and restart to load it"
 
     def go(n, deg):
         deg = min(180.0, max(0.0, round(float(deg), 1)))
@@ -157,26 +167,23 @@ def main():
                     msg = "move %s first: these keys record the angle it is at" % n
                 elif k == "h":
                     NEUTRAL_DEG[n] = now[n]
-                    save()
-                    msg = "home of %s = %.1f deg (saved)" % (n, now[n])
+                    msg = "home of %s = %.1f deg (saved)" % (n, now[n]) if save() else stale
                 else:
                     lo, hi = lim(n)
                     lo, hi = (now[n], max(hi, now[n])) if k == "<" else (min(lo, now[n]), now[n])
                     limits[n] = [lo, hi]
-                    save()
-                    msg = "range of %s = %.1f-%.1f deg (saved)" % (n, lo, hi)
+                    msg = "range of %s = %.1f-%.1f deg (saved)" % (n, lo, hi) if save() else stale
             elif k == "r":
                 DIRECTION[n] = -DIRECTION[n]
-                save()
-                msg = "direction of %s = %+d (saved)" % (n, DIRECTION[n])
+                msg = "direction of %s = %+d (saved)" % (n, DIRECTION[n]) if save() else stale
             elif k == "#":
                 v = ask("%s: channel (0-15, Enter; Esc cancels): " % n)
                 if v and v.isdigit() and 0 <= int(v) <= 15:
                     hw.limp(CHANNEL[n])
                     CHANNEL[n], now[n] = int(v), None
-                    save()
                     others = [m for m in SERVOS if m != n and CHANNEL[m] == int(v)]
-                    msg = "channel of %s = %s (saved)%s" % (n, v, "  WARNING: also used by " + ", ".join(others) if others else "")
+                    msg = ("channel of %s = %s (saved)%s" % (n, v, "  WARNING: also used by " + ", ".join(others) if others else "")
+                           if save() else stale)
                 else:
                     msg = "cancelled" if not v else "channel must be 0-15"
     finally:

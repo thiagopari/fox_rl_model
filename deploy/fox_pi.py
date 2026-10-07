@@ -253,6 +253,7 @@ def main():
     p.add_argument("--wiggle", choices=SERVOS, help="move one servo +/- around its centre (the others stay limp)")
     p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
     p.add_argument("--set", metavar="SERVO=DEG", help="move one servo straight to DEG from its centre, hold 2 s, limp")
+    p.add_argument("--stand", type=float, metavar="SECONDS", help="all servos to home (no policy), print the body tilt, limp")
     a = p.parse_args()
     if a.set and (a.set.split("=")[0] not in SERVOS or a.set.count("=") != 1):
         p.error("--set needs SERVO=DEG with SERVO one of %s" % ", ".join(SERVOS))
@@ -264,6 +265,16 @@ def main():
                 gyro, down = read_retry(robot)
                 print("gyro %+.2f %+.2f %+.2f rad/s   gravity %+.2f %+.2f %+.2f" % (*gyro, *down), flush=True)
                 time.sleep(0.2)
+        if a.stand:
+            print("all servos to home for %.0f s (no policy); body tilt from the IMU, level = 0 / 0" % a.stand, flush=True)
+            robot.write(np.zeros(12))
+            end = time.perf_counter() + a.stand
+            while time.perf_counter() < end:
+                down = read_retry(robot)[1]
+                print("  pitch %+5.1f deg (nose down +)   roll %+5.1f deg (left side down +)"
+                      % tuple(math.degrees(math.asin(np.clip(v, -1.0, 1.0))) for v in down[:2]), flush=True)
+                time.sleep(0.5)
+            return
         if a.set:
             name, deg = a.set.split("=")
             print("%s on channel %d -> %.1f deg (centre %.1f %+.0f), hold 2 s, then limp"
@@ -284,7 +295,7 @@ def main():
     except KeyboardInterrupt:
         return
     finally:
-        if a.check_imu or a.wiggle or a.set:
+        if a.check_imu or a.wiggle or a.set or a.stand:
             robot.limp()
     walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=150 if a.dry_run else None)
 

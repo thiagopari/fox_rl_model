@@ -184,11 +184,12 @@ class Keys:
 
 
 def read_retry(robot):
-    for _ in range(10):
+    for _ in range(25):                  # the BNO055 reads zeros for ~0.1 s after a mode change; I2C glitches
         r = robot.read()
         if r is not None:
             return r
-    raise RuntimeError("no IMU reading")
+        time.sleep(0.02)
+    raise RuntimeError("no IMU reading for 0.5 s")
 
 
 def walk(robot, policy, steps=None):

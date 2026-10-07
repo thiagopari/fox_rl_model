@@ -233,7 +233,10 @@ def main():
     p.add_argument("--check-imu", action="store_true", help="print body-frame gyro and gravity")
     p.add_argument("--wiggle", choices=SERVOS, help="move one servo +/- around its centre (the others stay limp)")
     p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
+    p.add_argument("--set", metavar="SERVO=DEG", help="move one servo straight to DEG from its centre, hold 2 s, limp")
     a = p.parse_args()
+    if a.set and (a.set.split("=")[0] not in SERVOS or a.set.count("=") != 1):
+        p.error("--set needs SERVO=DEG with SERVO one of %s" % ", ".join(SERVOS))
     robot = FakeRobot() if a.dry_run else Robot()
     try:
         if a.check_imu:
@@ -242,6 +245,13 @@ def main():
                 gyro, down = read_retry(robot)
                 print("gyro %+.2f %+.2f %+.2f rad/s   gravity %+.2f %+.2f %+.2f" % (*gyro, *down), flush=True)
                 time.sleep(0.2)
+        if a.set:
+            name, deg = a.set.split("=")
+            print("%s on channel %d -> %.1f deg (centre %.1f %+.0f), hold 2 s, then limp"
+                  % (name, CHANNEL[name], servo_deg(name, math.radians(float(deg))), NEUTRAL_DEG[name], float(deg)), flush=True)
+            robot.write_one(name, math.radians(float(deg)))
+            time.sleep(2.0)
+            return
         if a.wiggle:
             amp = math.radians(a.amplitude)
             print("%s on channel %d, centre %.1f deg, +/-%.0f deg; + means: %s"
@@ -255,7 +265,7 @@ def main():
     except KeyboardInterrupt:
         return
     finally:
-        if a.check_imu or a.wiggle:
+        if a.check_imu or a.wiggle or a.set:
             robot.limp()
     walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=150 if a.dry_run else None)
 

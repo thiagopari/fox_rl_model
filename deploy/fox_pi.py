@@ -18,7 +18,9 @@ FoxPolicy (no hardware) is the input/output contract; tools/check_policy_io.py r
 """
 import argparse
 import collections
+import json
 import math
+import os
 import select
 import sys
 import termios
@@ -39,6 +41,24 @@ NEUTRAL_DEG = {name: 90.0 for name in SERVOS}   # adafruit servo angle (0..180) 
 DIRECTION = {name: 1 for name in SERVOS}        # -1 where a larger servo angle turns the joint against the policy's +
 DEG_PER_RAD = 180.0 / math.pi                   # 500-2500 us = 180 deg (adafruit_motor); correct if the travel differs
 LIMIT_DEG = {name: (NEUTRAL_DEG[name] - 50.0, NEUTRAL_DEG[name] + 50.0) for name in SERVOS}   # never command beyond
+CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "servo_calib.json")   # written by fox_calib.py
+
+
+def load_calib(path=CALIB_FILE):
+    """Measured values from fox_calib.py override the guesses above: channel, home (deg), direction, limits (deg)."""
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        c = json.load(f)
+    known = lambda d: {k: v for k, v in d.items() if k in SERVOS}  # noqa: E731
+    CHANNEL.update({k: int(v) for k, v in known(c.get("channel", {})).items()})
+    NEUTRAL_DEG.update({k: float(v) for k, v in known(c.get("home_deg", {})).items()})
+    DIRECTION.update({k: 1 if v >= 0 else -1 for k, v in known(c.get("direction", {})).items()})
+    LIMIT_DEG.update({n: (NEUTRAL_DEG[n] - 50.0, NEUTRAL_DEG[n] + 50.0) for n in SERVOS})
+    LIMIT_DEG.update({k: (float(v[0]), float(v[1])) for k, v in known(c.get("limit_deg", {})).items()})
+
+
+load_calib()
 IMU_TO_BODY = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]   # BNO055 axes -> body (x fwd, y left, z up): upside-down mount,
 #   verified with --check-imu 2026-10-07 (nose down x +0.99, left side down y +1.00, CCW turn +93 deg, gyro in rad/s)
 PLUS = {"hip": "the foot moves to the robot's LEFT", "pivot": "the femur turns, knee moving BACK; the shin keeps its angle",

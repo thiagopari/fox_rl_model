@@ -44,6 +44,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `isaaclab/fox_cfg.py` | Isaac Lab `ArticulationCfg` + `FoxServoActuator`: targets on hip/thigh/calf joints are the hip/pivot/gear **servo** angles; `FOX_SERVO_REAL_CFG` adds latency, backlash and the torque-speed line |
 | `isaaclab/fox_sim.py` | launches the robots in Isaac Lab (GUI or headless) and drives the servos |
 | `isaaclab/fox_tasks.py`, `fox_mdp.py`, `fox_train.py`, `fox_play.py` | RL walking tasks (`Fox-Velocity-Flat`, hardware-ready `Fox-Velocity-Flat-Blind`), PPO training, keyboard driving + eval |
+| `deploy/fox_calib.py` | interactive servo calibration over SSH (angles, home, range, direction, channel → `servo_calib.json`) |
 | `deploy/fox_pi.py` | runs a policy on the robot: Raspberry Pi + BNO055 + PCA9685, 50 Hz, keyboard over SSH; calibration modes |
 | `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2`, `fox_flat_blind_v3`, `fox_flat_blind_v4` = current), each with its ONNX export and config |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
@@ -265,7 +266,13 @@ Status: verified only against the simulator (`tools/check_policy_io.py`); it has
      pi@<pi>:~/fox/`. The `.data` file must sit next to the `.onnx`.
    * **Smoke test:** `python3 fox_pi.py policy.onnx --dry-run` (no hardware) must report 0 steps over the 20 ms budget.
      On the robot it prints the same count. If the servo writes push the loop over budget, the I2C bus is too slow.
-1. **Calibrate** the constants at the top of `fox_pi.py`:
+1. **Calibrate** with `fox_calib.py`, an interactive tool: `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_calib.py'`.
+   * **Moving:** select a servo, then arrows move it ±1° (A/D ±5°) and `g` types an exact angle.
+   * **Recording:** `h` sets home (the CAD stance), `<` and `>` the safe range, `r` the direction, `#` the channel.
+   * **Saving:** everything goes to `servo_calib.json` next to `fox_pi.py`, which loads it at start.
+   * **Safety:** all servos are limp at start and on quit, and a servo's first move goes to its saved home.
+
+   Hips: don't assume 90°. The RL hip's 90° was past its outward stop. The steps below fill in the same values:
    * `--check-imu`: fix `IMU_TO_BODY` until level reads gravity (0, 0, −1), nose down gives x > 0, left side down
      gives y > 0, and turning left gives gyro z > 0. The default assumes the January script's upside-down mount.
      The gyro must read rad/s: about one turn per second by hand should show ~6, not ~360 (old adafruit_bno055

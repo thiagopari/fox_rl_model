@@ -132,21 +132,16 @@ def servo_deg(name, rad):
     return min(hi, 180.0, max(lo, 0.0, NEUTRAL_DEG[name] + DIRECTION[name] * DEG_PER_RAD * rad))
 
 
-class Robot:
-    """BNO055 + PCA9685 through Adafruit Blinka, as in ~/robofox_leg_imu_calibration.py."""
+class Imu:
+    """The BNO055 alone (--check-imu, --level-imu): never touches the PCA9685, so servos held by another program stay."""
 
-    def __init__(self):
+    def __init__(self, i2c=None):
         import adafruit_bno055
         import board
         import busio
-        from adafruit_motor import servo
-        from adafruit_pca9685 import PCA9685
-        i2c = busio.I2C(board.SCL, board.SDA)
-        self.imu = adafruit_bno055.BNO055_I2C(i2c)
+        self.i2c = i2c or busio.I2C(board.SCL, board.SDA)
+        self.imu = adafruit_bno055.BNO055_I2C(self.i2c)
         self.imu.mode = adafruit_bno055.IMUPLUS_MODE    # gyro + accelerometer fusion: no magnetometer near the servo motors
-        self.pca = PCA9685(i2c, address=0x40)
-        self.pca.frequency = 50
-        self.servos = [servo.Servo(self.pca.channels[CHANNEL[n]], min_pulse=500, max_pulse=2500) for n in SERVOS]
         self.rot = IMU_LEVEL @ np.array(IMU_TO_BODY, float)
 
     def read(self):
@@ -159,6 +154,18 @@ class Robot:
             return None
         down = -(self.rot @ np.array(grav, float))      # the BNO055 reports gravity pointing up (+z when level)
         return self.rot @ np.array(gyro, float), down / np.linalg.norm(down)
+
+
+class Robot(Imu):
+    """BNO055 + PCA9685 through Adafruit Blinka, as in ~/robofox_leg_imu_calibration.py."""
+
+    def __init__(self):
+        super().__init__()
+        from adafruit_motor import servo
+        from adafruit_pca9685 import PCA9685
+        self.pca = PCA9685(self.i2c, address=0x40)
+        self.pca.frequency = 50
+        self.servos = [servo.Servo(self.pca.channels[CHANNEL[n]], min_pulse=500, max_pulse=2500) for n in SERVOS]
 
     def write(self, targets):
         # ponytail: 12 single-channel I2C writes (~1 ms each); batch them if the loop overruns
@@ -271,7 +278,7 @@ def main():
     a = p.parse_args()
     if a.set and (a.set.split("=")[0] not in SERVOS or a.set.count("=") != 1):
         p.error("--set needs SERVO=DEG with SERVO one of %s" % ", ".join(SERVOS))
-    robot = FakeRobot() if a.dry_run else Robot()
+    robot = FakeRobot() if a.dry_run else Imu() if (a.check_imu or a.level_imu) else Robot()
     try:
         if a.check_imu:
             print("expect: level -> gravity (0, 0, -1); nose down -> x > 0; left side down -> y > 0; turn left -> gyro z > 0")
@@ -280,9 +287,8 @@ def main():
                 print("gyro %+.2f %+.2f %+.2f rad/s   gravity %+.2f %+.2f %+.2f" % (*gyro, *down), flush=True)
                 time.sleep(0.2)
         if a.level_imu:
-            print("all servos to home; keep the robot standing level and untouched for %.0f s" % a.level_imu, flush=True)
-            robot.write(np.zeros(12))
-            time.sleep(1.0)
+            print("IMU only (servos untouched): keep the robot standing level at home and untouched for %.0f s" % a.level_imu,
+                  flush=True)
             robot.rot = np.array(IMU_TO_BODY, float)          # measure in the mount frame, without an old correction
             g, end = [], time.perf_counter() + a.level_imu
             while time.perf_counter() < end:
@@ -329,7 +335,7 @@ def main():
     except KeyboardInterrupt:
         return
     finally:
-        if a.check_imu or a.wiggle or a.set or a.stand or a.level_imu:
+        if a.wiggle or a.set or a.stand or (a.dry_run and (a.check_imu or a.level_imu)):
             robot.limp()
     walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=150 if a.dry_run else None)
 

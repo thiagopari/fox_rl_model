@@ -6,7 +6,8 @@ IMU -> the policy's observation -> policy.onnx -> 12 servo angles -> PCA9685.
 
     pip install numpy onnxruntime adafruit-circuitpython-pca9685 adafruit-circuitpython-bno055 adafruit-circuitpython-motor
     python3 fox_pi.py policy.onnx --check-imu       # 1. IMU axes: tilt / turn the robot, compare with the printout
-    python3 fox_pi.py policy.onnx --wiggle FL_hip   # 2. robot held in the air: which channel, which way is +
+    python3 fox_pi.py policy.onnx --wiggle FL_hip   # 2. robot held in the air: which channel, which way is + (only that
+                                                    #    servo is powered: centre, +10 deg, centre, -10 deg, centre, x2)
     python3 fox_pi.py policy.onnx                   # 3. walk. W/S A/D Q/E step the command, space = stop, Ctrl-C = limp
     python3 fox_pi.py policy.onnx --dry-run         # anywhere: fake hardware, 3 s, prints the servo angles
 
@@ -133,6 +134,10 @@ class Robot:
         for s, name, t in zip(self.servos, SERVOS, targets):
             s.angle = servo_deg(name, t)
 
+    def write_one(self, name, target):
+        """Drive one servo; the others get no pulses (limp)."""
+        self.servos[SERVOS.index(name)].angle = servo_deg(name, target)
+
     def limp(self):
         for s in self.servos:
             s.fraction = None
@@ -152,6 +157,9 @@ class FakeRobot:
         self.k += 1
         if self.k % 50 == 0:
             print("servo deg:", " ".join("%s %.1f" % (n, servo_deg(n, t)) for n, t in zip(SERVOS, targets)))
+
+    def write_one(self, name, target):
+        print("  (fake) %s -> %.1f deg" % (name, servo_deg(name, target)))
 
     def limp(self):
         pass
@@ -223,8 +231,8 @@ def main():
     p.add_argument("policy", help="policy.onnx (its .onnx.data next to it)")
     p.add_argument("--dry-run", action="store_true", help="fake hardware, 3 s")
     p.add_argument("--check-imu", action="store_true", help="print body-frame gyro and gravity")
-    p.add_argument("--wiggle", choices=SERVOS, help="move one servo + and back (others at the stance)")
-    p.add_argument("--amplitude", type=float, default=0.15, help="--wiggle size in rad (1.0 for timing a servo on video)")
+    p.add_argument("--wiggle", choices=SERVOS, help="move one servo +/- around its centre (the others stay limp)")
+    p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
     a = p.parse_args()
     robot = FakeRobot() if a.dry_run else Robot()
     try:
@@ -235,12 +243,14 @@ def main():
                 print("gyro %+.2f %+.2f %+.2f rad/s   gravity %+.2f %+.2f %+.2f" % (*gyro, *down), flush=True)
                 time.sleep(0.2)
         if a.wiggle:
-            print("%s +%.2f rad: %s" % (a.wiggle, a.amplitude, PLUS[a.wiggle.split("_")[1]]))
-            for _ in range(3):
-                for t in (a.amplitude, 0.0):
-                    print("  %s -> %.3f s" % ("+" if t else "0", time.perf_counter()), flush=True)
-                    robot.write([t if n == a.wiggle else 0.0 for n in SERVOS])
-                    time.sleep(1.0)
+            amp = math.radians(a.amplitude)
+            print("%s on channel %d, centre %.1f deg, +/-%.0f deg; + means: %s"
+                  % (a.wiggle, CHANNEL[a.wiggle], NEUTRAL_DEG[a.wiggle], a.amplitude, PLUS[a.wiggle.split("_")[1]]), flush=True)
+            for t in (0.0, amp, 0.0, -amp) * 2 + (0.0,):
+                print("  %-6s %.1f deg  (t = %.3f s)" % ({0.0: "centre"}.get(t, "+" if t > 0 else "-"), servo_deg(a.wiggle, t),
+                                                          time.perf_counter()), flush=True)
+                robot.write_one(a.wiggle, t)
+                time.sleep(1.0)
             return
     except KeyboardInterrupt:
         return

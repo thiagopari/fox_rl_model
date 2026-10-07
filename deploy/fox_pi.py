@@ -32,10 +32,9 @@ import numpy as np
 # ---------------------------------------------------------------------------- calibration (measure on the robot)
 LEGS = ("FL", "FR", "RL", "RR")
 SERVOS = ["%s_%s" % (leg, s) for s in ("hip", "pivot", "gear") for leg in LEGS]     # the policy's output order
-# PCA9685 channels. Leg blocks from ~/robofox_fourbar_kinematics.py (RL 0-2, RR 3-5, FR 6-8, FL 9-11). Inside a block,
-# GUESSED from the January script's "gear1"/"gear2" pair: servo 1 = gear (pinion, sets the shin), servo 2 = pivot (on the
-# femur), servo 3 = hip. Check with --wiggle
-CHANNEL = {"RL_gear": 0, "RL_pivot": 1, "RL_hip": 2, "RR_gear": 3, "RR_pivot": 4, "RR_hip": 5,
+# PCA9685 channels: leg blocks RL 0-2, RR 3-5, FR 6-8, FL 9-11 (~/robofox_fourbar_kinematics.py), hip last. Checked on the
+# robot 2026-10-07: front legs gear then pivot, rear legs pivot then gear. servo_calib.json (fox_calib.py) overrides
+CHANNEL = {"RL_pivot": 0, "RL_gear": 1, "RL_hip": 2, "RR_pivot": 3, "RR_gear": 4, "RR_hip": 5,
            "FR_gear": 6, "FR_pivot": 7, "FR_hip": 8, "FL_gear": 9, "FL_pivot": 10, "FL_hip": 11}
 NEUTRAL_DEG = {name: 90.0 for name in SERVOS}   # adafruit servo angle (0..180) that puts the joint at the CAD stance
 DIRECTION = {name: 1 for name in SERVOS}        # -1 where a larger servo angle turns the joint against the policy's +

@@ -38,7 +38,8 @@ NEUTRAL_DEG = {name: 90.0 for name in SERVOS}   # adafruit servo angle (0..180) 
 DIRECTION = {name: 1 for name in SERVOS}        # -1 where a larger servo angle turns the joint against the policy's +
 DEG_PER_RAD = 180.0 / math.pi                   # 500-2500 us = 180 deg (adafruit_motor); correct if the travel differs
 LIMIT_DEG = {name: (NEUTRAL_DEG[name] - 50.0, NEUTRAL_DEG[name] + 50.0) for name in SERVOS}   # never command beyond
-IMU_TO_BODY = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]   # BNO055 axes -> body (x fwd, y left, z up); upside-down mount (Jan.)
+IMU_TO_BODY = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]   # BNO055 axes -> body (x fwd, y left, z up): upside-down mount,
+#   verified with --check-imu 2026-10-07 (nose down x +0.99, left side down y +1.00, CCW turn +93 deg, gyro in rad/s)
 PLUS = {"hip": "the foot moves to the robot's LEFT", "pivot": "the femur turns, knee moving BACK; the shin keeps its angle",
         "gear": "the shin turns, foot moving FORWARD; the femur stays"}   # policy + for each servo (fox_cfg.py servo map)
 

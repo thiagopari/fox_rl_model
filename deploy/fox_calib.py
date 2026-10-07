@@ -77,9 +77,14 @@ def main():
         nonlocal stamp
         if (os.path.getmtime(CALIB_FILE) if os.path.exists(CALIB_FILE) else None) != stamp:
             return False
+        data = {}
+        if os.path.exists(CALIB_FILE):                   # keep entries this tool doesn't edit (imu_level_gravity)
+            with open(CALIB_FILE) as f:
+                data = json.load(f)
+        data.update({"channel": CHANNEL, "home_deg": NEUTRAL_DEG, "direction": DIRECTION, "limit_deg": limits})
         tmp = CALIB_FILE + ".tmp"
         with open(tmp, "w") as f:
-            json.dump({"channel": CHANNEL, "home_deg": NEUTRAL_DEG, "direction": DIRECTION, "limit_deg": limits}, f, indent=1)
+            json.dump(data, f, indent=1)
         os.replace(tmp, CALIB_FILE)
         stamp = os.path.getmtime(CALIB_FILE)
         return True

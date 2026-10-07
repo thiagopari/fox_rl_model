@@ -41,6 +41,16 @@ DIRECTION = {name: 1 for name in SERVOS}        # -1 where a larger servo angle 
 DEG_PER_RAD = 180.0 / math.pi                   # 500-2500 us = 180 deg (adafruit_motor); correct if the travel differs
 LIMIT_DEG = {name: (NEUTRAL_DEG[name] - 50.0, NEUTRAL_DEG[name] + 50.0) for name in SERVOS}   # never command beyond
 CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "servo_calib.json")   # written by fox_calib.py
+IMU_LEVEL = np.eye(3)   # mount tilt correction, from --level-imu (servo_calib.json "imu_level_gravity")
+
+
+def level_rotation(g0):
+    """Rotation taking g0, the gravity direction the IMU reports with the body level, onto (0, 0, -1): corrects a tilted
+    IMU mount (pitch and roll; a yaw offset does not show in gravity)."""
+    a, b = np.asarray(g0, float) / np.linalg.norm(g0), np.array([0.0, 0.0, -1.0])
+    v, c = np.cross(a, b), float(a @ b)
+    k = np.array([[0.0, -v[2], v[1]], [v[2], 0.0, -v[0]], [-v[1], v[0], 0.0]])
+    return np.eye(3) + k + k @ k / (1.0 + c)
 
 
 def load_calib(path=CALIB_FILE):
@@ -55,6 +65,8 @@ def load_calib(path=CALIB_FILE):
     DIRECTION.update({k: 1 if v >= 0 else -1 for k, v in known(c.get("direction", {})).items()})
     LIMIT_DEG.update({n: (NEUTRAL_DEG[n] - 50.0, NEUTRAL_DEG[n] + 50.0) for n in SERVOS})
     LIMIT_DEG.update({k: (float(v[0]), float(v[1])) for k, v in known(c.get("limit_deg", {})).items()})
+    if "imu_level_gravity" in c:
+        IMU_LEVEL[:] = level_rotation(c["imu_level_gravity"])
 
 
 load_calib()
@@ -135,7 +147,7 @@ class Robot:
         self.pca = PCA9685(i2c, address=0x40)
         self.pca.frequency = 50
         self.servos = [servo.Servo(self.pca.channels[CHANNEL[n]], min_pulse=500, max_pulse=2500) for n in SERVOS]
-        self.rot = np.array(IMU_TO_BODY, float)
+        self.rot = IMU_LEVEL @ np.array(IMU_TO_BODY, float)
 
     def read(self):
         """(gyro rad/s, gravity unit vector pointing down), body frame; None when the BNO055 drops a reading."""
@@ -254,6 +266,8 @@ def main():
     p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
     p.add_argument("--set", metavar="SERVO=DEG", help="move one servo straight to DEG from its centre, hold 2 s, limp")
     p.add_argument("--stand", type=float, metavar="SECONDS", help="all servos to home (no policy), print the body tilt, limp")
+    p.add_argument("--level-imu", type=float, metavar="SECONDS", help="stand at home, robot level and untouched: average the "
+                   "IMU and save that reading as level (corrects a tilted IMU mount)")
     a = p.parse_args()
     if a.set and (a.set.split("=")[0] not in SERVOS or a.set.count("=") != 1):
         p.error("--set needs SERVO=DEG with SERVO one of %s" % ", ".join(SERVOS))
@@ -265,6 +279,26 @@ def main():
                 gyro, down = read_retry(robot)
                 print("gyro %+.2f %+.2f %+.2f rad/s   gravity %+.2f %+.2f %+.2f" % (*gyro, *down), flush=True)
                 time.sleep(0.2)
+        if a.level_imu:
+            print("all servos to home; keep the robot standing level and untouched for %.0f s" % a.level_imu, flush=True)
+            robot.write(np.zeros(12))
+            time.sleep(1.0)
+            robot.rot = np.array(IMU_TO_BODY, float)          # measure in the mount frame, without an old correction
+            g, end = [], time.perf_counter() + a.level_imu
+            while time.perf_counter() < end:
+                g.append(read_retry(robot)[1])
+                time.sleep(0.05)
+            g0 = np.mean(g, axis=0)
+            g0 /= np.linalg.norm(g0)
+            spread = np.degrees(np.arcsin(np.clip(np.std(np.array(g)[:, :2], axis=0), 0.0, 1.0))).max()
+            c = json.load(open(CALIB_FILE)) if os.path.exists(CALIB_FILE) else {}
+            c["imu_level_gravity"] = [round(float(x), 5) for x in g0]
+            with open(CALIB_FILE + ".tmp", "w") as f:
+                json.dump(c, f, indent=1)
+            os.replace(CALIB_FILE + ".tmp", CALIB_FILE)
+            print("level reading: pitch %+.1f deg, roll %+.1f deg (wobble %.2f deg, %d samples) -> saved in %s"
+                  % (math.degrees(math.asin(g0[0])), math.degrees(math.asin(g0[1])), spread, len(g), CALIB_FILE), flush=True)
+            return
         if a.stand:
             print("all servos to home for %.0f s (no policy); body tilt from the IMU, level = 0 / 0" % a.stand, flush=True)
             robot.write(np.zeros(12))
@@ -295,7 +329,7 @@ def main():
     except KeyboardInterrupt:
         return
     finally:
-        if a.check_imu or a.wiggle or a.set or a.stand:
+        if a.check_imu or a.wiggle or a.set or a.stand or a.level_imu:
             robot.limp()
     walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=150 if a.dry_run else None)
 

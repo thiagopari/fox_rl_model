@@ -41,6 +41,7 @@ DIRECTION = {name: 1 for name in SERVOS}        # -1 where a larger servo angle 
 DEG_PER_RAD = 180.0 / math.pi                   # 500-2500 us = 180 deg (adafruit_motor); correct if the travel differs
 LIMIT_DEG = {name: (NEUTRAL_DEG[name] - 50.0, NEUTRAL_DEG[name] + 50.0) for name in SERVOS}   # never command beyond
 HEIGHT_TRIM_MM = {leg: 0.0 for leg in LEGS}   # + = leg longer at the stance (--stand / --balance); "height_trim_mm"
+STAND_DEG = {}   # the robot's standing pose in servo degrees ("stand_deg"): --stand / --balance start from it, not home
 CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "servo_calib.json")   # written by fox_calib.py
 IMU_LEVEL = np.eye(3)   # mount tilt correction, from --level-imu (servo_calib.json "imu_level_gravity")
 
@@ -69,6 +70,7 @@ def load_calib(path=CALIB_FILE):
     if "imu_level_gravity" in c:
         IMU_LEVEL[:] = level_rotation(c["imu_level_gravity"])
     HEIGHT_TRIM_MM.update({k: float(v) for k, v in c.get("height_trim_mm", {}).items() if k in LEGS})
+    STAND_DEG.update({k: float(v) for k, v in known(c.get("stand_deg", {})).items()})
 
 
 load_calib()
@@ -91,33 +93,39 @@ def leg_fk(leg, pivot, gear):
     return l1 * math.sin(b1) + l2 * math.sin(b2), -l1 * math.cos(b1) - l2 * math.cos(b2)
 
 
-def leg_reach(leg):
-    """How much longer than at the stance a leg can get (mm) while keeping 15 deg of knee bend."""
+def leg_reach(leg, pivot0=0.0, gear0=0.0):
+    """How much longer than in the base pose (pivot0, gear0) a leg can get (mm) while keeping 15 deg of knee bend."""
     l1, l2, a1, a2 = LEG_GEOM[leg[0]]
-    x0, z0 = leg_fk(leg, 0.0, 0.0)
+    x0, z0 = leg_fk(leg, pivot0, gear0)
     return math.sqrt(l1 * l1 + l2 * l2 + 2 * l1 * l2 * math.cos(math.radians(15.0))) - math.hypot(x0, z0)
 
 
-def leg_ik(leg, dh):
-    """Pivot and gear targets (rad from home) that make a leg dh mm longer, its ankle staying above the same point."""
+def leg_ik(leg, dh, pivot0=0.0, gear0=0.0):
+    """Pivot and gear targets (rad from home) that make a leg dh mm longer than in the base pose (pivot0, gear0; the
+    CAD stance by default), its ankle staying above the same point."""
     l1, l2, a1, a2 = LEG_GEOM[leg[0]]
-    x, z = leg_fk(leg, 0.0, 0.0)
+    x, z = leg_fk(leg, pivot0, gear0)
     z -= dh
     d = math.hypot(x, z)
     a = (l1 * l1 - l2 * l2 + d * d) / (2.0 * d)               # knee: where the circles |K| = l1 and |K - ankle| = l2 meet,
-    h = math.sqrt(max(l1 * l1 - a * a, 0.0))                  # on the side the stance knee is on
+    h = math.sqrt(max(l1 * l1 - a * a, 0.0))                  # on the side the base pose's knee is on
     mx, mz = a * x / d, a * z / d
-    k0 = (l1 * math.sin(a1), -l1 * math.cos(a1))
+    k0 = (l1 * math.sin(a1 - pivot0), -l1 * math.cos(a1 - pivot0))
     kx, kz = min(((mx + h * z / d, mz - h * x / d), (mx - h * z / d, mz + h * x / d)),
                  key=lambda k: (k[0] - k0[0]) ** 2 + (k[1] - k0[1]) ** 2)
     return a1 - math.atan2(kx, -kz), math.atan2(x - kx, -(z - kz)) - a2
 
 
+def stand_targets():
+    """The stand pose (STAND_DEG) as targets in rad from home; home for servos it doesn't list."""
+    return np.array([(STAND_DEG[n] - NEUTRAL_DEG[n]) / (DIRECTION[n] * DEG_PER_RAD) if n in STAND_DEG else 0.0 for n in SERVOS])
+
+
 def stance(dh):
-    """12 targets: every leg at its height trim + dh[leg] mm, hips at home."""
-    t = np.zeros(12)
+    """12 targets: the stand pose (or home) with every leg made HEIGHT_TRIM_MM[leg] + dh[leg] mm longer."""
+    t = stand_targets()
     for i, leg in enumerate(LEGS):
-        t[4 + i], t[8 + i] = leg_ik(leg, HEIGHT_TRIM_MM[leg] + dh[leg])
+        t[4 + i], t[8 + i] = leg_ik(leg, HEIGHT_TRIM_MM[leg] + dh[leg], t[4 + i], t[8 + i])
     return t
 
 
@@ -125,7 +133,8 @@ def level_offsets(p, r, low=-40.0):
     """Leg length changes (mm) for pitch / roll corrections p, r (mm: front up, left up). The common height is free, so
     when a leg can't get longer (the front legs are nearly straight at the stance) the whole robot is lowered."""
     raw = {leg: (p if leg[0] == "F" else -p) + (r if leg[1] == "L" else -r) for leg in LEGS}
-    common = min(0.0, min(leg_reach(leg) - HEIGHT_TRIM_MM[leg] - raw[leg] for leg in LEGS))
+    base = stand_targets()
+    common = min(0.0, min(leg_reach(leg, base[4 + i], base[8 + i]) - HEIGHT_TRIM_MM[leg] - raw[leg] for i, leg in enumerate(LEGS)))
     return {leg: max(low, raw[leg] + common) for leg in LEGS}
 
 
@@ -438,8 +447,9 @@ def main():
                   % (math.degrees(math.asin(g0[0])), math.degrees(math.asin(g0[1])), spread, len(g), CALIB_FILE), flush=True)
             return
         if a.stand:
-            print("all servos to home for %.0f s (no policy); body tilt from the IMU, level = 0 / 0" % a.stand, flush=True)
-            robot.write(np.zeros(12))
+            print("all servos to the %s for %.0f s (no policy); body tilt from the IMU, level = 0 / 0"
+                  % ("stand pose" if STAND_DEG else "home", a.stand), flush=True)
+            robot.write(stance({leg: 0.0 for leg in LEGS}))
             end = time.perf_counter() + a.stand
             while time.perf_counter() < end:
                 down = read_retry(robot)[1]

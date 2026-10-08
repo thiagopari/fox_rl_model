@@ -114,10 +114,11 @@ FOX_SERVO_CFG = FoxServoActuatorCfg(
     friction=0.0,
     armature=0.0005,        # reflected rotor inertia estimate for a geared hobby servo (helps solver stability)
 )
-# The hardware, as far as it is known before bench tests (measure and set these): Pi -> PCA9685 at 50 Hz -> digital servo
-# is 5-25 ms of command latency (sensor lag included); metal servo gears have ~1 deg of play, and the printed 12T gear
-# pair adds ~1 deg on the gear servo.
-FOX_SERVO_REAL_CFG = FOX_SERVO_CFG.replace(min_delay=1, max_delay=5, backlash=(0.02, 0.02, 0.04), torque_speed=True)
+# The hardware, as far as it is known (measure and set these): Pi -> PCA9685 at 50 Hz -> digital servo is 5-25 ms of
+# command latency (sensor lag included); metal servo gears have ~1 deg of play. The gear servo's path to the shin (gear
+# pair, horn, linkage pins) is far looser: on RR (1:1 gears, 2026-10-08, deploy/fox_leg_modes.py) the gear servo turned
+# 10-15 deg before the shin moved, i.e. about +-6 deg (0.11 rad) of free play; 0.15 covers it. Re-measure on the v7 build.
+FOX_SERVO_REAL_CFG = FOX_SERVO_CFG.replace(min_delay=1, max_delay=5, backlash=(0.02, 0.02, 0.15), torque_speed=True)
 
 FOX_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(

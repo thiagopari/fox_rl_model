@@ -195,7 +195,9 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
 * Since v3 the blind task (training, play and eval) uses realistic servos, `FOX_SERVO_REAL_CFG`, each drawn at random
   per robot and episode:
   * 5–25 ms command latency (Pi → PCA9685 at 50 Hz → servo, sensor lag included);
-  * backlash up to 0.02 rad on the hip and pivot servos, and 0.04 rad on the gear servo (the printed gear pair adds play);
+  * backlash up to 0.02 rad on the hip and pivot servos, and 0.15 rad on the gear servo. On RR, measured 2026-10-08 with
+    `deploy/fox_leg_modes.py`, the gear servo turns 10–15° before the shin moves (about ±6° of play, from the gear pair,
+    horn and linkage pins). Policies trained before then (v1–v4) saw only 0.04 rad;
   * torque that falls linearly from the stall torque at rest to zero at the no-load speed (DS-843MG: 0.47 N·m, 10.5 rad/s);
   * servo gains off by up to ±20 % (kp) and ±30 % (kd).
 

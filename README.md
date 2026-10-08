@@ -319,6 +319,27 @@ The servos stalled when the robot readjusted on the ground. v7 (`Fox_Prototype_0
   are suppressed, because the brackets turn with the hip servos. The rear pinions are turned 14.9° about their own axis
   so the rear gear pairs mesh too.
 
+* **The crank gear turns only with its pinion** (design version 2, `tools/fusion/FoxV7FreeGear`). Each gear runs on a
+  **623ZZ ball bearing** (3 × 10 × 4 mm), the "disk" in the gear's centre, now named `623ZZ bearing L/R`. The horn screw
+  and washer clamp the bearing's inner ring to the femur hub, so the femur can only drag the gear if that bearing locks or
+  is a plain printed disk. v6 allowed both:
+  * the hub's Ø6 end face is wider than the inner ring (≈Ø5.2), so tightening the screw also pressed the shield/outer
+    ring. v7 keeps a Ø4.4 boss and relieves the ring around it by 0.3 mm (all 4 femurs);
+  * the gear's seat was Ø10.2, loose on the Ø10 outer ring. v7 has a Ø10.0 press fit.
+
+  Fusion checks: every gear sits on its bearing without overlap, and no gear comes within 0.7 mm of its femur.
+
+  **Retrofit on the current robot:** fit a real 623ZZ, not a printed disk. Shave the femur hub's end to a Ø4–4.5 boss,
+  about 0.3 mm proud, or reprint `print/v7_femur_*.stl`. Press the bearing into the gear.
+
+  In Fusion's mechanism document, dragging a femur still turns the gear unless `XX_pinion_joint` is locked. That is
+  Fusion's solver closing the leg loop (a back-drivable, unpowered gear servo), not friction. The models apply servo
+  torques only, with no friction coupling.
+
+  The mechanism document and the v7 URDF/MJCF come from design version 1. This change moves no joint and changes masses
+  by under 0.02 g, so they stay valid. Re-run `FoxScrewScan` before rebuilding the mechanism: the bearing bodies were
+  renamed.
+
 **Stance:** base level, each foot where its worst pitch servo's static load is lowest. That puts the front feet 25.5 mm
 ahead of the hips and the rear feet 28.6 mm behind. Set in `v7/mechanism.json`; servo angles from the CAD pose:
 
@@ -353,7 +374,8 @@ Standing still in MuJoCo (0.55 kg, 4 feet), the worst servo goes from 23 % (v6) 
    servo angles as action offsets).
 
 On the robot:
-* print `print/v7_crank_gear_24T.stl` and `v7_pinion_12T.stl` (4 each) and `v7_rear_hip_spacer.stl` (1);
+* print `print/v7_crank_gear_24T.stl` and `v7_pinion_12T.stl` (4 each), `v7_rear_hip_spacer.stl` (1) and, for the bearing
+  fix, `v7_femur_{FL,FR,RL,RR}.stl`; buy 4 × 623ZZ bearings and two M3 screws 20 mm longer than the current rear ones;
 * recalibrate the homes to the v7 stance.
 * `deploy/fox_pi.py`'s stand/balance IK still assumes 1:1 gears (`gear = -(thigh + calf)`), so it needs the ratio
   before `--stand` / `--balance` run on v7.
@@ -361,6 +383,8 @@ On the robot:
 ## Regenerate
 Each `tools/fusion/*` folder is a one-shot add-in: copy it into Fusion's `API/AddIns`, start Fusion, wait for its result
 in `C:\fusion_jobs` (`drive_c/fusion_jobs` in the Wine prefix), then remove the folder again (it runs at every start).
+`tools/fusion/run_addin.sh <add-in folder> <result file> [document to wait for]` does all of that. It never closes a Fusion
+that has unsaved changes or that someone used in the last 2 minutes.
 1. After editing the design copy: `FoxScrewScan` → copy `screw_scan.json` to `analysis/`, run
    `~/.venvs/fox_rl/bin/python tools/screw_graph.py` (fails on a fastener conflict or a non-parallelogram leg) and copy
    `analysis/link_map.json` into `tools/fusion/FoxBuildLinkModel/`.

@@ -1,0 +1,11 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "913f14b4-4e60-4b3b-9296-94b27059c376",
+    "author": "local",
+    "description": { "": "One-shot: Fox_Prototype_03_v7_RL new version - each crank gear turns only with its pinion (623ZZ seat, femur hub relief)." },
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

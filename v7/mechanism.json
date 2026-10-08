@@ -1,0 +1,162 @@
+{
+ "servo_map": {
+  "thigh": "pivot",
+  "calf": "-gear / 2 - pivot",
+  "foot": "f(calf)",
+  "gear_ratio": -0.5,
+  "pinion_per_gear": 2.0,
+  "note": "pitch angles about +y from the CAD pose; gear: external mesh, the crank turns -1/N of the gear servo"
+ },
+ "legs": {
+  "FL": {
+   "foot_poly": [
+    0.000117,
+    0.358775,
+    -0.155189,
+    -0.037049,
+    0.007424
+   ],
+   "foot_fit_err_rad": 0.0006925702083920848,
+   "knee_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "upper_loop_range_rad": [
+    -1.3962,
+    1.3964
+   ],
+   "parallelogram_err_m": 2.9120439557145715e-06
+  },
+  "FR": {
+   "foot_poly": [
+    0.000117,
+    0.358775,
+    -0.155189,
+    -0.037049,
+    0.007424
+   ],
+   "foot_fit_err_rad": 0.0006925702083908636,
+   "knee_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    1.2
+   ],
+   "upper_loop_range_rad": [
+    -1.3962,
+    1.3964
+   ],
+   "parallelogram_err_m": 2.912043955718384e-06
+  },
+  "RL": {
+   "foot_poly": [
+    -0.0,
+    -1.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "foot_fit_err_rad": 2.930988785010413e-14,
+   "knee_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "upper_loop_range_rad": [
+    -1.3963,
+    1.3963
+   ],
+   "parallelogram_err_m": 1.9999999999187335e-07
+  },
+  "RR": {
+   "foot_poly": [
+    0.0,
+    -1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "foot_fit_err_rad": 3.8746783559417963e-14,
+   "knee_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "foot_loop_range_rad": [
+    -1.2,
+    0.74
+   ],
+   "upper_loop_range_rad": [
+    -1.3963,
+    1.3963
+   ],
+   "parallelogram_err_m": 1.9999999999187335e-07
+  }
+ },
+ "stance": {
+  "joints_rad": {
+   "FL_thigh_joint": -0.149512,
+   "FL_calf_joint": 0.051304,
+   "FL_foot_joint": 0.01811,
+   "FR_thigh_joint": -0.149512,
+   "FR_calf_joint": 0.051304,
+   "FR_foot_joint": 0.01811,
+   "RL_thigh_joint": 0.447024,
+   "RL_calf_joint": -0.355882,
+   "RL_foot_joint": 0.355882,
+   "RR_thigh_joint": 0.447739,
+   "RR_calf_joint": -0.356233,
+   "RR_foot_joint": 0.356233
+  },
+  "base_height_m": 0.16024,
+  "servo_deg_from_cad": {
+   "FL_hip": 0.0,
+   "FL_pivot": -8.57,
+   "FL_gear": 11.25,
+   "FR_hip": 0.0,
+   "FR_pivot": -8.57,
+   "FR_gear": 11.25,
+   "RL_hip": 0.0,
+   "RL_pivot": 25.61,
+   "RL_gear": -10.44,
+   "RR_hip": 0.0,
+   "RR_pivot": 25.65,
+   "RR_gear": -10.49
+  },
+  "legs": {
+   "FL": {
+    "foot_ahead_of_hip_mm": 25.5,
+    "pivot_lever_mm": 25.47,
+    "gear_lever_mm": 25.48,
+    "residual_m": 3.7572805132793374e-08
+   },
+   "FR": {
+    "foot_ahead_of_hip_mm": 25.5,
+    "pivot_lever_mm": 25.47,
+    "gear_lever_mm": 25.48,
+    "residual_m": 3.7570924767138525e-08
+   },
+   "RL": {
+    "foot_ahead_of_hip_mm": -28.6,
+    "pivot_lever_mm": 28.62,
+    "gear_lever_mm": 28.61,
+    "residual_m": 3.2502708994727736e-08
+   },
+   "RR": {
+    "foot_ahead_of_hip_mm": -28.7,
+    "pivot_lever_mm": 28.53,
+    "gear_lever_mm": 28.62,
+    "residual_m": 3.251622867662951e-08
+   }
+  },
+  "note": "base level, soles at the front feet CAD height, feet where the worst pitch servo load is lowest (levers: servo N m per N of vertical foot force)"
+ }
+}

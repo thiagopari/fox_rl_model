@@ -1,0 +1,124 @@
+{
+ "nq": 39,
+ "nv": 38,
+ "nu": 12,
+ "njnt": 33,
+ "nbody": 34,
+ "total_mass_kg": 0.549708,
+ "joints": [
+  "root",
+  "FL_hip_joint",
+  "FL_femur_joint",
+  "FL_knee_joint",
+  "FL_ankle_joint",
+  "FL_link_pin_joint",
+  "FL_pinion_joint",
+  "FL_gear_joint",
+  "FL_crank_pin_joint",
+  "FR_hip_joint",
+  "FR_femur_joint",
+  "FR_knee_joint",
+  "FR_ankle_joint",
+  "FR_link_pin_joint",
+  "FR_pinion_joint",
+  "FR_gear_joint",
+  "FR_crank_pin_joint",
+  "RL_hip_joint",
+  "RL_femur_joint",
+  "RL_knee_joint",
+  "RL_ankle_joint",
+  "RL_link_pin_joint",
+  "RL_pinion_joint",
+  "RL_gear_joint",
+  "RL_crank_pin_joint",
+  "RR_hip_joint",
+  "RR_femur_joint",
+  "RR_knee_joint",
+  "RR_ankle_joint",
+  "RR_link_pin_joint",
+  "RR_pinion_joint",
+  "RR_gear_joint",
+  "RR_crank_pin_joint"
+ ],
+ "foot_heights_at_zero_pose_m": {
+  "FL_foot": 0.0019999937615488607,
+  "FR_foot": 0.001999993876877517,
+  "RL_foot": 0.020794943530834255,
+  "RR_foot": 0.02079494333821765
+ },
+ "standing": {
+  "base_z_start_m": 0.162237,
+  "base_z_end_m": 0.16039625834212795,
+  "upright_cos": 0.9999555412503802,
+  "max_servo_err_rad": 0.4385948900051132,
+  "contacts_end": 16,
+  "max_loop_pin_gap_m": 6.707310224093393e-05,
+  "max_gear_mesh_err_rad": 0.0002889957386860119,
+  "finite": true,
+  "trace": [
+   [
+    0.0,
+    0.1622,
+    1.0
+   ],
+   [
+    1.0,
+    0.1604,
+    1.0
+   ],
+   [
+    2.0,
+    0.1604,
+    1.0
+   ],
+   [
+    3.0,
+    0.1604,
+    1.0
+   ]
+  ]
+ },
+ "foot_heights_at_stance_m": {
+  "FL_foot": -0.0008902637392819296,
+  "FR_foot": -0.0008776293252515874,
+  "RL_foot": -0.0009208241783551611,
+  "RR_foot": -0.0009179712259370365
+ },
+ "servo_torque_end_pct_of_stall": {
+  "FL_hip": 4.7,
+  "FL_pivot": 6.7,
+  "FL_gear": 6.2,
+  "FR_hip": 4.6,
+  "FR_pivot": 6.5,
+  "FR_gear": 6.1,
+  "RL_hip": 4.4,
+  "RL_pivot": 10.0,
+  "RL_gear": 8.0,
+  "RR_hip": 4.3,
+  "RR_pivot": 9.7,
+  "RR_gear": 7.8
+ },
+ "actuator_force_end_Nm": [
+  -0.0221,
+  -0.0316,
+  -0.0293,
+  0.0215,
+  -0.0308,
+  -0.0286,
+  -0.0207,
+  0.0469,
+  0.0378,
+  0.0203,
+  0.0454,
+  0.0367
+ ],
+ "renders": true,
+ "checks": {
+  "structure (free base + 32 hinges, 12 servos, 8 loop pins + 4 gear meshes)": true,
+  "stands for 4 s (upright, <15 mm sag, finite)": true,
+  "all four feet on the floor at the stance (within 3 mm)": true,
+  "stance is level (upright > 0.999)": true,
+  "servo torque stays within 0.47 N m": true,
+  "linkage loops stay closed (< 0.5 mm) and gears meshed (< 0.01 rad)": true
+ }
+}

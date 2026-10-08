@@ -1,0 +1,1419 @@
+{
+ "links": {
+  "base": {
+   "mass_g": 335.62,
+   "com_link_m": [
+    -0.00339,
+    0.00091,
+    0.01218
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 624612,
+   "visual_faces": 59998,
+   "mesh_z_min_world_m": -0.023364748805761337
+  },
+  "FL_hip": {
+   "mass_g": 29.64,
+   "com_link_m": [
+    0.0197,
+    0.00017,
+    -0.00961
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 53466,
+   "visual_faces": 20000,
+   "mesh_z_min_world_m": -0.031153932213783264
+  },
+  "FL_pinion": {
+   "mass_g": 1.24,
+   "com_link_m": [
+    -0.0,
+    0.00399,
+    0.0
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 19712,
+   "visual_faces": 19712,
+   "mesh_z_min_world_m": -0.014679290354251862
+  },
+  "FL_gear": {
+   "mass_g": 4.04,
+   "com_link_m": [
+    -0.00079,
+    0.00863,
+    0.0003
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 5878,
+   "visual_faces": 5878,
+   "mesh_z_min_world_m": -0.017316853627562523
+  },
+  "FL_femur": {
+   "mass_g": 4.89,
+   "com_link_m": [
+    -0.01234,
+    0.00129,
+    -0.03147
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 9420,
+   "visual_faces": 9420,
+   "mesh_z_min_world_m": -0.08082296699285507
+  },
+  "FL_quad": {
+   "mass_g": 2.61,
+   "com_link_m": [
+    -0.01592,
+    -0.0016,
+    -0.03173
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 540,
+   "visual_faces": 540,
+   "mesh_z_min_world_m": -0.07361055910587311
+  },
+  "FL_tibia": {
+   "mass_g": 5.49,
+   "com_link_m": [
+    -0.00147,
+    0.00631,
+    -0.02011
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 1842,
+   "visual_faces": 1842,
+   "mesh_z_min_world_m": -0.1458173245191574
+  },
+  "FL_foot": {
+   "mass_g": 2.52,
+   "com_link_m": [
+    0.01096,
+    -0.00137,
+    -0.00658
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 3382,
+   "visual_faces": 3382,
+   "mesh_z_min_world_m": -0.160236656665802
+  },
+  "FL_link": {
+   "mass_g": 2.35,
+   "com_link_m": [
+    -0.0016,
+    -0.0021,
+    -0.03118
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 480,
+   "visual_faces": 480,
+   "mesh_z_min_world_m": -0.14351040124893188
+  },
+  "FR_hip": {
+   "mass_g": 29.64,
+   "com_link_m": [
+    0.01965,
+    -8e-05,
+    -0.00956
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 53466,
+   "visual_faces": 20000,
+   "mesh_z_min_world_m": -0.031153932213783264
+  },
+  "FR_pinion": {
+   "mass_g": 1.24,
+   "com_link_m": [
+    -0.0,
+    -0.0042,
+    0.0
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 19712,
+   "visual_faces": 19712,
+   "mesh_z_min_world_m": -0.014680780470371246
+  },
+  "FR_gear": {
+   "mass_g": 4.04,
+   "com_link_m": [
+    -0.00079,
+    -0.00863,
+    0.0003
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 5878,
+   "visual_faces": 5878,
+   "mesh_z_min_world_m": -0.017316853627562523
+  },
+  "FR_femur": {
+   "mass_g": 4.89,
+   "com_link_m": [
+    -0.01234,
+    -0.00129,
+    -0.03147
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 9420,
+   "visual_faces": 9420,
+   "mesh_z_min_world_m": -0.08082296699285507
+  },
+  "FR_quad": {
+   "mass_g": 2.61,
+   "com_link_m": [
+    -0.01592,
+    0.0016,
+    -0.03173
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 540,
+   "visual_faces": 540,
+   "mesh_z_min_world_m": -0.07361055910587311
+  },
+  "FR_tibia": {
+   "mass_g": 5.82,
+   "com_link_m": [
+    -0.00138,
+    -0.00634,
+    -0.01897
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 2972,
+   "visual_faces": 2972,
+   "mesh_z_min_world_m": -0.14582128822803497
+  },
+  "FR_foot": {
+   "mass_g": 2.52,
+   "com_link_m": [
+    0.01096,
+    0.00137,
+    -0.00658
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 3382,
+   "visual_faces": 3382,
+   "mesh_z_min_world_m": -0.160236656665802
+  },
+  "FR_link": {
+   "mass_g": 2.35,
+   "com_link_m": [
+    -0.0016,
+    0.0021,
+    -0.03118
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 480,
+   "visual_faces": 480,
+   "mesh_z_min_world_m": -0.14351040124893188
+  },
+  "RL_hip": {
+   "mass_g": 30.14,
+   "com_link_m": [
+    -0.01776,
+    0.00019,
+    -0.0125
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 50884,
+   "visual_faces": 20000,
+   "mesh_z_min_world_m": -0.025332890450954437
+  },
+  "RL_pinion": {
+   "mass_g": 1.24,
+   "com_link_m": [
+    0.0,
+    0.00399,
+    -0.0
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 19726,
+   "visual_faces": 19726,
+   "mesh_z_min_world_m": -0.008814016357064247
+  },
+  "RL_gear": {
+   "mass_g": 4.04,
+   "com_link_m": [
+    0.00073,
+    0.00863,
+    0.00043
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 5890,
+   "visual_faces": 5890,
+   "mesh_z_min_world_m": -0.008066775277256966
+  },
+  "RL_femur": {
+   "mass_g": 5.15,
+   "com_link_m": [
+    0.01798,
+    0.00129,
+    -0.03009
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 10076,
+   "visual_faces": 10076,
+   "mesh_z_min_world_m": -0.0659550353884697
+  },
+  "RL_quad": {
+   "mass_g": 2.61,
+   "com_link_m": [
+    0.02119,
+    -0.0016,
+    -0.0285
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 536,
+   "visual_faces": 536,
+   "mesh_z_min_world_m": -0.05638545751571655
+  },
+  "RL_tibia": {
+   "mass_g": 5.3,
+   "com_link_m": [
+    -0.01576,
+    0.0046,
+    -0.01363
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 10602,
+   "visual_faces": 10602,
+   "mesh_z_min_world_m": -0.11713448166847229
+  },
+  "RL_foot": {
+   "mass_g": 3.07,
+   "com_link_m": [
+    0.01723,
+    -0.00119,
+    -0.01232
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 2874,
+   "visual_faces": 2874,
+   "mesh_z_min_world_m": -0.14144280552864075
+  },
+  "RL_link": {
+   "mass_g": 2.06,
+   "com_link_m": [
+    -0.02794,
+    -0.00227,
+    -0.02334
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 712,
+   "visual_faces": 712,
+   "mesh_z_min_world_m": -0.11520589143037796
+  },
+  "RR_hip": {
+   "mass_g": 31.63,
+   "com_link_m": [
+    -0.01725,
+    4e-05,
+    -0.01331
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 51966,
+   "visual_faces": 20000,
+   "mesh_z_min_world_m": -0.025332890450954437
+  },
+  "RR_pinion": {
+   "mass_g": 1.24,
+   "com_link_m": [
+    1e-05,
+    -0.004,
+    -0.0
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 18736,
+   "visual_faces": 18736,
+   "mesh_z_min_world_m": -0.008817601948976517
+  },
+  "RR_gear": {
+   "mass_g": 4.04,
+   "com_link_m": [
+    0.00073,
+    -0.00838,
+    0.00043
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 5890,
+   "visual_faces": 5890,
+   "mesh_z_min_world_m": -0.008066781796514988
+  },
+  "RR_femur": {
+   "mass_g": 5.09,
+   "com_link_m": [
+    0.01807,
+    -0.00102,
+    -0.03016
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 11482,
+   "visual_faces": 11482,
+   "mesh_z_min_world_m": -0.0659550353884697
+  },
+  "RR_quad": {
+   "mass_g": 2.59,
+   "com_link_m": [
+    0.02132,
+    0.0016,
+    -0.02864
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 548,
+   "visual_faces": 548,
+   "mesh_z_min_world_m": -0.05638545751571655
+  },
+  "RR_tibia": {
+   "mass_g": 4.95,
+   "com_link_m": [
+    -0.01691,
+    -0.00447,
+    -0.01468
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 1380,
+   "visual_faces": 1380,
+   "mesh_z_min_world_m": -0.11714021116495132
+  },
+  "RR_foot": {
+   "mass_g": 3.01,
+   "com_link_m": [
+    0.01767,
+    0.00118,
+    -0.01259
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 2878,
+   "visual_faces": 2878,
+   "mesh_z_min_world_m": -0.14144280552864075
+  },
+  "RR_link": {
+   "mass_g": 2.01,
+   "com_link_m": [
+    -0.02769,
+    0.00226,
+    -0.02298
+   ],
+   "physically_valid": true,
+   "mesh_faces_full": 720,
+   "visual_faces": 720,
+   "mesh_z_min_world_m": -0.11520589143037796
+  }
+ },
+ "joints": {
+  "FL_hip_joint": {
+   "parent": "base",
+   "child": "FL_hip",
+   "origin_world_m": [
+    0.07169,
+    0.02424,
+    -0.00201
+   ],
+   "axis": [
+    0.984808,
+    0.0,
+    -0.173648
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "FL_femur_joint": {
+   "parent": "FL_hip",
+   "child": "FL_femur",
+   "origin_world_m": [
+    0.08476,
+    0.04151,
+    -0.00462
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "FL_pinion_joint": {
+   "parent": "FL_hip",
+   "child": "FL_pinion",
+   "origin_world_m": [
+    0.10254,
+    0.04581,
+    -0.00745
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.49999999999959,
+    1.49999999999959
+   ]
+  },
+  "FL_gear_joint": {
+   "parent": "FL_hip",
+   "child": "FL_gear",
+   "origin_world_m": [
+    0.08476,
+    0.04151,
+    -0.00462
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FL_crank_pin_joint": {
+   "parent": "FL_gear",
+   "child": "FL_quad",
+   "origin_world_m": [
+    0.07071,
+    0.04516,
+    0.00064
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FL_knee_joint": {
+   "parent": "FL_femur",
+   "child": "FL_tibia",
+   "origin_world_m": [
+    0.05849,
+    0.04151,
+    -0.07487
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FL_quad_pin_joint": {
+   "parent": "FL_quad",
+   "child": "FL_tibia",
+   "origin_world_m": [
+    0.04444,
+    0.04466,
+    -0.06961
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "FL_link_pin_joint": {
+   "parent": "FL_femur",
+   "child": "FL_link",
+   "origin_world_m": [
+    0.06359,
+    0.04016,
+    -0.07179
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FL_ankle_joint": {
+   "parent": "FL_tibia",
+   "child": "FL_foot",
+   "origin_world_m": [
+    0.06386,
+    0.04426,
+    -0.14232
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FL_foot_pin_joint": {
+   "parent": "FL_link",
+   "child": "FL_foot",
+   "origin_world_m": [
+    0.05138,
+    0.04056,
+    -0.14101
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "FR_hip_joint": {
+   "parent": "base",
+   "child": "FR_hip",
+   "origin_world_m": [
+    0.07169,
+    -0.02426,
+    -0.00201
+   ],
+   "axis": [
+    0.984808,
+    0.0,
+    -0.173648
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "FR_femur_joint": {
+   "parent": "FR_hip",
+   "child": "FR_femur",
+   "origin_world_m": [
+    0.08476,
+    -0.04151,
+    -0.00462
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "FR_pinion_joint": {
+   "parent": "FR_hip",
+   "child": "FR_pinion",
+   "origin_world_m": [
+    0.10255,
+    -0.04559,
+    -0.00745
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.49999999999959,
+    1.49999999999959
+   ]
+  },
+  "FR_gear_joint": {
+   "parent": "FR_hip",
+   "child": "FR_gear",
+   "origin_world_m": [
+    0.08476,
+    -0.04151,
+    -0.00462
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FR_crank_pin_joint": {
+   "parent": "FR_gear",
+   "child": "FR_quad",
+   "origin_world_m": [
+    0.07071,
+    -0.04516,
+    0.00064
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FR_knee_joint": {
+   "parent": "FR_femur",
+   "child": "FR_tibia",
+   "origin_world_m": [
+    0.05849,
+    -0.04151,
+    -0.07487
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FR_quad_pin_joint": {
+   "parent": "FR_quad",
+   "child": "FR_tibia",
+   "origin_world_m": [
+    0.04444,
+    -0.04466,
+    -0.06961
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "FR_link_pin_joint": {
+   "parent": "FR_femur",
+   "child": "FR_link",
+   "origin_world_m": [
+    0.06359,
+    -0.04016,
+    -0.07179
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FR_ankle_joint": {
+   "parent": "FR_tibia",
+   "child": "FR_foot",
+   "origin_world_m": [
+    0.06386,
+    -0.04426,
+    -0.14232
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "FR_foot_pin_joint": {
+   "parent": "FR_link",
+   "child": "FR_foot",
+   "origin_world_m": [
+    0.05138,
+    -0.04056,
+    -0.14101
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "RL_hip_joint": {
+   "parent": "base",
+   "child": "RL_hip",
+   "origin_world_m": [
+    -0.08045,
+    0.02424,
+    0.00905
+   ],
+   "axis": [
+    0.939693,
+    -0.0,
+    0.34202
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "RL_femur_joint": {
+   "parent": "RL_hip",
+   "child": "RL_femur",
+   "origin_world_m": [
+    -0.09284,
+    0.04151,
+    0.00462
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "RL_pinion_joint": {
+   "parent": "RL_hip",
+   "child": "RL_pinion",
+   "origin_world_m": [
+    -0.10975,
+    0.04581,
+    -0.00154
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.49999999999959,
+    1.49999999999959
+   ]
+  },
+  "RL_gear_joint": {
+   "parent": "RL_hip",
+   "child": "RL_gear",
+   "origin_world_m": [
+    -0.09284,
+    0.04151,
+    0.00462
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RL_crank_pin_joint": {
+   "parent": "RL_gear",
+   "child": "RL_quad",
+   "origin_world_m": [
+    -0.07992,
+    0.04516,
+    0.01223
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RL_knee_joint": {
+   "parent": "RL_femur",
+   "child": "RL_tibia",
+   "origin_world_m": [
+    -0.05477,
+    0.04326,
+    -0.06
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RL_quad_pin_joint": {
+   "parent": "RL_quad",
+   "child": "RL_tibia",
+   "origin_world_m": [
+    -0.04185,
+    0.04466,
+    -0.05239
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "RL_link_pin_joint": {
+   "parent": "RL_femur",
+   "child": "RL_link",
+   "origin_world_m": [
+    -0.06525,
+    0.04066,
+    -0.05871
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RL_ankle_joint": {
+   "parent": "RL_tibia",
+   "child": "RL_foot",
+   "origin_world_m": [
+    -0.10734,
+    0.04426,
+    -0.1135
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RL_foot_pin_joint": {
+   "parent": "RL_link",
+   "child": "RL_foot",
+   "origin_world_m": [
+    -0.11782,
+    0.04006,
+    -0.11221
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "RR_hip_joint": {
+   "parent": "base",
+   "child": "RR_hip",
+   "origin_world_m": [
+    -0.08022,
+    -0.02424,
+    0.00921
+   ],
+   "axis": [
+    0.939693,
+    -0.0,
+    0.34202
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -0.4999999999992816,
+    0.4999999999992816
+   ]
+  },
+  "RR_femur_joint": {
+   "parent": "RR_hip",
+   "child": "RR_femur",
+   "origin_world_m": [
+    -0.09284,
+    -0.04176,
+    0.00462
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.2000000000000213,
+    1.2000000000000213
+   ]
+  },
+  "RR_pinion_joint": {
+   "parent": "RR_hip",
+   "child": "RR_pinion",
+   "origin_world_m": [
+    -0.10975,
+    -0.04581,
+    -0.00154
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": true,
+   "closes_loop": false,
+   "limits_rad": [
+    -1.49999999999959,
+    1.49999999999959
+   ]
+  },
+  "RR_gear_joint": {
+   "parent": "RR_hip",
+   "child": "RR_gear",
+   "origin_world_m": [
+    -0.09284,
+    -0.04176,
+    0.00462
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RR_crank_pin_joint": {
+   "parent": "RR_gear",
+   "child": "RR_quad",
+   "origin_world_m": [
+    -0.07992,
+    -0.04516,
+    0.01223
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RR_knee_joint": {
+   "parent": "RR_femur",
+   "child": "RR_tibia",
+   "origin_world_m": [
+    -0.05477,
+    -0.04326,
+    -0.06
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RR_quad_pin_joint": {
+   "parent": "RR_quad",
+   "child": "RR_tibia",
+   "origin_world_m": [
+    -0.04185,
+    -0.04466,
+    -0.05239
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  },
+  "RR_link_pin_joint": {
+   "parent": "RR_femur",
+   "child": "RR_link",
+   "origin_world_m": [
+    -0.06525,
+    -0.04066,
+    -0.05871
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RR_ankle_joint": {
+   "parent": "RR_tibia",
+   "child": "RR_foot",
+   "origin_world_m": [
+    -0.10734,
+    -0.04426,
+    -0.1135
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": false,
+   "limits_rad": null
+  },
+  "RR_foot_pin_joint": {
+   "parent": "RR_link",
+   "child": "RR_foot",
+   "origin_world_m": [
+    -0.11782,
+    -0.04006,
+    -0.11221
+   ],
+   "axis": [
+    -0.0,
+    1.0,
+    0.0
+   ],
+   "servo": false,
+   "closes_loop": true,
+   "limits_rad": null
+  }
+ },
+ "reduced": {
+  "base": {
+   "parts": [
+    "base"
+   ],
+   "mass_g": 335.62,
+   "physically_valid": true
+  },
+  "FL_hip": {
+   "parts": [
+    "FL_hip",
+    "FL_pinion",
+    "FL_gear"
+   ],
+   "mass_g": 34.92,
+   "physically_valid": true
+  },
+  "FL_thigh": {
+   "parts": [
+    "FL_femur",
+    "FL_quad"
+   ],
+   "mass_g": 7.5,
+   "physically_valid": true
+  },
+  "FL_calf": {
+   "parts": [
+    "FL_tibia",
+    "FL_link"
+   ],
+   "mass_g": 7.85,
+   "physically_valid": true
+  },
+  "FL_foot": {
+   "parts": [
+    "FL_foot"
+   ],
+   "mass_g": 2.52,
+   "physically_valid": true
+  },
+  "FR_hip": {
+   "parts": [
+    "FR_hip",
+    "FR_pinion",
+    "FR_gear"
+   ],
+   "mass_g": 34.92,
+   "physically_valid": true
+  },
+  "FR_thigh": {
+   "parts": [
+    "FR_femur",
+    "FR_quad"
+   ],
+   "mass_g": 7.5,
+   "physically_valid": true
+  },
+  "FR_calf": {
+   "parts": [
+    "FR_tibia",
+    "FR_link"
+   ],
+   "mass_g": 8.18,
+   "physically_valid": true
+  },
+  "FR_foot": {
+   "parts": [
+    "FR_foot"
+   ],
+   "mass_g": 2.52,
+   "physically_valid": true
+  },
+  "RL_hip": {
+   "parts": [
+    "RL_hip",
+    "RL_pinion",
+    "RL_gear"
+   ],
+   "mass_g": 35.42,
+   "physically_valid": true
+  },
+  "RL_thigh": {
+   "parts": [
+    "RL_femur",
+    "RL_quad"
+   ],
+   "mass_g": 7.76,
+   "physically_valid": true
+  },
+  "RL_calf": {
+   "parts": [
+    "RL_tibia",
+    "RL_link"
+   ],
+   "mass_g": 7.36,
+   "physically_valid": true
+  },
+  "RL_foot": {
+   "parts": [
+    "RL_foot"
+   ],
+   "mass_g": 3.07,
+   "physically_valid": true
+  },
+  "RR_hip": {
+   "parts": [
+    "RR_hip",
+    "RR_pinion",
+    "RR_gear"
+   ],
+   "mass_g": 36.91,
+   "physically_valid": true
+  },
+  "RR_thigh": {
+   "parts": [
+    "RR_femur",
+    "RR_quad"
+   ],
+   "mass_g": 7.67,
+   "physically_valid": true
+  },
+  "RR_calf": {
+   "parts": [
+    "RR_tibia",
+    "RR_link"
+   ],
+   "mass_g": 6.96,
+   "physically_valid": true
+  },
+  "RR_foot": {
+   "parts": [
+    "RR_foot"
+   ],
+   "mass_g": 3.01,
+   "physically_valid": true
+  }
+ },
+ "standing_height_base_origin_m": 0.162236656665802,
+ "total_mass_g": 549.7,
+ "mechanism": {
+  "servo_map": {
+   "thigh": "pivot",
+   "calf": "-gear / 2 - pivot",
+   "foot": "f(calf)",
+   "gear_ratio": -0.5,
+   "pinion_per_gear": 2.0,
+   "note": "pitch angles about +y from the CAD pose; gear: external mesh, the crank turns -1/N of the gear servo"
+  },
+  "legs": {
+   "FL": {
+    "foot_poly": [
+     0.000117,
+     0.358775,
+     -0.155189,
+     -0.037049,
+     0.007424
+    ],
+    "foot_fit_err_rad": 0.0006925702083920848,
+    "knee_range_rad": [
+     -1.2,
+     1.2
+    ],
+    "foot_loop_range_rad": [
+     -1.2,
+     1.2
+    ],
+    "upper_loop_range_rad": [
+     -1.3962,
+     1.3964
+    ],
+    "parallelogram_err_m": 2.9120439557145715e-06
+   },
+   "FR": {
+    "foot_poly": [
+     0.000117,
+     0.358775,
+     -0.155189,
+     -0.037049,
+     0.007424
+    ],
+    "foot_fit_err_rad": 0.0006925702083908636,
+    "knee_range_rad": [
+     -1.2,
+     1.2
+    ],
+    "foot_loop_range_rad": [
+     -1.2,
+     1.2
+    ],
+    "upper_loop_range_rad": [
+     -1.3962,
+     1.3964
+    ],
+    "parallelogram_err_m": 2.912043955718384e-06
+   },
+   "RL": {
+    "foot_poly": [
+     -0.0,
+     -1.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "foot_fit_err_rad": 2.930988785010413e-14,
+    "knee_range_rad": [
+     -1.2,
+     0.74
+    ],
+    "foot_loop_range_rad": [
+     -1.2,
+     0.74
+    ],
+    "upper_loop_range_rad": [
+     -1.3963,
+     1.3963
+    ],
+    "parallelogram_err_m": 1.9999999999187335e-07
+   },
+   "RR": {
+    "foot_poly": [
+     0.0,
+     -1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "foot_fit_err_rad": 3.8746783559417963e-14,
+    "knee_range_rad": [
+     -1.2,
+     0.74
+    ],
+    "foot_loop_range_rad": [
+     -1.2,
+     0.74
+    ],
+    "upper_loop_range_rad": [
+     -1.3963,
+     1.3963
+    ],
+    "parallelogram_err_m": 1.9999999999187335e-07
+   }
+  },
+  "stance": {
+   "joints_rad": {
+    "FL_thigh_joint": -0.149512,
+    "FL_calf_joint": 0.051304,
+    "FL_foot_joint": 0.01811,
+    "FR_thigh_joint": -0.149512,
+    "FR_calf_joint": 0.051304,
+    "FR_foot_joint": 0.01811,
+    "RL_thigh_joint": 0.447024,
+    "RL_calf_joint": -0.355882,
+    "RL_foot_joint": 0.355882,
+    "RR_thigh_joint": 0.447739,
+    "RR_calf_joint": -0.356233,
+    "RR_foot_joint": 0.356233
+   },
+   "base_height_m": 0.16024,
+   "servo_deg_from_cad": {
+    "FL_hip": 0.0,
+    "FL_pivot": -8.57,
+    "FL_gear": 11.25,
+    "FR_hip": 0.0,
+    "FR_pivot": -8.57,
+    "FR_gear": 11.25,
+    "RL_hip": 0.0,
+    "RL_pivot": 25.61,
+    "RL_gear": -10.44,
+    "RR_hip": 0.0,
+    "RR_pivot": 25.65,
+    "RR_gear": -10.49
+   },
+   "legs": {
+    "FL": {
+     "foot_ahead_of_hip_mm": 25.5,
+     "pivot_lever_mm": 25.47,
+     "gear_lever_mm": 25.48,
+     "residual_m": 3.7572805132793374e-08
+    },
+    "FR": {
+     "foot_ahead_of_hip_mm": 25.5,
+     "pivot_lever_mm": 25.47,
+     "gear_lever_mm": 25.48,
+     "residual_m": 3.7570924767138525e-08
+    },
+    "RL": {
+     "foot_ahead_of_hip_mm": -28.6,
+     "pivot_lever_mm": 28.62,
+     "gear_lever_mm": 28.61,
+     "residual_m": 3.2502708994727736e-08
+    },
+    "RR": {
+     "foot_ahead_of_hip_mm": -28.7,
+     "pivot_lever_mm": 28.53,
+     "gear_lever_mm": 28.62,
+     "residual_m": 3.251622867662951e-08
+    }
+   },
+   "note": "base level, soles at the front feet CAD height, feet where the worst pitch servo load is lowest (levers: servo N m per N of vertical foot force)"
+  }
+ }
+}

@@ -1,13 +1,15 @@
 # One-shot, READ-ONLY Fusion add-in. Copy this folder into
 #   <prefix>/drive_c/users/<you>/AppData/Roaming/Autodesk/Autodesk Fusion 360/API/AddIns/
 # start Fusion, wait for C:\fusion_jobs\export\raw.json, then delete the folder again (it runs at every start).
-# From 'Fox_Prototype_03_v6_RL_Mechanism' it exports one binary STL per link (metres, model frame: x fwd, y left, z up),
+# From DOC_NAME ('Fox_Prototype_03_v6_RL_Mechanism', or export.json {"doc", "out"}) it exports one binary STL per link (metres, model frame: x fwd, y left, z up),
 # each link's mass / COM / inertia (about the world origin, kg cm^2) and every joint's origin / axes / limits;
 # 'axis_measured' is the rotation axis recovered from the child's motion when the joint is turned by 0.1 rad.
 import adsk.core, adsk.fusion, json, math, os, threading, time, traceback
 
-OUT = r'C:\fusion_jobs\export'
-DOC_NAME = 'Fox_Prototype_03_v6_RL_Mechanism'
+CFG = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'export.json')   # optional: {"doc": ..., "out": ...}
+_cfg = json.load(open(CFG)) if os.path.exists(CFG) else {}
+OUT = _cfg.get('out', r'C:\fusion_jobs\export')
+DOC_NAME = _cfg.get('doc', 'Fox_Prototype_03_v6_RL_Mechanism')
 EVT = 'FoxExportRawRun'
 _handlers, _res, _done = [], {}, threading.Event()
 
@@ -16,12 +18,19 @@ def v3(p):
     return [p.x, p.y, p.z]
 
 
+def value(param):  # motion-link parameter -> rad (None if the API hands back something else)
+    try:
+        return param.value
+    except Exception:
+        return None
+
+
 def find_doc_file(app):
     for i in range(app.data.activeHub.dataProjects.count):
         proj = app.data.activeHub.dataProjects.item(i)
         files = proj.rootFolder.dataFiles
         for j in range(files.count):
-            if files.item(j).name == DOC_NAME:
+            if files.item(j).name == DOC_NAME and files.item(j).fileExtension == 'f3d':
                 return files.item(j)
     return None
 
@@ -76,7 +85,8 @@ def _work():
                        'third': v3(g.thirdAxisVector), 'type': j.jointMotion.objectType.split('::')[-1],
                        'axis_measured': [c / n for c in w] if n and n > 1e-4 else None,
                        'measured_angle': math.asin(min(1.0, n / 2)) if n else 0.0,
-                       'motion_links': [[ml.jointOne.name, ml.jointTwo.name, ml.isReversed] for ml in j.motionLinks],
+                       'motion_links': [[ml.jointOne.name, ml.jointTwo.name, ml.isReversed, value(ml.valueOne), value(ml.valueTwo)]
+                                        for ml in j.motionLinks],   # values: rad of joint one per rad of joint two
                        'lower': lim.minimumValue if lim.isMinimumValueEnabled else None,
                        'upper': lim.maximumValue if lim.isMaximumValueEnabled else None})
     _res.update({'doc_version': doc.dataFile.versionNumber, 'links': links, 'joints': joints, 'status': 'ok',

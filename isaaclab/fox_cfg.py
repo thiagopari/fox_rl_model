@@ -1,15 +1,16 @@
 """Isaac Lab articulation config for the Fox quadruped (analogue of UNITREE_GO1_CFG), driven like the real robot.
 
-Each leg has three DS-843MG servos: hip (abduction), pivot (turns the femur) and gear (pinion -> 12:12 gear -> crank ->
-Quad Link; the hip-crank-Quad Link-knee parallelogram keeps the shin at the crank's angle). urdf/fox.urdf is that
-mechanism reduced to a tree (base + per leg hip, thigh, calf, foot); the servo map makes it exact:
-    thigh = pivot        calf = -gear - pivot        foot = mimic of calf (foot four-bar, linear part)
+Each leg has three DS-843MG servos: hip (abduction), pivot (turns the femur) and gear (pinion -> N:1 gear -> crank ->
+Quad Link; the hip-crank-Quad Link-knee parallelogram keeps the shin at the crank's angle; N = gear_ratio, 1 for the
+v6 12:12 pair, 2 for the v7 12:24 one). urdf/fox.urdf is that mechanism reduced to a tree (base + per leg hip, thigh,
+calf, foot); the servo map makes it exact:
+    thigh = pivot        calf = -gear / N - pivot        foot = mimic of calf (foot four-bar, linear part)
 So the gear servo alone swings the shin, the pivot servo alone bends the knee (extension), and pivot +a with gear -a
 swings the whole leg like a pendulum.
 
 FoxServoActuator reads the position targets of <leg>_hip_joint / _thigh_joint / _calf_joint as the HIP / PIVOT /
 GEAR SERVO angles (rad from the CAD stance), runs one saturated PD per servo, and maps the servo torques onto the
-joints (virtual work):  tau_hip = t_hip,  tau_thigh = t_pivot - t_gear,  tau_calf = -t_gear.
+joints (virtual work):  tau_hip = t_hip,  tau_thigh = t_pivot - N t_gear,  tau_calf = -N t_gear.
 The foot joints carry no actuator; their <mimic> constraint (NewtonMimicAPI in the USD) moves them.
 Body names for the velocity task: base = "base", feet = ".*_foot", undesired contacts = ".*_thigh|.*_calf".
 FOX_SERVO_REAL_CFG adds what the hardware does on top (FOX_SERVO_CFG is the ideal servo): command latency, gear backlash
@@ -21,6 +22,7 @@ Isaac Lab 3.0.0-beta2 (isaaclab/fox_sim.py); the servo map is also checked in Mu
 """
 from __future__ import annotations
 
+import json
 import os
 
 import torch
@@ -47,6 +49,7 @@ class FoxServoActuator(ActuatorBase):
         names = list(self.joint_names)
         pick = lambda part: [names.index("%s_%s_joint" % (leg, part)) for leg in LEGS]  # noqa: E731
         self._hip, self._thigh, self._calf = pick("hip"), pick("thigh"), pick("calf")
+        self._n = float(cfg.gear_ratio)
         self._delay = DelayBuffer(cfg.max_delay, self._num_envs, device=self._device)
         self._play = torch.zeros(self._num_envs, 3 * len(LEGS), device=self._device)   # backlash of each servo, this episode
         self._play_max = torch.tensor(cfg.backlash, device=self._device).repeat_interleave(len(LEGS))
@@ -62,7 +65,7 @@ class FoxServoActuator(ActuatorBase):
     def servo_angles(self, joint_pos: torch.Tensor) -> torch.Tensor:
         """(num_envs, 12) servo angles [hip, pivot, gear] x legs from joint angles (also for observations / hardware)."""
         return torch.cat([joint_pos[:, self._hip], joint_pos[:, self._thigh],
-                          -(joint_pos[:, self._thigh] + joint_pos[:, self._calf])], dim=1)
+                          -self._n * (joint_pos[:, self._thigh] + joint_pos[:, self._calf])], dim=1)
 
     def compute(self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor) -> ArticulationActions:
         tgt = self._delay.compute(control_action.joint_positions)      # command latency (physics steps)
@@ -79,8 +82,8 @@ class FoxServoActuator(ActuatorBase):
         t_hip, t_pivot, t_gear = t[:, :n], t[:, n:2 * n], t[:, 2 * n:]
         effort = torch.zeros_like(joint_pos)
         effort[:, self._hip] = t_hip
-        effort[:, self._thigh] = t_pivot - t_gear
-        effort[:, self._calf] = -t_gear
+        effort[:, self._thigh] = t_pivot - self._n * t_gear
+        effort[:, self._calf] = -self._n * t_gear
         self.computed_effort = effort
         self.applied_effort = effort
         control_action.joint_efforts = effort
@@ -96,14 +99,15 @@ class FoxServoActuatorCfg(ActuatorBaseCfg):
     max_delay: int = 0
     backlash: tuple = (0.0, 0.0, 0.0)   # max free play of the hip / pivot / gear servos (rad), drawn per episode in [0, max]
     torque_speed: bool = False          # limit torque by speed: stall torque at rest, 0 at velocity_limit (no-load speed)
+    gear_ratio: float = 1.0             # pinion turns per crank-gear turn: v6 12:12 = 1, v7 12:24 = 2
 
 
-# Corona DS-843MG at 6 V: 0.47 N m stall, 0.10 s / 60 deg (10.5 rad/s). The 12:12 gear passes the gear servo's torque
-# to the crank unchanged; the parallelogram passes it to the shin.
+# Corona DS-843MG at 6 V: 0.47 N m stall, 0.10 s / 60 deg (10.5 rad/s). The gear pair passes N times the gear servo's
+# torque to the crank (1:1 here; gear_ratio=2 for v7); the parallelogram passes it to the shin.
 FOX_SERVO_CFG = FoxServoActuatorCfg(
     joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
     effort_limit=0.47,      # per servo (stall); lower it for a continuous rating after bench tests
-    effort_limit_sim=2.0,   # PhysX joint clip above the mapped torques (thigh gets pivot - gear: up to 0.94 N m)
+    effort_limit_sim=2.0,   # PhysX joint clip above the mapped torques (thigh gets pivot - N gear: up to 0.94 N m, v7 1.41)
     velocity_limit=10.5,
     stiffness=5.0,          # servo PD gains (N m / rad, N m s / rad), same as the MuJoCo models: a DS-843MG reaches
     damping=0.08,           # stall within ~5 deg of error (~5 N m/rad); kp 2 was too soft (randomized robots tipped over)
@@ -141,3 +145,25 @@ FOX_CFG = ArticulationCfg(
     actuators={"servos": FOX_SERVO_CFG},
 )
 """Fox quadruped: 17 links (base + {FL,FR,RL,RR}_{hip,thigh,calf,foot}), 16 revolute joints (4 foot mimics), 0.54 kg."""
+
+
+def fox_model_cfg(model_dir: str):
+    """(ArticulationCfg, action offsets) for a model folder written by tools/build_robot.py --out <model_dir> (v7: FOX_DIR/v7):
+    its USD (usd/fox.usd, from tools/isaacsim_import.py), gear ratio and level stance (mechanism.json). The stance is the
+    reset pose in JOINT angles; the offsets are the same stance as SERVO angles (hip, pivot, gear servo on the hip / thigh /
+    calf joint names) for JointPositionActionCfg(use_default_offset=False, offset=...), because FoxServoActuator reads the
+    targets as servo angles. The v6 model (FOX_CFG) stands at the CAD pose, so it needs neither."""
+    mech = json.load(open(os.path.join(model_dir, "mechanism.json")))
+    n, stance = float(mech["servo_map"].get("pinion_per_gear", 1.0)), mech["stance"]
+    joints, offsets = {}, {}
+    for leg in LEGS:
+        th, ca = stance["joints_rad"][leg + "_thigh_joint"], stance["joints_rad"][leg + "_calf_joint"]
+        joints.update({leg + "_hip_joint": 0.0, leg + "_thigh_joint": th, leg + "_calf_joint": ca,
+                       leg + "_foot_joint": stance["joints_rad"][leg + "_foot_joint"]})
+        offsets.update({leg + "_hip_joint": 0.0, leg + "_thigh_joint": th, leg + "_calf_joint": -n * (th + ca)})
+    cfg = FOX_CFG.replace(
+        spawn=FOX_CFG.spawn.replace(usd_path=os.path.join(model_dir, "usd", "fox.usd")),
+        init_state=FOX_CFG.init_state.replace(pos=(0.0, 0.0, stance["base_height_m"] + 0.008), joint_pos=joints),
+        actuators={"servos": FOX_SERVO_CFG.replace(gear_ratio=n)},
+    )
+    return cfg, offsets

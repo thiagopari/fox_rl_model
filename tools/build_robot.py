@@ -3,19 +3,21 @@
 
 raw/raw.json + raw/meshes/*.stl come from tools/fusion/FoxExportRaw run on 'Fox_Prototype_03_v6_RL_Mechanism'
 (frame: x forward, y left, z up; origin between the hips; cm / kg in raw.json, metres in the STLs). Each leg is the real
-mechanism: hip servo -> abduction; pivot servo -> femur; gear servo -> pinion -> 12:12 gear with crank -> Quad Link ->
-tibia. hip-crank-Quad Link-knee is a parallelogram (the tibia keeps the crank's angle); the foot hangs from a second
+mechanism: hip servo -> abduction; pivot servo -> femur; gear servo -> pinion -> gear with crank (N:1, N from the
+exported motion link: v6 12:12 = 1, v7 12:24 = 2) -> Quad Link -> tibia. hip-crank-Quad Link-knee is a parallelogram (the tibia keeps the crank's angle); the foot hangs from a second
 four-bar (Component77 front, Calf Link rear - a parallelogram on the rear legs). Outputs:
   mjcf/fox.xml (+ scene.xml)   exact mechanism: loops closed with <connect>, the gear pair with a joint equality,
                                position servos on the 12 servo joints (hip, pivot = femur, gear = pinion)
   mjcf/fox_reduced.xml         the same robot as a tree (base + per leg hip, thigh, calf, foot): the gear servo acts on
                                a fixed tendon (-thigh - calf), the foot follows the four-bar through a joint equality
   urdf/fox.urdf                that tree for Isaac (URDF cannot hold loops); foot joint as <mimic> of the calf joint
-  mechanism.json               servo <-> joint map + four-bar fits, used by isaaclab/fox_cfg.py and the checks
-Servo map (all pitch angles about +y, zero = CAD stance):  thigh = pivot,  calf = -gear_servo - pivot,  foot = f(calf).
-Usage:  ~/.venvs/fox_rl/bin/python tools/build_robot.py
+  mechanism.json               servo <-> joint map + four-bar fits + the level standing pose, used by isaaclab/fox_cfg.py
+Servo map (all pitch angles about +y, zero = CAD pose):  thigh = pivot,  calf = -gear_servo / N - pivot,  foot = f(calf).
+Stance: base level, soles at the front feet's CAD height (v7: the raised rear legs reach down), each foot fore-aft where
+its worst pitch servo's static load is lowest (1:1 -> under the hip).
+Usage:  ~/.venvs/fox_rl/bin/python tools/build_robot.py [--raw raw] [--out .]     (v7: --raw raw_v7 --out v7)
 """
-import json, os, sys
+import argparse, json, os, sys
 import numpy as np
 import trimesh
 import fast_simplification
@@ -23,8 +25,8 @@ import fast_simplification
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, 'raw')
 CM = 0.01
-# DS-843MG at 6 V (servodatabase): 0.47 N m stall, 0.10 s/60 deg = 10.5 rad/s. The gear pair is 1:1, so the gear
-# servo's torque reaches the crank unchanged (reversed).
+# DS-843MG at 6 V (servodatabase): 0.47 N m stall, 0.10 s/60 deg = 10.5 rad/s. The gear pair multiplies the gear
+# servo's torque by N on the crank (reversed).
 EFFORT, VELOCITY = 0.47, 10.5
 ARMATURE, DAMPING, FRICTIONLOSS = 0.0005, 0.01, 0.002   # servo joints (estimates; reflected rotor inertia dominates)
 PIN_ARMATURE, PIN_DAMPING = 1e-6, 1e-4                  # free pins of the linkages
@@ -113,10 +115,113 @@ def parallelogram_range(H, Q1, K):
     return [-(a - MIN_TRANSMISSION), np.pi - a - MIN_TRANSMISSION]
 
 
+def gear_ratio(J):
+    """N = pinion turns per crank-gear turn, from the exported motion links (older exports: 1:1)."""
+    ns = []
+    for leg in LEGS:
+        ml = J[leg + '_pinion_joint']['motion_links'][0]
+        if len(ml) < 5 or not ml[3] or not ml[4]:
+            ns.append(1.0)
+        else:
+            ns.append(ml[3] / ml[4] if ml[0] == leg + '_pinion_joint' else ml[4] / ml[3])
+    assert max(ns) - min(ns) < 1e-6, ns
+    return float(ns[0])
+
+
+def level_stance(xml, legs, mech, n):
+    """Standing pose of the reduced model: base level, every sole (centre of the foot's flat bottom) at the front feet's
+    CAD height, and each foot placed fore-aft where the larger of its pitch servos' static loads (vertical force at the
+    sole, through the servo map) is smallest. With 1:1 gears that is the foot under the hip; with N:1 the foot moves so the
+    pivot servo takes a share of the load the geared servo no longer needs. Returns joint angles, the base origin height
+    above the soles and per leg the foot offset and both servos' levers (m of torque per N of foot force)."""
+    import mujoco
+    from scipy.optimize import least_squares
+    m = mujoco.MjModel.from_xml_path(xml)
+    d = mujoco.MjData(m)
+    jid = lambda n_: m.joint(n_).id                          # noqa: E731
+    qadr = lambda n_: m.jnt_qposadr[jid(n_)]                 # noqa: E731
+    dof = lambda n_: m.jnt_dofadr[jid(n_)]                   # noqa: E731
+    P = np.polynomial.polynomial
+
+    def set_leg(leg, th, ca):
+        d.qpos[qadr(leg + '_thigh_joint')], d.qpos[qadr(leg + '_calf_joint')] = th, ca
+        d.qpos[qadr(leg + '_foot_joint')] = P.polyval(ca, mech['legs'][leg]['foot_poly'])
+        mujoco.mj_kinematics(m, d)
+        mujoco.mj_comPos(m, d)
+
+    sole, foot_geom = {}, {}
+    for leg in legs:                                         # sole point, in the foot geom's mesh frame
+        g = next(i for i in range(m.ngeom) if m.geom_bodyid[i] == m.body(leg + '_foot').id and m.geom_contype[i])
+        mid = m.geom_dataid[g]
+        v = m.mesh_vert[m.mesh_vertadr[mid]:m.mesh_vertadr[mid] + m.mesh_vertnum[mid]]
+        set_leg(leg, 0.0, 0.0)
+        w = d.geom_xpos[g] + v @ d.geom_xmat[g].reshape(3, 3).T
+        flat = w[:, 2] < w[:, 2].min() + 0.0005                  # the sole is flat: centre of its lowest 0.5 mm
+        c = w[flat].mean(axis=0)
+        c[2] = w[:, 2].min()
+        sole[leg], foot_geom[leg] = d.geom_xmat[g].reshape(3, 3).T @ (c - d.geom_xpos[g]), g
+
+    def sole_world(leg):
+        g = foot_geom[leg]
+        return d.geom_xpos[g] + d.geom_xmat[g].reshape(3, 3) @ sole[leg]
+
+    def levers(leg):                                         # pivot / gear servo torque per N of vertical sole force
+        jp = np.zeros((3, m.nv))
+        mujoco.mj_jac(m, d, jp, None, sole_world(leg), m.body(leg + '_foot').id)
+        slope = P.polyval(d.qpos[qadr(leg + '_calf_joint')], P.polyder(mech['legs'][leg]['foot_poly']))
+        t_th = jp[2, dof(leg + '_thigh_joint')]
+        t_ca = jp[2, dof(leg + '_calf_joint')] + slope * jp[2, dof(leg + '_foot_joint')]
+        return abs(t_th - t_ca), abs(t_ca) / n
+    z_feet = np.mean([sole_world(leg)[2] for leg in legs if leg[0] == 'F'])
+    out, info = {}, {}
+    for leg in legs:
+        hx = d.xanchor[jid(leg + '_thigh_joint')][0]
+        lo, hi = mech['legs'][leg]['knee_range_rad']
+
+        def solve(dx, q0):
+            def err(q):
+                set_leg(leg, *q)
+                p = sole_world(leg)
+                return [p[0] - hx - dx, p[2] - z_feet]
+            r = least_squares(err, q0, xtol=1e-12, ftol=1e-12)
+            set_leg(leg, *r.x)
+            ok = np.abs(r.fun).max() < 1e-6 and lo + 0.05 < r.x[1] < hi - 0.05 and abs(r.x[0]) < 1.15
+            return r.x, ok, max(levers(leg)), float(np.abs(r.fun).max())
+        best = None
+        for sgn in (1.0, -1.0):                              # walk the foot out from under the hip both ways
+            q = np.zeros(2)
+            for dx in sgn * np.arange(0.0, 0.0401, 0.001):
+                q, ok, worst, res = solve(dx, q)
+                if not ok:
+                    break
+                if best is None or worst < best[0]:
+                    best = (worst, dx, q.copy())
+        for dx in best[1] + np.arange(-0.001, 0.00101, 0.0001):   # refine around the best millimetre
+            q, ok, worst, res = solve(dx, best[2])
+            if ok and worst < best[0]:
+                best = (worst, dx, q.copy())
+        q, ok, worst, res = solve(best[1], best[2])
+        th, ca = q
+        out.update({leg + '_thigh_joint': float(th), leg + '_calf_joint': float(ca),
+                    leg + '_foot_joint': float(P.polyval(ca, mech['legs'][leg]['foot_poly']))})
+        lp, lg = levers(leg)
+        info[leg] = {'foot_ahead_of_hip_mm': round(1000 * best[1], 2), 'pivot_lever_mm': round(1000 * lp, 2),
+                     'gear_lever_mm': round(1000 * lg, 2), 'residual_m': res}
+    for leg in legs:
+        set_leg(leg, out[leg + '_thigh_joint'], out[leg + '_calf_joint'])
+    return out, float(d.xpos[m.body('base').id][2] - z_feet), info
+
+
 def main():
-    raw = json.load(open(os.path.join(RAW, 'raw.json')))
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--raw', default=RAW, help='FoxExportRaw output folder (raw.json + meshes/)')
+    ap.add_argument('--out', default=ROOT, help='where meshes/, urdf/, mjcf/, mechanism.json, build_report.json go')
+    a = ap.parse_args()
+    raw_dir, out_dir = os.path.abspath(a.raw), os.path.abspath(a.out)
+    raw = json.load(open(os.path.join(raw_dir, 'raw.json')))
     links, joints = raw['links'], raw['joints']
     J = {j['name']: j for j in joints}
+    N = gear_ratio(J)
     parent, tree, loops = {'base': None}, [], []
     for j in joints:                                  # first joint that reaches a part is its tree joint; later ones close loops
         (loops if j['child'] in parent else tree).append(j)
@@ -126,8 +231,8 @@ def main():
     frame = {n: (np.array(tj[n]['origin_cm']) * CM if n in tj else np.zeros(3)) for n in links}
     world = {n: np.array(j['origin_cm']) * CM for n, j in J.items()}
     for d in ('meshes/visual', 'meshes/collision', 'urdf', 'mjcf'):
-        os.makedirs(os.path.join(ROOT, d), exist_ok=True)
-    raw_mesh = {n: trimesh.load(os.path.join(RAW, 'meshes', L['stl']), force='mesh') for n, L in links.items()}
+        os.makedirs(os.path.join(out_dir, d), exist_ok=True)
+    raw_mesh = {n: trimesh.load(os.path.join(raw_dir, 'meshes', L['stl']), force='mesh') for n, L in links.items()}
     report = {'links': {}, 'joints': {}, 'reduced': {}}
 
     def write_meshes(n, mesh, origin):              # visual (decimated) + collision (convex hull) in the link frame
@@ -138,8 +243,8 @@ def main():
         if len(mesh.faces) > tgt:
             v, f = fast_simplification.simplify(mesh.vertices, mesh.faces, 1.0 - tgt / len(mesh.faces))
             vis = trimesh.Trimesh(v, f, process=True)
-        vis.export(os.path.join(ROOT, 'meshes', 'visual', n + '.stl'))
-        mesh.convex_hull.export(os.path.join(ROOT, 'meshes', 'collision', n + '.stl'))
+        vis.export(os.path.join(out_dir, 'meshes', 'visual', n + '.stl'))
+        mesh.convex_hull.export(os.path.join(out_dir, 'meshes', 'collision', n + '.stl'))
         return len(mesh.faces), len(vis.faces)
 
     def inertial(names, origin):                    # merged mass properties of parts, COM in the link frame
@@ -151,8 +256,9 @@ def main():
         return m, com * CM - origin, I, bool(valid)
 
     # ---------------- four-bar foot + servo map ----------------
-    mech = {'servo_map': {'thigh': 'pivot', 'calf': '-gear - pivot', 'foot': 'f(calf)', 'gear_ratio': -1.0,
-                          'note': 'pitch angles about +y from the CAD stance; gear = 12:12 external mesh'}, 'legs': {}}
+    mech = {'servo_map': {'thigh': 'pivot', 'calf': '-gear / %g - pivot' % N, 'foot': 'f(calf)', 'gear_ratio': -1.0 / N,
+                          'pinion_per_gear': N, 'note': 'pitch angles about +y from the CAD pose; gear: external mesh, '
+                          'the crank turns -1/N of the gear servo'}, 'legs': {}}
     for leg in LEGS:
         P = {k: world[leg + n][[0, 2]] for k, n in (('K', '_knee_joint'), ('C', '_link_pin_joint'), ('A', '_ankle_joint'), ('Cp', '_foot_pin_joint'))}
         coef, err, rng = foot_fit(P['K'], P['C'], P['A'], P['Cp'])
@@ -162,7 +268,6 @@ def main():
         mech['legs'][leg] = {'foot_poly': coef.round(6).tolist(), 'foot_fit_err_rad': err, 'knee_range_rad': knee,
                              'foot_loop_range_rad': np.round(rng, 4).tolist(), 'upper_loop_range_rad': np.round(up, 4).tolist(),
                              'parallelogram_err_m': float(np.linalg.norm((Q1 - H) - (Q2 - K)) + np.linalg.norm((K - H) - (Q2 - Q1)))}
-    json.dump(mech, open(os.path.join(ROOT, 'mechanism.json'), 'w'), indent=1)
 
     # ---------------- exact mechanism MJCF ----------------
     inert = {}
@@ -225,12 +330,12 @@ def main():
     for leg in LEGS:
         ml = J[leg + '_pinion_joint'].get('motion_links') or J[leg + '_gear_joint'].get('motion_links')
         assert ml and ml[0][2], 'gear motion link missing or not reversed: %s' % ml
-        X.append('    <joint name="%s_gear_mesh" joint1="%s_gear_joint" joint2="%s_pinion_joint" polycoef="0 -1 0 0 0"/>' % (leg, leg, leg))
+        X.append('    <joint name="%s_gear_mesh" joint1="%s_gear_joint" joint2="%s_pinion_joint" polycoef="0 %.8g 0 0 0"/>' % (leg, leg, leg, -1.0 / N))
     X += ['  </equality>', '  <actuator>']
     X += ['    <position name="%s_%s" joint="%s_%s"/>' % (leg, a, leg, sj) for leg in LEGS for a, sj in SERVOS]
     X += ['  </actuator>'] + sensors
-    open(os.path.join(ROOT, 'mjcf', 'fox.xml'), 'w').write('\n'.join(X) + '\n')
-    open(os.path.join(ROOT, 'mjcf', 'scene.xml'), 'w').write(SCENE % 'fox.xml')
+    open(os.path.join(out_dir, 'mjcf', 'fox.xml'), 'w').write('\n'.join(X) + '\n')
+    open(os.path.join(out_dir, 'mjcf', 'scene.xml'), 'w').write(SCENE % 'fox.xml')
     for j in joints:
         report['joints'][j['name']] = {'parent': j['parent'], 'child': j['child'], 'origin_world_m': np.round(world[j['name']], 5).tolist(),
                                        'axis': axis_of(j).tolist(), 'servo': j['lower'] is not None, 'closes_loop': j in loops,
@@ -268,8 +373,8 @@ def main():
         lo, hi = mech['legs'][leg]['knee_range_rad'] if k == 'calf' else rlim[k]
         U += ['  <joint name="%s_joint" type="revolute">' % n, '    ' + origin(rframe[n] - rframe[rparent[n]]),
               '    <parent link="%s"/>' % rparent[n], '    <child link="%s"/>' % n, '    <axis xyz="%g %g %g"/>' % tuple(axis_of(rjoint[n])),
-              # thigh torque = pivot - gear servo torques (up to 2 x stall); PhysX clips joint efforts at this value
-              '    <limit lower="%.4f" upper="%.4f" effort="%.3f" velocity="%.2f"/>' % (lo, hi, {'thigh': 2 * EFFORT, 'foot': 10.0}.get(k, EFFORT),
+              # thigh torque = pivot - N gear servo torques, calf = -N gear (up to (1+N) / N x stall); PhysX clips at these
+              '    <limit lower="%.4f" upper="%.4f" effort="%.3f" velocity="%.2f"/>' % (lo, hi, {'thigh': (1 + N) * EFFORT, 'calf': N * EFFORT, 'foot': 10.0}.get(k, EFFORT),
                                                                                        VELOCITY if k != 'foot' else 50.0),
               # damping/friction 0 on purpose: Isaac's URDF importer writes URDF damping into the per-degree USD field;
               # joint damping/armature belong in the actuator config (isaaclab/fox_cfg.py) and the MJCF defaults.
@@ -278,7 +383,7 @@ def main():
             U.append('    <mimic joint="%s_calf_joint" multiplier="%.6f" offset="0"/>' % (leg, mech['legs'][leg]['foot_poly'][1]))
         U.append('  </joint>')
     U.append('</robot>')
-    open(os.path.join(ROOT, 'urdf', 'fox.urdf'), 'w').write('\n'.join(U) + '\n')
+    open(os.path.join(out_dir, 'urdf', 'fox.urdf'), 'w').write('\n'.join(U) + '\n')
     rkids = {}
     for n in red[1:]:
         rkids.setdefault(rparent[n], []).append(n)
@@ -306,7 +411,7 @@ def main():
         out.append('%s</body>' % sp)
         return out
     R = header('fox_reduced', red, stem) + rbody('base', 2) + ['  </worldbody>', '  <tendon>']
-    R += ['    <fixed name="%s_gear_servo"><joint joint="%s_thigh_joint" coef="-1"/><joint joint="%s_calf_joint" coef="-1"/></fixed>' % (l, l, l) for l in LEGS]
+    R += ['    <fixed name="%s_gear_servo"><joint joint="%s_thigh_joint" coef="%g"/><joint joint="%s_calf_joint" coef="%g"/></fixed>' % (l, l, -N, l, -N) for l in LEGS]
     R += ['  </tendon>', '  <equality>']
     R += ['    <joint name="%s_four_bar" joint1="%s_foot_joint" joint2="%s_calf_joint" polycoef="%s"/>' % (l, l, l, ' '.join('%.6g' % c for c in mech['legs'][l]['foot_poly'])) for l in LEGS]
     R += ['  </equality>', '  <actuator>']
@@ -314,15 +419,28 @@ def main():
         R += ['    <position name="%s_hip" joint="%s_hip_joint"/>' % (l, l), '    <position name="%s_pivot" joint="%s_thigh_joint"/>' % (l, l),
               '    <position name="%s_gear" tendon="%s_gear_servo" inheritrange="0" ctrlrange="%.4f %.4f"/>' % (l, l, J[l + '_pinion_joint']['lower'], J[l + '_pinion_joint']['upper'])]
     R += ['  </actuator>'] + sensors
-    open(os.path.join(ROOT, 'mjcf', 'fox_reduced.xml'), 'w').write('\n'.join(R) + '\n')
-    open(os.path.join(ROOT, 'mjcf', 'scene_reduced.xml'), 'w').write(SCENE % 'fox_reduced.xml')
+    open(os.path.join(out_dir, 'mjcf', 'fox_reduced.xml'), 'w').write('\n'.join(R) + '\n')
+    open(os.path.join(out_dir, 'mjcf', 'scene_reduced.xml'), 'w').write(SCENE % 'fox_reduced.xml')
+    stance, height, info = level_stance(os.path.join(out_dir, 'mjcf', 'fox_reduced.xml'), LEGS, mech, N)
+    mech['stance'] = {'joints_rad': {k: round(v, 6) for k, v in stance.items()}, 'base_height_m': round(height, 5),
+                      'servo_deg_from_cad': {'%s_%s' % (l, s_): round(float(np.degrees(v)), 2) for l in LEGS for s_, v in
+                                             (('hip', 0.0), ('pivot', stance[l + '_thigh_joint']),
+                                              ('gear', -N * (stance[l + '_thigh_joint'] + stance[l + '_calf_joint'])))},
+                      'legs': info, 'note': 'base level, soles at the front feet CAD height, feet where the worst pitch servo '
+                      'load is lowest (levers: servo N m per N of vertical foot force)'}
+    json.dump(mech, open(os.path.join(out_dir, 'mechanism.json'), 'w'), indent=1)
     report['standing_height_base_origin_m'] = -feet_z + 0.002
     report['total_mass_g'] = round(sum(l['mass_kg'] for l in links.values()) * 1000, 1)
     report['mechanism'] = mech
-    json.dump(report, open(os.path.join(ROOT, 'build_report.json'), 'w'), indent=1)
+    json.dump(report, open(os.path.join(out_dir, 'build_report.json'), 'w'), indent=1)
     bad = [n for n, r in report['links'].items() if not r['physically_valid']] + [n for n, r in report['reduced'].items() if not r['physically_valid']]
     print('parts %d  joints %d (tree %d, loops %d)  reduced links %d  mass %.1f g  base height %.4f m  invalid inertias %s'
           % (len(links), len(joints), len(tree), len(loops), len(red), report['total_mass_g'], report['standing_height_base_origin_m'], bad))
+    print('  gear servo -> crank %g:1 | level stance: base %.4f m above the soles, servo deg from CAD %s'
+          % (N, height, mech['stance']['servo_deg_from_cad']))
+    for leg, v in info.items():
+        print('    %s foot %+.1f mm ahead of the hip: levers pivot %.1f mm, gear %.1f mm (residual %.0e m)'
+              % (leg, v['foot_ahead_of_hip_mm'], v['pivot_lever_mm'], v['gear_lever_mm'], v['residual_m']))
     for leg, v in mech['legs'].items():
         print('  %s foot = f(calf): poly %s  fit err %.1e rad | knee range %s (foot loop %s, upper loop %s) | parallelogram err %.1e m'
               % (leg, np.round(v['foot_poly'], 4).tolist(), v['foot_fit_err_rad'], v['knee_range_rad'], v['foot_loop_range_rad'],

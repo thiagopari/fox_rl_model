@@ -4,7 +4,7 @@ import os
 import numpy as np
 import mujoco
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.abspath(os.environ.get('FOX_MODEL', os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))   # FOX_MODEL=v7: another model folder
 m = mujoco.MjModel.from_xml_path(os.path.join(ROOT, 'mjcf', 'scene.xml'))
 d = mujoco.MjData(m)
 rng = np.random.default_rng(0)

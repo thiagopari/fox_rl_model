@@ -3,10 +3,12 @@
 # start Fusion, wait for C:\fusion_jobs\screw_scan.json, then delete the folder again (it runs at every start).
 # Scans every visible solid body of the design copy for small cylindrical faces (screw holes, pins, splines) after
 # suppressing, in memory, the Combine features that join the rear hip brackets to the pelvis (same list as
-# FoxBuildLinkModel). Feed the result to tools/screw_graph.py.
+# FoxBuildLinkModel). Feed the result to tools/screw_graph.py. Another design: put scan.json {"source": name} here.
 import adsk.core, adsk.fusion, json, os, threading, time, traceback
 
-SOURCE_NAME, OUT, RMAX = 'Fox_Prototype_03_v6_RL', r'C:\fusion_jobs', 0.30
+CFG = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scan.json')   # optional: {"source": design name}
+SOURCE_NAME = json.load(open(CFG))['source'] if os.path.exists(CFG) else 'Fox_Prototype_03_v6_RL'
+OUT, RMAX = r'C:\fusion_jobs', 0.30
 UNJOIN = [('Combine1', 'Component41(Mirror) (1)'), ('Combine2', 'Component41(Mirror) (1)'), ('Combine2', 'Servo Pelv Upper')]
 EVT, _handlers, _res, _done = 'FoxScrewScanRun', [], {}, threading.Event()
 
@@ -15,7 +17,7 @@ def find_file(app, name):
     for i in range(app.data.activeHub.dataProjects.count):
         files = app.data.activeHub.dataProjects.item(i).rootFolder.dataFiles
         for j in range(files.count):
-            if files.item(j).name == name:
+            if files.item(j).name == name and files.item(j).fileExtension == 'f3d':
                 return files.item(j)
     return None
 

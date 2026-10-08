@@ -67,26 +67,28 @@ names = ['%s_%s_joint' % (l, p) for p in ('hip', 'thigh', 'calf') for l in LEGS]
 rng = np.random.default_rng(0)
 order = list(rng.permutation(len(names)))                                            # any order must work (name lookup)
 names = [names[i] for i in order]
-act = fox_cfg.FoxServoActuator(fox_cfg.FOX_SERVO_CFG, names, list(range(12)), 5, 'cpu')
-q, qd, tgt = (torch.tensor(rng.uniform(-1, 1, (5, 12)), dtype=torch.float32) for _ in range(3))
-out = act.compute(_Cfg(joint_positions=tgt.clone(), joint_velocities=None, joint_efforts=None), q, qd)
-eff = out.joint_efforts.numpy()
-kp, kd, lim = fox_cfg.FOX_SERVO_CFG.stiffness, fox_cfg.FOX_SERVO_CFG.damping, fox_cfg.FOX_SERVO_CFG.effort_limit
-worst = 0.0
-for e in range(5):
-    for l in LEGS:
-        h, t, c = (names.index('%s_%s_joint' % (l, p)) for p in ('hip', 'thigh', 'calf'))
-        servo = lambda x: np.array([x[e, h], x[e, t], -(x[e, t] + x[e, c])])       # hip, pivot, gear angles
-        s, v, goal = servo(q.numpy()), servo(qd.numpy()), np.array([tgt[e, h], tgt[e, t], tgt[e, c]])
-        th, tp, tg = np.clip(kp * (goal - s) - kd * v, -lim, lim)
-        ref = {h: th, t: tp - tg, c: -tg}
-        worst = max(worst, max(abs(eff[e, j] - r) for j, r in ref.items()))
-        dq = rng.normal(size=12)                                                     # virtual work: joint power = servo power
-        ds = np.array([dq[h], dq[t], -(dq[t] + dq[c])])
-        worst = max(worst, abs(eff[e, h] * dq[h] + eff[e, t] * dq[t] + eff[e, c] * dq[c] - (np.array([th, tp, tg]) @ ds)))
-assert out.joint_positions is None and out.joint_velocities is None, 'explicit actuator must clear the position/velocity targets'
-assert worst < 1e-5, 'FoxServoActuator disagrees with the servo map: %.2e' % worst
-print('FoxServoActuator matches the servo map (max deviation %.1e N m, power balance included) - PASS' % worst)
+for N in (1.0, 2.0):                                                                 # v6 12:12, v7 12:24 gears
+    cfg = fox_cfg.FOX_SERVO_CFG.replace(gear_ratio=N)
+    act = fox_cfg.FoxServoActuator(cfg, names, list(range(12)), 5, 'cpu')
+    q, qd, tgt = (torch.tensor(rng.uniform(-1, 1, (5, 12)), dtype=torch.float32) for _ in range(3))
+    out = act.compute(_Cfg(joint_positions=tgt.clone(), joint_velocities=None, joint_efforts=None), q, qd)
+    eff = out.joint_efforts.numpy()
+    kp, kd, lim = cfg.stiffness, cfg.damping, cfg.effort_limit
+    worst = 0.0
+    for e in range(5):
+        for l in LEGS:
+            h, t, c = (names.index('%s_%s_joint' % (l, p)) for p in ('hip', 'thigh', 'calf'))
+            servo = lambda x: np.array([x[e, h], x[e, t], -N * (x[e, t] + x[e, c])])   # hip, pivot, gear angles
+            s, v, goal = servo(q.numpy()), servo(qd.numpy()), np.array([tgt[e, h], tgt[e, t], tgt[e, c]])
+            th, tp, tg = np.clip(kp * (goal - s) - kd * v, -lim, lim)
+            ref = {h: th, t: tp - N * tg, c: -N * tg}
+            worst = max(worst, max(abs(eff[e, j] - r) for j, r in ref.items()))
+            dq = rng.normal(size=12)                                                 # virtual work: joint power = servo power
+            ds = np.array([dq[h], dq[t], -N * (dq[t] + dq[c])])
+            worst = max(worst, abs(eff[e, h] * dq[h] + eff[e, t] * dq[t] + eff[e, c] * dq[c] - (np.array([th, tp, tg]) @ ds)))
+    assert out.joint_positions is None and out.joint_velocities is None, 'explicit actuator must clear the position/velocity targets'
+    assert worst < 1e-5, 'FoxServoActuator disagrees with the servo map (N=%g): %.2e' % (N, worst)
+    print('FoxServoActuator matches the servo map, gear ratio %g (max deviation %.1e N m, power balance included) - PASS' % (N, worst))
 
 # FOX_SERVO_REAL_CFG: latency, backlash, torque-speed line. Servo-space checks on one leg (FL), joints at rest.
 real = fox_cfg.FOX_SERVO_REAL_CFG
@@ -111,3 +113,15 @@ for _ in range(lag + 1):
                       zero, torch.where(torch.arange(12) == h, real.velocity_limit / 2, 0.0)[None].float())
 assert abs(float(out.joint_efforts[0, h]) - real.effort_limit / 2) < 1e-6, 'half the stall torque at half the no-load speed'
 print('FOX_SERVO_REAL_CFG: %d-step latency, %.4f rad backlash, torque-speed line - PASS' % (lag, play))
+
+# fox_model_cfg (v7 model folders): reset pose in joint angles, action offsets as servo angles, gear ratio on the servos
+import json, tempfile  # noqa: E402,E401
+with tempfile.TemporaryDirectory() as d:
+    joints = {'%s_%s_joint' % (l, p): v for l in LEGS for p, v in (('thigh', 0.1), ('calf', 0.05), ('foot', -0.05))}
+    json.dump({'servo_map': {'pinion_per_gear': 2.0}, 'stance': {'joints_rad': joints, 'base_height_m': 0.17}},
+              open(os.path.join(d, 'mechanism.json'), 'w'))
+    cfg, off = fox_cfg.fox_model_cfg(d)
+    assert cfg.actuators['servos'].gear_ratio == 2.0 and cfg.spawn.usd_path == os.path.join(d, 'usd', 'fox.usd')
+    assert abs(cfg.init_state.pos[2] - 0.178) < 1e-9 and cfg.init_state.joint_pos['RL_calf_joint'] == 0.05
+    assert off['RL_thigh_joint'] == 0.1 and abs(off['RL_calf_joint'] + 2.0 * 0.15) < 1e-12 and off['FL_hip_joint'] == 0.0
+print('fox_model_cfg: stance as reset pose, servo-angle offsets (gear = -N (thigh + calf)), gear ratio - PASS')

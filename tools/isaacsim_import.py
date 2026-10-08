@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import urdf/fox.urdf into a single self-contained USD for Isaac Sim 6.0 / Isaac Lab: usd/fox.usd.
+"""Import urdf/fox.urdf into a single self-contained USD for Isaac Sim 6.0 / Isaac Lab: usd/fox.usd (FOX_MODEL=v7: v7/...).
 
 Rerun (headless, ~20 s):
     OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python ~/Documents/fox_rl_model/tools/isaacsim_import.py
@@ -27,7 +27,7 @@ sys.excepthook = lambda *exc: (traceback.print_exception(*exc), app.close(exit_c
 from isaacsim.asset.importer.urdf import URDFImporter, URDFImporterConfig  # noqa: E402
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics  # noqa: E402
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.abspath(os.environ.get("FOX_MODEL", os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))   # FOX_MODEL=v7: another model folder
 URDF = os.path.join(ROOT, "urdf", "fox.urdf")
 OUT = os.path.join(ROOT, "usd", "fox.usd")
 REPORT = os.path.join(ROOT, "validation", "isaacsim_report.json")

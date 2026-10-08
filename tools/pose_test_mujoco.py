@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
 """Drive a few poses through the 12 servos of the exact mechanism in MuJoCo and check stability; save a gallery.
-Poses are given as hip / thigh / calf angles and converted with the servo map: pivot = thigh, gear = -thigh - calf."""
+Poses are given as hip / thigh / calf angles from the stance (mechanism.json; the CAD pose if it has none) and converted
+with the servo map: pivot = thigh, gear = -N (thigh + calf)."""
+import json
 import os
 os.environ.setdefault('MUJOCO_GL', 'egl')
 import numpy as np
 import mujoco
 from PIL import Image
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.abspath(os.environ.get('FOX_MODEL', os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))   # FOX_MODEL=v7: another model folder
 m = mujoco.MjModel.from_xml_path(os.path.join(ROOT, 'mjcf', 'scene.xml'))
 d = mujoco.MjData(m)
 act = {mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_ACTUATOR, i): i for i in range(m.nu)}
+mech = json.load(open(os.path.join(ROOT, 'mechanism.json')))
+N = mech['servo_map'].get('pinion_per_gear', 1.0)
+stance = mech.get('stance', {}).get('joints_rad', {})
 
 def target(hip=0.0, thigh=0.0, calf=0.0, legs=('FL', 'FR', 'RL', 'RR'), base=None):
     u = np.zeros(m.nu) if base is None else base.copy()
     for l in legs:
         sgn = 1.0 if l[1] == 'L' else -1.0          # abduction outward on both sides
+        th, ca = thigh + stance.get(l + '_thigh_joint', 0.0), calf + stance.get(l + '_calf_joint', 0.0)
         u[act[l + '_hip']] = sgn * hip
-        u[act[l + '_pivot']] = thigh            # pivot servo turns the femur
-        u[act[l + '_gear']] = -thigh - calf     # gear servo sets the shin angle through the 1:1 gear + parallelogram
+        u[act[l + '_pivot']] = th               # pivot servo turns the femur
+        u[act[l + '_gear']] = -N * (th + ca)    # gear servo sets the shin angle through the N:1 gear + parallelogram
     return u
 
 def settle(u, secs=1.5, ramp=0.5):

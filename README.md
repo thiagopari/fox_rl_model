@@ -54,6 +54,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `analysis/` | hole/pin scan of the CAD (`screw_scan.json`) and the part map (`link_map.json`) |
 | `tools/` | `screw_graph.py`, `build_robot.py`, MuJoCo + Isaac checks, `check_policy_io.py` (the Pi's policy interface), Fusion add-ins |
 | `validation/` | reports + renders |
+| `v7/`, `raw_v7/`, `print/v7_*.stl` | the v7 design (see "v7: mechanical improvements"): model folder (URDF, MJCF, meshes, `mechanism.json` with its level stance, validation), raw Fusion export, print-ready new parts |
 
 Fusion documents (cloud, work › Default Project):
 * `Fox_Prototype_03_v6` — original, untouched.
@@ -63,6 +64,8 @@ Fusion documents (cloud, work › Default Project):
   servo + 7 free pins, two of them closing the loops) and 4 motion links (pinion → gear, 1:1 reversed). Drag `XX_pinion_joint`
   to swing the leg; to see the pivot servo extend the leg, **lock `XX_pinion_joint`** (right-click → Lock) and drag
   `XX_femur_joint` — otherwise Fusion moves both servos together and the leg just swings.
+* `Fox_Prototype_03_v7_RL` — **v7 design** (2026-10-08): the `_RL` copy with the mechanical improvements below; awaiting review.
+* `Fox_Prototype_03_v7_RL_Mechanism` — v7 jointed model: same 40 joints, motion links pinion → gear **2:1** reversed.
 * `Fox_Prototype_03_v6_RL_URDF_v2` — checkpoint: screw-consistent serial model (no gear relation).
 * `Fox_Prototype_03_v6_RL_URDF` — first model, superseded; safe to delete.
 
@@ -293,6 +296,68 @@ Status: verified only against the simulator (`tools/check_policy_io.py`); it has
    * latency: keep 5–25 ms unless measured;
    * all three go in `isaaclab/fox_cfg.py` (`FOX_SERVO_CFG` / `FOX_SERVO_REAL_CFG`).
 
+## v7: mechanical improvements (review before use)
+The servos stalled when the robot readjusted on the ground. v7 (`Fox_Prototype_03_v7_RL`, made by
+`tools/fusion/FoxMakeV7`, which never saves the source) changes three things:
+* **2:1 gear-servo drive.** The 12T m1.5 pinion / 12T gear pair becomes a **12T pinion → 24T crank gear**:
+  * module 1.0, 20°, profile shift +0.3 / −0.3, so the 12T pinion does not undercut;
+  * same 18.00 mm centres, face width 6.7 mm;
+  * teeth 0.1 mm thin for print backlash (0.2 mm total), contact ratio 1.46.
+
+  Outlines come from `tools/gear_profile.py` (rack-generated, checked by rolling the pair at 2:1). The crank arm, bores
+  and hub are unchanged; the gear teeth start 0.3 mm above the gear plate, like the pinion's, to clear the pinion hub.
+  The gear servo now needs 2× the angle for the same shin motion. Its torque on the crank doubles, while the shin's speed
+  and range halve: ±90° of servo → ±45° of shin.
+* **Rear hips 18.8 mm higher.** The rear module moves 20 mm up the two rear pelvis screws, which are 20° from vertical
+  (+18.8 mm up, 6.8 mm back). It sits on a printed **spacer** between the pelvis flange and the plate tab:
+  * 25 × 8.9 × 20.2 mm, two Ø3.2 holes;
+  * the two screws need to be **20 mm longer**;
+  * the rear module is the rear pelvis, rear legs and servos, and the PWM board and XL4015 that sit on it.
+
+  The rear legs reach down to stand level, which shortens their lever arms.
+* **Rear hip brackets un-fused.** Three Combine features (the same ones the mechanism build always suppressed in memory)
+  are suppressed, because the brackets turn with the hip servos. The rear pinions are turned 14.9° about their own axis
+  so the rear gear pairs mesh too.
+
+**Stance:** base level, each foot where its worst pitch servo's static load is lowest. That puts the front feet 25.5 mm
+ahead of the hips and the rear feet 28.6 mm behind. Set in `v7/mechanism.json`; servo angles from the CAD pose:
+
+| Leg | pivot servo | gear servo |
+|---|---|---|
+| front | −8.6° | +11.3° |
+| rear | +25.6° | −10.4° |
+
+These angles are the new home offsets.
+
+Servo load (`tools/servo_load.py`; trot: 0.75 kg on 2 feet × 1.5), as a share of the 0.47 N·m stall torque:
+
+| | Worst servo | Front pivot / gear | Rear pivot / gear |
+|---|---|---|---|
+| v6, CAD pose | 89 % | 43 % / 51 % | 89 % / 62 % |
+| v6, best level stance (feet under hips) | 72 % | 46 % / 46 % | 72 % / 72 % |
+| **v7, its stance** | **34 %** | 30 % / 30 % | 34 % / 34 % |
+
+Standing still in MuJoCo (0.55 kg, 4 feet), the worst servo goes from 23 % (v6) to 10 % (v7) of stall.
+
+**Checks** (`v7/validation/`):
+* Fusion: tooth overlap 0.0 mm³ on all 4 legs; every rear body moved by exactly the lift and nothing else moved; no new
+  interference; the spacer is seated on both faces; 40 joints + 4 motion links healthy; the drive tests give
+  gear = −pinion / 2 and keep both parallelograms (worst 5.5e-5 rad).
+* MuJoCo: stands level at the stance (upright 1.0000, all feet down); servo roles at 2:1; the reduced tree matches the
+  exact mechanism within 7 µm; pose test and 20 s of random actions pass.
+* `rear_stack_section.png` shows pelvis, spacer and plate on the screw axis; `v7_*.png` are Fusion renders.
+
+**To use it** (not done yet, on purpose):
+1. `FOX_MODEL=v7 OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py` writes `v7/usd/fox.usd`.
+2. Train `Fox-V7-Velocity-Flat-Blind` (`isaaclab/fox_cfg.py` `fox_model_cfg()`: ratio 2, stance as reset pose, and its
+   servo angles as action offsets).
+
+On the robot:
+* print `print/v7_crank_gear_24T.stl` and `v7_pinion_12T.stl` (4 each) and `v7_rear_hip_spacer.stl` (1);
+* recalibrate the homes to the v7 stance.
+* `deploy/fox_pi.py`'s stand/balance IK still assumes 1:1 gears (`gear = -(thigh + calf)`), so it needs the ratio
+  before `--stand` / `--balance` run on v7.
+
 ## Regenerate
 Each `tools/fusion/*` folder is a one-shot add-in: copy it into Fusion's `API/AddIns`, start Fusion, wait for its result
 in `C:\fusion_jobs` (`drive_c/fusion_jobs` in the Wine prefix), then remove the folder again (it runs at every start).
@@ -303,6 +368,11 @@ in `C:\fusion_jobs` (`drive_c/fusion_jobs` in the Wine prefix), then remove the 
    drive tests pass. Wait for `Uploaded document` in the Fusion log before closing Fusion.
 3. `FoxExportRaw` → copy `C:\fusion_jobs\export` to `raw/`.
 4. `~/.venvs/fox_rl/bin/python tools/build_robot.py`, then the checks below.
+
+v7 the same way, with the configs in `tools/fusion/v7/` (`scan.json`, `build.json`, `export.json`) placed next to each
+add-in, `tools/screw_graph.py analysis/screw_scan_v7.json analysis/link_map_v7.json`, then
+`tools/build_robot.py --raw raw_v7 --out v7` and the MuJoCo checks with `FOX_MODEL=v7`. `FoxMakeV7` itself runs once
+(it refuses to overwrite `Fox_Prototype_03_v7_RL`).
 
 ## Validation
 All checks pass (reports in `validation/`):

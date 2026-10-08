@@ -1,0 +1,584 @@
+{
+ "checks": {
+  "rear bracket joins suppressed (in memory) without errors": {
+   "ok": true,
+   "detail": {
+    "timeline": [
+     182,
+     187,
+     192
+    ],
+    "errors": []
+   }
+  },
+  "every body has a link in link_map.json (else rerun FoxScrewScan + tools/screw_graph.py)": {
+   "ok": true,
+   "detail": {
+    "unmapped": [],
+    "bodies": 543,
+    "map": 543
+   }
+  },
+  "4 abduction axes in link_map.json": {
+   "ok": true,
+   "detail": [
+    "FL",
+    "FR",
+    "RL",
+    "RR"
+   ]
+  },
+  "copies placed exactly": {
+   "ok": true,
+   "detail": []
+  },
+  "all parts have bodies": {
+   "ok": true,
+   "detail": {
+    "base": 462,
+    "FL_hip": 7,
+    "FL_pinion": 2,
+    "FL_gear": 1,
+    "FL_femur": 4,
+    "FL_quad": 1,
+    "FL_tibia": 1,
+    "FL_foot": 2,
+    "FL_link": 1,
+    "FR_hip": 7,
+    "FR_pinion": 2,
+    "FR_gear": 1,
+    "FR_femur": 4,
+    "FR_quad": 1,
+    "FR_tibia": 2,
+    "FR_foot": 2,
+    "FR_link": 1,
+    "RL_hip": 7,
+    "RL_pinion": 2,
+    "RL_gear": 1,
+    "RL_femur": 5,
+    "RL_quad": 1,
+    "RL_tibia": 2,
+    "RL_foot": 2,
+    "RL_link": 1,
+    "RR_hip": 9,
+    "RR_pinion": 2,
+    "RR_gear": 1,
+    "RR_femur": 4,
+    "RR_quad": 1,
+    "RR_tibia": 1,
+    "RR_foot": 2,
+    "RR_link": 1
+   }
+  },
+  "library plastic material found": {
+   "ok": true,
+   "detail": null
+  },
+  "40 joints + 4 gear motion links, all healthy": {
+   "ok": true,
+   "detail": {
+    "joints": 40,
+    "motion_links": 4,
+    "unhealthy": []
+   }
+  },
+  "FL_hip_joint turns the leg rigidly": {
+   "ok": true,
+   "detail": {
+    "rigid_rotation_err_cm": 0.0
+   }
+  },
+  "FL mechanism: gear 2:1 reversed, tibia || crank, Quad Link || femur while the knee bends": {
+   "ok": true,
+   "detail": {
+    "worst_rad": 5.5e-05,
+    "knee_bends": true,
+    "home": true
+   }
+  },
+  "FR_hip_joint turns the leg rigidly": {
+   "ok": true,
+   "detail": {
+    "rigid_rotation_err_cm": 0.0
+   }
+  },
+  "FR mechanism: gear 2:1 reversed, tibia || crank, Quad Link || femur while the knee bends": {
+   "ok": true,
+   "detail": {
+    "worst_rad": 5.5e-05,
+    "knee_bends": true,
+    "home": true
+   }
+  },
+  "RL_hip_joint turns the leg rigidly": {
+   "ok": true,
+   "detail": {
+    "rigid_rotation_err_cm": 0.0
+   }
+  },
+  "RL mechanism: gear 2:1 reversed, tibia || crank, Quad Link || femur, foot || femur while the knee bends": {
+   "ok": true,
+   "detail": {
+    "worst_rad": 5e-05,
+    "knee_bends": true,
+    "home": true
+   }
+  },
+  "RR_hip_joint turns the leg rigidly": {
+   "ok": true,
+   "detail": {
+    "rigid_rotation_err_cm": 0.0
+   }
+  },
+  "RR mechanism: gear 2:1 reversed, tibia || crank, Quad Link || femur, foot || femur while the knee bends": {
+   "ok": true,
+   "detail": {
+    "worst_rad": 5e-05,
+    "knee_bends": true,
+    "home": true
+   }
+  }
+ },
+ "new_name": "Fox_Prototype_03_v7_RL_Mechanism",
+ "source_version": 1,
+ "n_bodies": 543,
+ "link_mass_g": {
+  "base": 335.6,
+  "FL_hip": 29.6,
+  "FL_pinion": 1.2,
+  "FL_gear": 4.0,
+  "FL_femur": 4.9,
+  "FL_quad": 2.6,
+  "FL_tibia": 5.5,
+  "FL_foot": 2.5,
+  "FL_link": 2.4,
+  "FR_hip": 29.6,
+  "FR_pinion": 1.2,
+  "FR_gear": 4.0,
+  "FR_femur": 4.9,
+  "FR_quad": 2.6,
+  "FR_tibia": 5.8,
+  "FR_foot": 2.5,
+  "FR_link": 2.4,
+  "RL_hip": 30.1,
+  "RL_pinion": 1.2,
+  "RL_gear": 4.0,
+  "RL_femur": 5.1,
+  "RL_quad": 2.6,
+  "RL_tibia": 5.3,
+  "RL_foot": 3.1,
+  "RL_link": 2.1,
+  "RR_hip": 31.6,
+  "RR_pinion": 1.2,
+  "RR_gear": 4.0,
+  "RR_femur": 5.1,
+  "RR_quad": 2.6,
+  "RR_tibia": 5.0,
+  "RR_foot": 3.0,
+  "RR_link": 2.0
+ },
+ "drive_tests": {
+  "FL": {
+   "start": {
+    "hip": -0.0,
+    "pinion": -0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur free": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.10036,
+    "quad": -0.10036,
+    "tibia": -0.10036,
+    "foot": -0.10036,
+    "link": -0.10036,
+    "femur_joint": 6.18283,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur held": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.0001,
+    "quad": -0.0001,
+    "tibia": -0.10036,
+    "foot": -0.13777,
+    "link": -0.09569,
+    "femur_joint": 6.28308,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 6.18293
+   },
+   "pivot servo +0.2, pinion held": {
+    "hip": -0.0,
+    "pinion": -0.00011,
+    "gear": -0.0,
+    "femur": 0.20071,
+    "quad": 0.20072,
+    "tibia": 0.0,
+    "foot": -0.07778,
+    "link": 0.00832,
+    "femur_joint": 0.20071,
+    "pinion_joint": -0.00011,
+    "gear_joint": 5e-05,
+    "knee_joint": 6.08248
+   },
+   "knee +0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.30019,
+    "quad": -0.3002,
+    "tibia": 0.0,
+    "foot": 0.09278,
+    "link": -0.01893,
+    "femur_joint": 5.98299,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.3002
+   },
+   "knee -0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": 0.3002,
+    "quad": 0.30021,
+    "tibia": 1e-05,
+    "foot": -0.12037,
+    "link": 0.01083,
+    "femur_joint": 0.3002,
+    "pinion_joint": -0.0,
+    "gear_joint": 0.0,
+    "knee_joint": -0.3002
+   },
+   "end": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": -0.0,
+    "knee_joint": 0.0
+   }
+  },
+  "FR": {
+   "start": {
+    "hip": -0.0,
+    "pinion": -0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur free": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.10036,
+    "quad": -0.10036,
+    "tibia": -0.10036,
+    "foot": -0.10036,
+    "link": -0.10036,
+    "femur_joint": 6.18283,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur held": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.0001,
+    "quad": -0.0001,
+    "tibia": -0.10036,
+    "foot": -0.13777,
+    "link": -0.09569,
+    "femur_joint": 6.28308,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 6.18293
+   },
+   "pivot servo +0.2, pinion held": {
+    "hip": -0.0,
+    "pinion": -0.00011,
+    "gear": -0.0,
+    "femur": 0.20071,
+    "quad": 0.20072,
+    "tibia": 0.0,
+    "foot": -0.07778,
+    "link": 0.00832,
+    "femur_joint": 0.20071,
+    "pinion_joint": -0.00011,
+    "gear_joint": 5e-05,
+    "knee_joint": 6.08248
+   },
+   "knee +0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.30019,
+    "quad": -0.3002,
+    "tibia": 0.0,
+    "foot": 0.09278,
+    "link": -0.01893,
+    "femur_joint": 5.98299,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.3002
+   },
+   "knee -0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": 0.3002,
+    "quad": 0.30021,
+    "tibia": 1e-05,
+    "foot": -0.12037,
+    "link": 0.01083,
+    "femur_joint": 0.3002,
+    "pinion_joint": -0.0,
+    "gear_joint": 0.0,
+    "knee_joint": -0.3002
+   },
+   "end": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": 0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": -0.0,
+    "knee_joint": 0.0
+   }
+  },
+  "RL": {
+   "start": {
+    "hip": -0.0,
+    "pinion": -0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur free": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.10036,
+    "quad": -0.10036,
+    "tibia": -0.10036,
+    "foot": -0.10036,
+    "link": -0.10036,
+    "femur_joint": 6.18283,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur held": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.0,
+    "quad": 0.0,
+    "tibia": -0.10036,
+    "foot": -0.0,
+    "link": -0.10036,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 6.18283
+   },
+   "pivot servo +0.2, pinion held": {
+    "hip": -0.0,
+    "pinion": -0.0001,
+    "gear": -0.0,
+    "femur": 0.20071,
+    "quad": 0.20071,
+    "tibia": -0.0,
+    "foot": 0.20071,
+    "link": -0.0,
+    "femur_joint": 0.20071,
+    "pinion_joint": -0.0001,
+    "gear_joint": 5e-05,
+    "knee_joint": 6.08247
+   },
+   "knee +0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.3002,
+    "quad": -0.3002,
+    "tibia": 0.0,
+    "foot": -0.3002,
+    "link": 0.0,
+    "femur_joint": 5.98299,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.3002
+   },
+   "knee -0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": 0.30019,
+    "quad": 0.30019,
+    "tibia": -0.0,
+    "foot": 0.30019,
+    "link": -0.0,
+    "femur_joint": 0.30019,
+    "pinion_joint": -0.0,
+    "gear_joint": 0.0,
+    "knee_joint": -0.3002
+   },
+   "end": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": -0.0,
+    "knee_joint": 0.0
+   }
+  },
+  "RR": {
+   "start": {
+    "hip": -0.0,
+    "pinion": -0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur free": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.10036,
+    "quad": -0.10036,
+    "tibia": -0.10036,
+    "foot": -0.10036,
+    "link": -0.10036,
+    "femur_joint": 6.18283,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 0.0
+   },
+   "gear servo +0.2, femur held": {
+    "hip": -0.0,
+    "pinion": 0.20071,
+    "gear": -0.10036,
+    "femur": -0.0,
+    "quad": 0.0,
+    "tibia": -0.10036,
+    "foot": 0.0,
+    "link": -0.10036,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.20071,
+    "gear_joint": -0.10036,
+    "knee_joint": 6.18283
+   },
+   "pivot servo +0.2, pinion held": {
+    "hip": -0.0,
+    "pinion": -0.0001,
+    "gear": -0.0,
+    "femur": 0.20071,
+    "quad": 0.20071,
+    "tibia": -0.0,
+    "foot": 0.20071,
+    "link": -0.0,
+    "femur_joint": 0.20071,
+    "pinion_joint": -0.0001,
+    "gear_joint": 5e-05,
+    "knee_joint": 6.08247
+   },
+   "knee +0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.3002,
+    "quad": -0.3002,
+    "tibia": 0.0,
+    "foot": -0.3002,
+    "link": 0.0,
+    "femur_joint": 5.98299,
+    "pinion_joint": 0.0,
+    "gear_joint": 0.0,
+    "knee_joint": 0.3002
+   },
+   "knee -0.3": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": 0.30019,
+    "quad": 0.30019,
+    "tibia": -0.0,
+    "foot": 0.30019,
+    "link": -0.0,
+    "femur_joint": 0.30019,
+    "pinion_joint": -0.0,
+    "gear_joint": 0.0,
+    "knee_joint": -0.3002
+   },
+   "end": {
+    "hip": -0.0,
+    "pinion": 0.0,
+    "gear": -0.0,
+    "femur": -0.0,
+    "quad": -0.0,
+    "tibia": -0.0,
+    "foot": -0.0,
+    "link": -0.0,
+    "femur_joint": 0.0,
+    "pinion_joint": 0.0,
+    "gear_joint": -0.0,
+    "knee_joint": 0.0
+   }
+  }
+ },
+ "saved": true,
+ "status": "ok"
+}

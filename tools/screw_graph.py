@@ -9,7 +9,7 @@ A "line" is a set of coaxial small cylindrical faces (holes, pins, splines) of d
   every rigid group takes the link of its anchors (two different links in one group = error, nothing is written);
   a loose part with no anchor joins the most distal link on its pivot line (pins), else the smallest body whose box it
   overlaps most (only root|Body27, a 0.07 cm^3 block on the rear-right hip servo, needs this).
-Usage: ~/.venvs/fox_rl/bin/python tools/screw_graph.py [analysis/screw_scan.json]
+Usage: ~/.venvs/fox_rl/bin/python tools/screw_graph.py [analysis/screw_scan.json [analysis/link_map.json]]
 """
 import json, os, sys
 from collections import defaultdict
@@ -136,6 +136,7 @@ def mechanism(bodies, link, edges):
 
 def main():
     scan_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'analysis', 'screw_scan.json')
+    out_path = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, 'analysis', 'link_map.json')
     scan = json.load(open(scan_path))
     bodies = scan['bodies']
     anchor_and_roles(bodies)
@@ -231,7 +232,7 @@ def main():
     assert sorted(abd_axes) == ['FL', 'FR', 'RL', 'RR'], abd_axes
     assert {i for i, j, why in edges if why == 'on spline'} == set(splines), 'a servo spline drives nothing'
     if not conflicts:
-        json.dump(out, open(os.path.join(ROOT, 'analysis', 'link_map.json'), 'w'), indent=1)
+        json.dump(out, open(out_path, 'w'), indent=1)
     print('bodies %d  lines %d  pivot lines %d  rigid edges %d  conflicts %d  changed vs previous model %d'
           % (len(bodies), len(clusters), sum(c['pivot'] for c in clusters), len(edges), len(conflicts), len(moved)))
     for c in conflicts:

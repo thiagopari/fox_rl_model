@@ -3,7 +3,8 @@
 # start Fusion, wait for C:\fusion_jobs\build_link_model.json, then delete the folder again (it runs at every start).
 #
 # Put link_map.json (written by tools/screw_graph.py from the FoxScrewScan hole scan) next to this file first.
-# From the design copy 'Fox_Prototype_03_v6_RL' it builds a NEW document (NEW_NAME), the full leg mechanism:
+# From the design copy SOURCE_NAME it builds a NEW document (NEW_NAME), the full leg mechanism (another design / gear
+# ratio: put build.json {"source", "new_name", "gear_ratio", "pinion_limit"} next to this file):
 #   * one top-level component per moving part: base + per leg {hip, pinion, gear, femur, quad, tibia, foot, link}, made of
 #     the VISIBLE solid bodies (copied exactly in place), re-oriented to x-forward / y-left / z-up, origin between the hips;
 #     which part a body joins comes from link_map.json: parts screwed together, or sitting on a servo spline, share a part;
@@ -11,15 +12,18 @@
 #   * 40 revolute as-built joints: per leg the 3 servo joints (hip = abduction about the tilted hip-servo spline,
 #     femur = pivot servo, pinion = gear servo) and 7 free pins (gear on the hip axis, crank pin, knee, Quad Link pin,
 #     foot-link pin, ankle, foot pin); the two pins that close the parallelogram and the foot four-bar make loops;
-#   * 4 motion links: gear-servo pinion -> 12-tooth crank gear, 1:1 reversed;
-#   * checks: each hip joint turns its leg rigidly; driving each servo keeps gear = -pinion, tibia || crank,
+#   * 4 motion links: gear-servo pinion -> crank gear, RATIO:1 reversed (v6 12:12 = 1, v7 12:24 = 2);
+#   * checks: each hip joint turns its leg rigidly; driving each servo keeps gear = -pinion / RATIO, tibia || crank,
 #     Quad Link || femur (and rear foot || femur) - the parallelograms of the CAD.
 # The source is only changed in memory (UNJOIN) and closed without saving. Pins come from link_map.json 'pivots'.
 import adsk.core, adsk.fusion, json, math, os, threading, time, traceback
 
 DRY_RUN = False                       # True: build + verify, then discard instead of saving
-SOURCE_NAME = 'Fox_Prototype_03_v6_RL'
-NEW_NAME = 'Fox_Prototype_03_v6_RL_Mechanism'
+_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build.json')
+_cfg = json.load(open(_cfg_path)) if os.path.exists(_cfg_path) else {}
+SOURCE_NAME = _cfg.get('source', 'Fox_Prototype_03_v6_RL')
+NEW_NAME = _cfg.get('new_name', 'Fox_Prototype_03_v6_RL_Mechanism')
+RATIO = float(_cfg.get('gear_ratio', 1.0))   # pinion turns per crank-gear turn
 # Combine (join) features that fuse the rear hip brackets into the pelvis, which would stop them turning with their
 # abduction servos: suppressed in memory only (rear-left: 'Servo Pelv Upper'; rear-right: 'Component41(Mirror) (1)').
 UNJOIN = [('Combine1', 'Component41(Mirror) (1)'), ('Combine2', 'Component41(Mirror) (1)'), ('Combine2', 'Servo Pelv Upper')]
@@ -27,7 +31,7 @@ MAP = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'l
 OUT = r'C:\fusion_jobs'
 MID_X, MID_Y = -2.476478, -8.6                           # sagittal plane x / front-rear split y (source frame, cm)
 Z0 = (MAP['pivots']['FL']['H'][2] + MAP['pivots']['RL']['H'][2]) / 2   # hip-axis height of the model origin
-LIMIT = {'hip': 0.5, 'femur': 1.2, 'pinion': 1.2}        # servo joints, +- rad around the standing pose (placeholders)
+LIMIT = {'hip': 0.5, 'femur': 1.2, 'pinion': float(_cfg.get('pinion_limit', 1.2))}   # servo joints, +- rad around the CAD pose (placeholders)
 PLA, SERVO_G = 1.24, 8.5
 ELEC_G = {'Raspberry Pi 4 Model B': 46.0, '12Channel PWM v2': 9.0, 'XL4015 StepDown DC-DC 5A (CC-CV) v1': 16.0,
           'arduino nano': 7.0, 'Adafruit_BNO055_AP203': 3.0}
@@ -47,7 +51,7 @@ def find_file(app, name):
     for i in range(app.data.activeHub.dataProjects.count):
         files = app.data.activeHub.dataProjects.item(i).rootFolder.dataFiles
         for j in range(files.count):
-            if files.item(j).name == name:
+            if files.item(j).name == name and files.item(j).fileExtension == 'f3d':
                 return files.item(j)
     return None
 
@@ -295,12 +299,12 @@ def _work():
             rl.isMaximumValueEnabled, rl.maximumValue = True, lim
             rl.isRestValueEnabled, rl.restValue = True, 0.0
         sk.isVisible = False
-    for leg in LEGS:   # the gear servo's pinion meshes with the 12-tooth crank gear: 1:1, opposite direction
+    for leg in LEGS:   # the gear servo's pinion meshes with the crank gear: RATIO turns per gear turn, opposite direction
         mi = nroot.motionLinks.createInput(J[leg + '_pinion_joint'], J[leg + '_gear_joint'])
         mi.valueOne = adsk.core.ValueInput.createByString('360 deg')
-        mi.valueTwo = adsk.core.ValueInput.createByString('360 deg')
+        mi.valueTwo = adsk.core.ValueInput.createByString('%.6g deg' % (360.0 / RATIO))
         mi.isReversed = True
-        nroot.motionLinks.add(mi).name = leg + ' gear mesh 1-1'
+        nroot.motionLinks.add(mi).name = leg + ' gear mesh %g-1' % RATIO
     adsk.doEvents()
     sick = [o.name for o in list(nroot.asBuiltJoints) + list(nroot.motionLinks)
             if o.timelineObject and o.timelineObject.healthState != adsk.fusion.FeatureHealthStates.HealthyFeatureHealthState]
@@ -362,12 +366,12 @@ def _work():
             st[tag] = {q: rot_y(occs[leg + '_' + q]) for q in PARTS}
             st[tag].update({k + '_joint': J[leg + '_' + k + '_joint'].jointMotion.rotationValue for k in ('femur', 'pinion', 'gear', 'knee')})
         rear = leg[0] == 'R'
-        worst = max(max(abs(s['gear'] + s['pinion']), abs(s['tibia'] - s['gear']), abs(s['quad'] - s['femur']),
+        worst = max(max(abs(s['gear'] + s['pinion'] / RATIO), abs(s['tibia'] - s['gear']), abs(s['quad'] - s['femur']),
                         abs(s['foot'] - s['femur']) if rear else 0.0, abs(s['link'] - s['tibia']) if rear else 0.0) for s in st.values())
         bent = all(abs(st[t]['tibia'] - st[t]['femur'] - v) < 0.01 for t, v in (('knee +0.3', 0.3), ('knee -0.3', -0.3)))
         home = max(abs(x) for x in st['end'].values()) < 1e-3
         _res['drive_tests'][leg] = {t: {k: round(x, 5) for k, x in s.items()} for t, s in st.items()}
-        check(leg + ' mechanism: gear 1:1 reversed, tibia || crank, Quad Link || femur' + (', foot || femur' if rear else '') + ' while the knee bends',
+        check(leg + ' mechanism: gear %g:1 reversed, tibia || crank' % RATIO + ', Quad Link || femur' + (', foot || femur' if rear else '') + ' while the knee bends',
               worst < 5e-3 and bent and home, {'worst_rad': round(worst, 6), 'knee_bends': bent, 'home': home})
 
 

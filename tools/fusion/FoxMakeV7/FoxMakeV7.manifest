@@ -1,0 +1,11 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "79821774-b397-4e12-8a64-89e7f02d77dc",
+    "author": "local",
+    "description": { "": "One-shot: make Fox_Prototype_03_v7_RL (2:1 gears, rear hips +20 mm on a spacer) from Fox_Prototype_03_v6_RL; the source is never saved." },
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

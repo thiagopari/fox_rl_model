@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """What each servo does, and the reduced tree vs the exact mechanism, in MuJoCo (body held in the air, no gravity).
-  gear servo alone       crank turns 1:1 the other way, the shin keeps the crank's angle: shin swings about the knee
+  gear servo alone       crank turns 1/N the other way (N:1 gears), the shin keeps the crank's angle: shin swings
   pivot servo alone      femur turns, the shin keeps its angle: the knee bends, the leg extends / retracts
-  pivot +a with gear -a  femur and crank turn together: the whole leg swings rigidly about the hip, like a pendulum
+  pivot +a with gear -Na femur and crank turn together: the whole leg swings rigidly about the hip, like a pendulum
   equivalence            mjcf/fox_reduced.xml (tree + gear-servo tendon + four-bar equality) puts every foot where the
                          exact mechanism (mjcf/fox.xml) does, for random servo targets; both stand at the same height.
 Writes validation/mechanism_report.json and validation/mujoco_servo_roles.png."""
@@ -12,7 +12,8 @@ import numpy as np
 import mujoco
 from PIL import Image, ImageDraw
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.abspath(os.environ.get('FOX_MODEL', os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))   # FOX_MODEL=v7: another model folder
+N = json.load(open(os.path.join(ROOT, 'mechanism.json')))['servo_map'].get('pinion_per_gear', 1.0)
 LEGS = ('FL', 'FR', 'RL', 'RR')
 
 
@@ -82,13 +83,13 @@ def describe(cmd):
 rep = {'servo_roles': {}, 'checks': {}}
 a = 0.3
 roles = {'gear servo +0.3 (pivot holds)': {'gear': a}, 'pivot servo +0.3 (gear holds)': {'pivot': a},
-         'pendulum: pivot +0.3, gear -0.3': {'pivot': a, 'gear': -a}}
+         'pendulum: pivot +0.3, gear -0.3 N': {'pivot': a, 'gear': -N * a}}
 for name, cmd in roles.items():
     rep['servo_roles'][name] = describe(cmd)
 g, p, s = (rep['servo_roles'][k] for k in roles)
 ok = rep['checks']
-ok['gear servo: gear turns 1:1 reversed, shin turns with the crank, femur stays'] = all(
-    abs(g[l]['gear_rad'] + a) < 0.01 and abs(g[l]['shin_rad'] + a) < 0.01 and abs(g[l]['femur_rad']) < 0.01 for l in LEGS)
+ok['gear servo: gear turns 1/N reversed, shin turns with the crank, femur stays'] = all(
+    abs(g[l]['gear_rad'] + a / N) < 0.01 and abs(g[l]['shin_rad'] + a / N) < 0.01 and abs(g[l]['femur_rad']) < 0.01 for l in LEGS)
 ok['pivot servo: femur turns, shin keeps its angle (knee bends)'] = all(
     abs(p[l]['femur_rad'] - a) < 0.01 and abs(p[l]['shin_rad']) < 0.01 and abs(p[l]['knee_rad'] + a) < 0.01 for l in LEGS)
 ok['pivot +a with gear -a: rigid pendulum swing (knee fixed, hip-foot length kept)'] = all(

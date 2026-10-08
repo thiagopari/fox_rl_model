@@ -1,0 +1,2095 @@
+{
+ "doc_version": 1,
+ "links": {
+  "base": {
+   "mass_kg": 0.335623982662669,
+   "com_cm": [
+    -0.3388202498558894,
+    0.09087778989597599,
+    1.2182926746490457
+   ],
+   "inertia_origin_kgcm2": [
+    3.096998462472722,
+    16.568551713136035,
+    17.404062093961716,
+    -0.04456102481855493,
+    -0.09785192409469055,
+    0.683742791009127
+   ],
+   "volume_cm3": 225.71178984587863,
+   "bodies": 462,
+   "stl": "base.stl",
+   "occurrence_identity": true
+  },
+  "FL_hip": {
+   "mass_kg": 0.029636833113932046,
+   "com_cm": [
+    9.13868929452237,
+    2.440948837246209,
+    -1.1620922632019843
+   ],
+   "inertia_origin_kgcm2": [
+    0.25564743960700603,
+    2.5831792786238776,
+    2.7124045379769575,
+    -0.6692782717799296,
+    0.08267329626419788,
+    0.3166312816531032
+   ],
+   "volume_cm3": 20.905352877367942,
+   "bodies": 7,
+   "stl": "FL_hip.stl",
+   "occurrence_identity": true
+  },
+  "FL_pinion": {
+   "mass_kg": 0.001242172602061312,
+   "com_cm": [
+    10.253779901451251,
+    4.9802460066019245,
+    -0.7447013440654134
+   ],
+   "inertia_origin_kgcm2": [
+    0.03174798285309308,
+    0.13157548006303546,
+    0.16166112933008128,
+    -0.06343321634675658,
+    0.004606965961933433,
+    0.009485234508360217
+   ],
+   "volume_cm3": 0.9948584375100505,
+   "bodies": 2,
+   "stl": "FL_pinion.stl",
+   "occurrence_identity": true
+  },
+  "FL_gear": {
+   "mass_kg": 0.004044894238451342,
+   "com_cm": [
+    8.396607326959579,
+    5.014488398883763,
+    -0.4320357219953407
+   ],
+   "inertia_origin_kgcm2": [
+    0.10438320086349294,
+    0.2893815922493537,
+    0.3891072368542955,
+    -0.17042250704618567,
+    0.008805436509390554,
+    0.014804541557567392
+   ],
+   "volume_cm3": 3.2620114826220505,
+   "bodies": 1,
+   "stl": "FL_gear.stl",
+   "occurrence_identity": true
+  },
+  "FL_femur": {
+   "mass_kg": 0.004891624065114053,
+   "com_cm": [
+    7.241678962802424,
+    4.280438089995215,
+    -3.6091325685799167
+   ],
+   "inertia_origin_kgcm2": [
+    0.18326863410631297,
+    0.3546658493006477,
+    0.35105807651319676,
+    -0.15189899271799995,
+    0.0748862970218275,
+    0.11670278787667861
+   ],
+   "volume_cm3": 3.93796445605139,
+   "bodies": 4,
+   "stl": "FL_femur.stl",
+   "occurrence_identity": true
+  },
+  "FL_quad": {
+   "mass_kg": 0.002607944040769521,
+   "com_cm": [
+    5.478686923045817,
+    4.356056576615432,
+    -3.10984122925277
+   ],
+   "inertia_origin_kgcm2": [
+    0.08751765576404547,
+    0.11842357556092185,
+    0.12991770921455995,
+    -0.06223981079438317,
+    0.03532889037610117,
+    0.03962218700507379
+   ],
+   "volume_cm3": 2.1031806780399362,
+   "bodies": 1,
+   "stl": "FL_quad.stl",
+   "occurrence_identity": true
+  },
+  "FL_tibia": {
+   "mass_kg": 0.005494696653910091,
+   "com_cm": [
+    5.702429481255111,
+    4.781645346409589,
+    -9.497751544998325
+   ],
+   "inertia_origin_kgcm2": [
+    0.6478270683683032,
+    0.7024870934024162,
+    0.30624512707359797,
+    -0.14978488788938524,
+    0.2489555396752554,
+    0.30106519322268355
+   ],
+   "volume_cm3": 4.431206978959751,
+   "bodies": 1,
+   "stl": "FL_tibia.stl",
+   "occurrence_identity": true
+  },
+  "FL_foot": {
+   "mass_kg": 0.0025176507959942464,
+   "com_cm": [
+    7.481670182320116,
+    4.289163466224512,
+    -14.890910595741675
+   ],
+   "inertia_origin_kgcm2": [
+    0.605835543664438,
+    0.705573648988264,
+    0.19254134686346763,
+    -0.08098188549825577,
+    0.16089145425851478,
+    0.2827542220459436
+   ],
+   "volume_cm3": 2.0303635451566504,
+   "bodies": 2,
+   "stl": "FL_foot.stl",
+   "occurrence_identity": true
+  },
+  "FL_link": {
+   "mass_kg": 0.0023508238834782716,
+   "com_cm": [
+    6.19832549573535,
+    3.8060565766154495,
+    -10.297115782474979
+   ],
+   "inertia_origin_kgcm2": [
+    0.29393262979670526,
+    0.35076556786043767,
+    0.12500400968527425,
+    -0.0554587035464491,
+    0.09213209147481095,
+    0.14800207528272227
+   ],
+   "volume_cm3": 1.895825712482477,
+   "bodies": 1,
+   "stl": "FL_link.stl",
+   "occurrence_identity": true
+  },
+  "FR_hip": {
+   "mass_kg": 0.029636833358141955,
+   "com_cm": [
+    9.134126463677566,
+    -2.4346580761272043,
+    -1.1571089101355756
+   ],
+   "inertia_origin_kgcm2": [
+    0.2543029504745446,
+    2.5806432660143197,
+    2.7091094248537617,
+    0.6670747366836836,
+    -0.08208422145215584,
+    0.31526440189048655
+   ],
+   "volume_cm3": 20.9053530311859,
+   "bodies": 7,
+   "stl": "FR_hip.stl",
+   "occurrence_identity": true
+  },
+  "FR_pinion": {
+   "mass_kg": 0.0012421726020734863,
+   "com_cm": [
+    10.254465109441204,
+    -4.979559467566679,
+    -0.7448250459501464
+   ],
+   "inertia_origin_kgcm2": [
+    0.03174040028971628,
+    0.13159316461352752,
+    0.161670773733152,
+    0.06342886680213565,
+    -0.004607124500157018,
+    0.00948744404220943
+   ],
+   "volume_cm3": 0.994858437517703,
+   "bodies": 2,
+   "stl": "FR_pinion.stl",
+   "occurrence_identity": true
+  },
+  "FR_gear": {
+   "mass_kg": 0.0040448942384337305,
+   "com_cm": [
+    8.396607326962426,
+    -5.014488137078487,
+    -0.4320357219942834
+   ],
+   "inertia_origin_kgcm2": [
+    0.10438319024259152,
+    0.28938159224828686,
+    0.3891072262323784,
+    0.1704224981537046,
+    -0.00880543605181678,
+    0.014804541557480056
+   ],
+   "volume_cm3": 3.2620114826078472,
+   "bodies": 1,
+   "stl": "FR_gear.stl",
+   "occurrence_identity": true
+  },
+  "FR_femur": {
+   "mass_kg": 0.004891624065114177,
+   "com_cm": [
+    7.241545175971119,
+    -4.280435931120024,
+    -3.6089922338466125
+   ],
+   "inertia_origin_kgcm2": [
+    0.18326796609058157,
+    0.35465417857801146,
+    0.3510469000584916,
+    0.1518962271032772,
+    -0.0748834803979706,
+    0.11669669464313226
+   ],
+   "volume_cm3": 3.9379644560514673,
+   "bodies": 4,
+   "stl": "FR_femur.stl",
+   "occurrence_identity": true
+  },
+  "FR_quad": {
+   "mass_kg": 0.00260794404076952,
+   "com_cm": [
+    5.478686923045768,
+    -4.356056316615435,
+    -3.1098412292529125
+   ],
+   "inertia_origin_kgcm2": [
+    0.08751764985666614,
+    0.11842357556092396,
+    0.12991770330717592,
+    0.06223980707947435,
+    -0.03532888826742686,
+    0.039622187005075075
+   ],
+   "volume_cm3": 2.103180678039936,
+   "bodies": 1,
+   "stl": "FR_quad.stl",
+   "occurrence_identity": true
+  },
+  "FR_tibia": {
+   "mass_kg": 0.005824578283773183,
+   "com_cm": [
+    5.710660276591347,
+    -4.784570901632278,
+    -9.383874753344797
+   ],
+   "inertia_origin_kgcm2": [
+    0.6740522962082526,
+    0.7323054012342107,
+    0.325258656103064,
+    0.15910865458073195,
+    -0.26089314967007243,
+    0.31550808216589854
+   ],
+   "volume_cm3": 4.697240551429987,
+   "bodies": 2,
+   "stl": "FR_tibia.stl",
+   "occurrence_identity": true
+  },
+  "FR_foot": {
+   "mass_kg": 0.0025175421607404355,
+   "com_cm": [
+    7.481701252697121,
+    -4.289166015903353,
+    -14.890901719476599
+   ],
+   "inertia_origin_kgcm2": [
+    0.6058088262102774,
+    0.7055438919233107,
+    0.19253441351022393,
+    0.08097877856067892,
+    -0.16088451788896643,
+    0.28274311781469924
+   ],
+   "volume_cm3": 2.0302759360809963,
+   "bodies": 2,
+   "stl": "FR_foot.stl",
+   "occurrence_identity": true
+  },
+  "FR_link": {
+   "mass_kg": 0.0023508238834784104,
+   "com_cm": [
+    6.198325495735322,
+    -3.8060563166154537,
+    -10.297115782475068
+   ],
+   "inertia_origin_kgcm2": [
+    0.29393262514409524,
+    0.3507655678604617,
+    0.12500400503264936,
+    0.05545869975794755,
+    -0.09213208518107377,
+    0.14800207528273157
+   ],
+   "volume_cm3": 1.895825712482589,
+   "bodies": 1,
+   "stl": "FR_link.stl",
+   "occurrence_identity": true
+  },
+  "RL_hip": {
+   "mass_kg": 0.030136620206130872,
+   "com_cm": [
+    -9.821076085420511,
+    2.4430475963904117,
+    -0.34584756737175304
+   ],
+   "inertia_origin_kgcm2": [
+    0.22514118663377625,
+    2.98079707870608,
+    3.1472719188532836,
+    0.731458281281953,
+    0.025421927522115247,
+    -0.1073153563783255
+   ],
+   "volume_cm3": 21.30840084376277,
+   "bodies": 7,
+   "stl": "RL_hip.stl",
+   "occurrence_identity": true
+  },
+  "RL_pinion": {
+   "mass_kg": 0.0012421430317359572,
+   "com_cm": [
+    -10.975476995264582,
+    4.980255258668988,
+    -0.15401892051671653
+   ],
+   "inertia_origin_kgcm2": [
+    0.03108794087202752,
+    0.14994394074551878,
+    0.18068838497365147,
+    0.06789638084161605,
+    0.0009527923968054543,
+    -0.002099757137950042
+   ],
+   "volume_cm3": 0.99483981235891,
+   "bodies": 2,
+   "stl": "RL_pinion.stl",
+   "occurrence_identity": true
+  },
+  "RL_gear": {
+   "mass_kg": 0.00404489423845135,
+   "com_cm": [
+    -9.211084239766718,
+    5.014488398883769,
+    0.5046653570451394
+   ],
+   "inertia_origin_kgcm2": [
+    0.1047123717534208,
+    0.3476648418041725,
+    0.4470613155191871,
+    0.1869335076093814,
+    -0.010174671305527355,
+    0.018627890602344144
+   ],
+   "volume_cm3": 3.2620114826220563,
+   "bodies": 1,
+   "stl": "RL_gear.stl",
+   "occurrence_identity": true
+  },
+  "RL_femur": {
+   "mass_kg": 0.005149681711862228,
+   "com_cm": [
+    -7.4861598822358895,
+    4.280076023154202,
+    -2.5473515082253084
+   ],
+   "inertia_origin_kgcm2": [
+    0.15586146119453356,
+    0.3595771666058052,
+    0.3928331350966109,
+    0.1654286745899159,
+    0.05543502796944783,
+    -0.0824515991450866
+   ],
+   "volume_cm3": 4.146080683390706,
+   "bodies": 5,
+   "stl": "RL_femur.stl",
+   "occurrence_identity": true
+  },
+  "RL_quad": {
+   "mass_kg": 0.0026147223410789,
+   "com_cm": [
+    -5.8730524352900595,
+    4.356056576615445,
+    -1.6267647995746468
+   ],
+   "inertia_origin_kgcm2": [
+    0.06744889455771373,
+    0.11212700150914312,
+    0.14394723764344675,
+    0.06689335336772591,
+    0.018528653333698766,
+    -0.01859605677996085
+   ],
+   "volume_cm3": 2.1086470492571774,
+   "bodies": 1,
+   "stl": "RL_quad.stl",
+   "occurrence_identity": true
+  },
+  "RL_tibia": {
+   "mass_kg": 0.005300846068175641,
+   "com_cm": [
+    -7.052713972128786,
+    4.786329304493991,
+    -7.363794407584356
+   ],
+   "inertia_origin_kgcm2": [
+    0.42523825783518887,
+    0.5868131724204406,
+    0.40474485961880624,
+    0.17841844348148592,
+    0.186388044415657,
+    -0.29223988587322575
+   ],
+   "volume_cm3": 4.274875861431968,
+   "bodies": 2,
+   "stl": "RL_tibia.stl",
+   "occurrence_identity": true
+  },
+  "RL_foot": {
+   "mass_kg": 0.003071638146086181,
+   "com_cm": [
+    -9.010505108385331,
+    4.3068103444927806,
+    -12.582230293434817
+   ],
+   "inertia_origin_kgcm2": [
+    0.5466163030147178,
+    0.7477206883685338,
+    0.3152166722994639,
+    0.11898291810638661,
+    0.16658417961088254,
+    -0.343149708460569
+   ],
+   "volume_cm3": 2.477127537166275,
+   "bodies": 2,
+   "stl": "RL_foot.stl",
+   "occurrence_identity": true
+  },
+  "RL_link": {
+   "mass_kg": 0.002056110018662103,
+   "com_cm": [
+    -9.318995296257887,
+    3.8390749714968573,
+    -8.205423688435307
+   ],
+   "inertia_origin_kgcm2": [
+    0.17547480409624924,
+    0.3302287652755564,
+    0.21540618753399726,
+    0.07347954006062096,
+    0.06467549818401754,
+    -0.1636603548941697
+   ],
+   "volume_cm3": 1.6581532408565347,
+   "bodies": 1,
+   "stl": "RL_link.stl",
+   "occurrence_identity": true
+  },
+  "RR_hip": {
+   "mass_kg": 0.031628285223786475,
+   "com_cm": [
+    -9.747065996471983,
+    -2.4200357710914324,
+    -0.4099711494617089
+   ],
+   "inertia_origin_kgcm2": [
+    0.23481646755631802,
+    3.0857924831344996,
+    3.254122097523757,
+    -0.7549073938402052,
+    -0.030866254693641765,
+    -0.13102678812654056
+   ],
+   "volume_cm3": 22.511690199285354,
+   "bodies": 9,
+   "stl": "RR_hip.stl",
+   "occurrence_identity": true
+  },
+  "RR_pinion": {
+   "mass_kg": 0.0012402721249833663,
+   "com_cm": [
+    -10.974873820765357,
+    -4.980605670673213,
+    -0.1543018001261764
+   ],
+   "inertia_origin_kgcm2": [
+    0.031045808783905726,
+    0.1497021718086695,
+    0.18040439708313552,
+    -0.067795001435519,
+    -0.0009532457455935952,
+    -0.0021003297305949953
+   ],
+   "volume_cm3": 0.9936614039167782,
+   "bodies": 2,
+   "stl": "RR_pinion.stl",
+   "occurrence_identity": true
+  },
+  "RR_gear": {
+   "mass_kg": 0.004044894238433719,
+   "com_cm": [
+    -9.2110842397677,
+    -5.014488137078486,
+    0.5046653570422635
+   ],
+   "inertia_origin_kgcm2": [
+    0.10471236113251775,
+    0.3476648418027219,
+    0.4470613048968865,
+    -0.18693349785428054,
+    0.010174670770998895,
+    0.018627890602142778
+   ],
+   "volume_cm3": 3.2620114826078384,
+   "bodies": 1,
+   "stl": "RR_gear.stl",
+   "occurrence_identity": true
+  },
+  "RR_femur": {
+   "mass_kg": 0.0050873744791621565,
+   "com_cm": [
+    -7.477323690747461,
+    -4.277738578720061,
+    -2.553944988515343
+   ],
+   "inertia_origin_kgcm2": [
+    0.15375913570159797,
+    0.35442038881356625,
+    0.3872666398901722,
+    -0.16312584385403534,
+    -0.054913071782437574,
+    -0.08168322448935203
+   ],
+   "volume_cm3": 4.0961633023984785,
+   "bodies": 4,
+   "stl": "RR_femur.stl",
+   "occurrence_identity": true
+  },
+  "RR_quad": {
+   "mass_kg": 0.002586177516069119,
+   "com_cm": [
+    -5.8599903907562325,
+    -4.35605631480941,
+    -1.64069875062574
+   ],
+   "inertia_origin_kgcm2": [
+    0.06668197213854056,
+    0.11040353898125636,
+    0.14190696838795117,
+    -0.06601592626126215,
+    -0.01848334903570994,
+    -0.018652791268854017
+   ],
+   "volume_cm3": 2.0856270290879992,
+   "bodies": 1,
+   "stl": "RR_quad.stl",
+   "occurrence_identity": true
+  },
+  "RR_tibia": {
+   "mass_kg": 0.004953713921766184,
+   "com_cm": [
+    -7.168560082666172,
+    -4.773263710494996,
+    -7.468818542152822
+   ],
+   "inertia_origin_kgcm2": [
+    0.40503431527222666,
+    0.5655306653931835,
+    0.3865080337921744,
+    -0.16905214819265954,
+    -0.17622687261614373,
+    -0.2816596719223142
+   ],
+   "volume_cm3": 3.9949305820695034,
+   "bodies": 1,
+   "stl": "RR_tibia.stl",
+   "occurrence_identity": true
+  },
+  "RR_foot": {
+   "mass_kg": 0.0030088158302673806,
+   "com_cm": [
+    -8.966479338642454,
+    -4.308320436292624,
+    -12.608946169563167
+   ],
+   "inertia_origin_kgcm2": [
+    0.5374618299879483,
+    0.7319106496582479,
+    0.3063050021866372,
+    -0.11602425376143213,
+    -0.1635775271342934,
+    -0.33525647084994026
+   ],
+   "volume_cm3": 2.4264643792478875,
+   "bodies": 2,
+   "stl": "RR_foot.stl",
+   "occurrence_identity": true
+  },
+  "RR_link": {
+   "mass_kg": 0.002011087835983565,
+   "com_cm": [
+    -9.294285214356337,
+    -3.8403507299610555,
+    -8.16890352689538
+   ],
+   "inertia_origin_kgcm2": [
+    0.1702257690243384,
+    0.3204943590690245,
+    0.20963106774439907,
+    -0.07170931579883215,
+    -0.06300513970187825,
+    -0.1588013052216523
+   ],
+   "volume_cm3": 1.621845029019004,
+   "bodies": 1,
+   "stl": "RR_link.stl",
+   "occurrence_identity": true
+  }
+ },
+ "joints": [
+  {
+   "name": "FL_hip_joint",
+   "child": "FL_hip",
+   "parent": "base",
+   "origin_cm": [
+    7.16864,
+    2.4238179999999985,
+    -0.200715
+   ],
+   "primary": [
+    0.9848077908426044,
+    0.0,
+    -0.173647963119955
+   ],
+   "secondary": [
+    -0.173647963119955,
+    -0.0,
+    -0.9848077908426045
+   ],
+   "third": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    0.9848077908426043,
+    4.1918514223913563e-16,
+    -0.17364796311995506
+   ],
+   "measured_angle": 0.09948376736367846,
+   "motion_links": [],
+   "lower": -0.4999999999992816,
+   "upper": 0.4999999999992816
+  },
+  {
+   "name": "FL_femur_joint",
+   "child": "FL_femur",
+   "parent": "FL_hip",
+   "origin_cm": [
+    8.47592,
+    4.151077999999998,
+    -0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    2.8443144400482407e-16,
+    1.0,
+    -1.4029960942585165e-17
+   ],
+   "measured_angle": 0.0994837673636763,
+   "motion_links": [],
+   "lower": -1.2000000000000213,
+   "upper": 1.2000000000000213
+  },
+  {
+   "name": "FL_pinion_joint",
+   "child": "FL_pinion",
+   "parent": "FL_hip",
+   "origin_cm": [
+    10.25378,
+    4.581177999999998,
+    -0.7447050000000002
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    8.739611137873619e-16,
+    1.0,
+    5.150651937373482e-16
+   ],
+   "measured_angle": 0.09948376736367626,
+   "motion_links": [
+    [
+     "FL_pinion_joint",
+     "FL_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": -1.49999999999959,
+   "upper": 1.49999999999959
+  },
+  {
+   "name": "FL_gear_joint",
+   "child": "FL_gear",
+   "parent": "FL_hip",
+   "origin_cm": [
+    8.47592,
+    4.151077999999998,
+    -0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    2.8443144400482387e-16,
+    1.0,
+    -1.402996094258516e-17
+   ],
+   "measured_angle": 0.0994837673636763,
+   "motion_links": [
+    [
+     "FL_pinion_joint",
+     "FL_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FL_crank_pin_joint",
+   "child": "FL_quad",
+   "parent": "FL_gear",
+   "origin_cm": [
+    7.07089,
+    4.5160779999999985,
+    0.06355500000000003
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    3.711264509170296e-16,
+    1.0,
+    -5.12510224472736e-16
+   ],
+   "measured_angle": 0.09948376736367633,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FL_knee_joint",
+   "child": "FL_tibia",
+   "parent": "FL_femur",
+   "origin_cm": [
+    5.849030000000001,
+    4.151077999999999,
+    -7.486595
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 2.890305221825469e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FL_quad_pin_joint",
+   "child": "FL_tibia",
+   "parent": "FL_quad",
+   "origin_cm": [
+    4.444040000000001,
+    4.4660779999999995,
+    -6.961215
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 2.8903421042670144e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FL_link_pin_joint",
+   "child": "FL_link",
+   "parent": "FL_femur",
+   "origin_cm": [
+    6.35854,
+    4.0160779999999985,
+    -7.179075
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -1.4069682336523555e-14,
+    -1.0,
+    8.223347789235122e-16
+   ],
+   "measured_angle": 0.005875770432943061,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FL_ankle_joint",
+   "child": "FL_foot",
+   "parent": "FL_tibia",
+   "origin_cm": [
+    6.38551,
+    4.426077999999999,
+    -14.232465
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -1.15315099116041e-15,
+    1.0,
+    5.736571054879946e-16
+   ],
+   "measured_angle": 0.09948656033674032,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FL_foot_pin_joint",
+   "child": "FL_foot",
+   "parent": "FL_link",
+   "origin_cm": [
+    5.137650000000001,
+    4.0560779999999985,
+    -14.101345
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -1.250908120519137e-16,
+    1.0,
+    2.2046282975239844e-17
+   ],
+   "measured_angle": 0.9002862464288384,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_hip_joint",
+   "child": "FR_hip",
+   "parent": "base",
+   "origin_cm": [
+    7.168639999999998,
+    -2.4261820000000016,
+    -0.200715
+   ],
+   "primary": [
+    0.9848077908426044,
+    0.0,
+    -0.173647963119955
+   ],
+   "secondary": [
+    -0.173647963119955,
+    -0.0,
+    -0.9848077908426045
+   ],
+   "third": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    0.9848077908426043,
+    4.1918514223913563e-16,
+    -0.17364796311995506
+   ],
+   "measured_angle": 0.09948376736367846,
+   "motion_links": [],
+   "lower": -0.4999999999992816,
+   "upper": 0.4999999999992816
+  },
+  {
+   "name": "FR_femur_joint",
+   "child": "FR_femur",
+   "parent": "FR_hip",
+   "origin_cm": [
+    8.47592,
+    -4.151022000000002,
+    -0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    2.8443144400482407e-16,
+    1.0,
+    -1.4029960942585165e-17
+   ],
+   "measured_angle": 0.0994837673636763,
+   "motion_links": [],
+   "lower": -1.2000000000000213,
+   "upper": 1.2000000000000213
+  },
+  {
+   "name": "FR_pinion_joint",
+   "child": "FR_pinion",
+   "parent": "FR_hip",
+   "origin_cm": [
+    10.254610000000001,
+    -4.5593220000000025,
+    -0.744855
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    8.739611137873619e-16,
+    1.0,
+    5.150651937373482e-16
+   ],
+   "measured_angle": 0.09948376736367626,
+   "motion_links": [
+    [
+     "FR_pinion_joint",
+     "FR_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": -1.49999999999959,
+   "upper": 1.49999999999959
+  },
+  {
+   "name": "FR_gear_joint",
+   "child": "FR_gear",
+   "parent": "FR_hip",
+   "origin_cm": [
+    8.47592,
+    -4.151022000000002,
+    -0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    2.8443144400482387e-16,
+    1.0,
+    -1.402996094258516e-17
+   ],
+   "measured_angle": 0.0994837673636763,
+   "motion_links": [
+    [
+     "FR_pinion_joint",
+     "FR_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_crank_pin_joint",
+   "child": "FR_quad",
+   "parent": "FR_gear",
+   "origin_cm": [
+    7.070889999999999,
+    -4.516022000000001,
+    0.06355500000000003
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -8.588589670257437e-16,
+    1.0,
+    -5.737425258370418e-16
+   ],
+   "measured_angle": 0.09948376736367633,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_knee_joint",
+   "child": "FR_tibia",
+   "parent": "FR_femur",
+   "origin_cm": [
+    5.849029999999999,
+    -4.151022000000002,
+    -7.486595
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 2.8903052290419187e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_quad_pin_joint",
+   "child": "FR_tibia",
+   "parent": "FR_quad",
+   "origin_cm": [
+    4.444039999999999,
+    -4.466022000000001,
+    -6.961215
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 2.890342101075123e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_link_pin_joint",
+   "child": "FR_link",
+   "parent": "FR_femur",
+   "origin_cm": [
+    6.358539999999998,
+    -4.016022000000001,
+    -7.179075
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -1.4069682336522998e-14,
+    -1.0,
+    8.223347789234859e-16
+   ],
+   "measured_angle": 0.005875770432943297,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_ankle_joint",
+   "child": "FR_foot",
+   "parent": "FR_tibia",
+   "origin_cm": [
+    6.385509999999998,
+    -4.4260220000000015,
+    -14.232465
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -1.1531509911604771e-15,
+    1.0,
+    5.736571054880627e-16
+   ],
+   "measured_angle": 0.09948656033673144,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "FR_foot_pin_joint",
+   "child": "FR_foot",
+   "parent": "FR_link",
+   "origin_cm": [
+    5.137649999999999,
+    -4.0560220000000005,
+    -14.101345
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -1.2509081205191113e-16,
+    1.0,
+    2.2046282975237887e-17
+   ],
+   "measured_angle": 0.9002862464288595,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_hip_joint",
+   "child": "RL_hip",
+   "parent": "base",
+   "origin_cm": [
+    -8.04459,
+    2.423818000000002,
+    0.9045950000000005
+   ],
+   "primary": [
+    0.9396927112094519,
+    0.0,
+    0.342019894888923
+   ],
+   "secondary": [
+    -0.342019894888923,
+    0.0,
+    0.939692711209452
+   ],
+   "third": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    0.9396927112094517,
+    -2.7945676149276637e-16,
+    0.34201989488892287
+   ],
+   "measured_angle": 0.09948376736367513,
+   "motion_links": [],
+   "lower": -0.4999999999992816,
+   "upper": 0.4999999999992816
+  },
+  {
+   "name": "RL_femur_joint",
+   "child": "RL_femur",
+   "parent": "RL_hip",
+   "origin_cm": [
+    -9.28404,
+    4.151078000000002,
+    0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -4.08106705493878e-16,
+    1.0,
+    -2.017938311274117e-16
+   ],
+   "measured_angle": 0.09948376736367637,
+   "motion_links": [],
+   "lower": -1.2000000000000213,
+   "upper": 1.2000000000000213
+  },
+  {
+   "name": "RL_pinion_joint",
+   "child": "RL_pinion",
+   "parent": "RL_hip",
+   "origin_cm": [
+    -10.975489999999999,
+    4.581178000000002,
+    -0.15394500000000022
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -6.569473277682535e-16,
+    1.0,
+    3.924577160520091e-16
+   ],
+   "measured_angle": 0.09948376736367634,
+   "motion_links": [
+    [
+     "RL_pinion_joint",
+     "RL_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": -1.49999999999959,
+   "upper": 1.49999999999959
+  },
+  {
+   "name": "RL_gear_joint",
+   "child": "RL_gear",
+   "parent": "RL_hip",
+   "origin_cm": [
+    -9.28404,
+    4.151078000000002,
+    0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -4.08106705493878e-16,
+    1.0,
+    -2.0179383112741158e-16
+   ],
+   "measured_angle": 0.09948376736367637,
+   "motion_links": [
+    [
+     "RL_pinion_joint",
+     "RL_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_crank_pin_joint",
+   "child": "RL_quad",
+   "parent": "RL_gear",
+   "origin_cm": [
+    -7.991629999999999,
+    4.516078000000002,
+    1.223055
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -7.13026888968462e-16,
+    1.0,
+    -8.266617973450059e-16
+   ],
+   "measured_angle": 0.09948376736367644,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_knee_joint",
+   "child": "RL_tibia",
+   "parent": "RL_femur",
+   "origin_cm": [
+    -5.477189999999999,
+    4.326078000000001,
+    -6.000345
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 5.565153869125104e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_quad_pin_joint",
+   "child": "RL_tibia",
+   "parent": "RL_quad",
+   "origin_cm": [
+    -4.18479,
+    4.466078000000001,
+    -5.238975
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 5.565150608816414e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_link_pin_joint",
+   "child": "RL_link",
+   "parent": "RL_femur",
+   "origin_cm": [
+    -6.52506,
+    4.066078000000001,
+    -5.871135000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 5.56515686742116e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_ankle_joint",
+   "child": "RL_foot",
+   "parent": "RL_tibia",
+   "origin_cm": [
+    -10.733749999999999,
+    4.426078000000002,
+    -11.349975
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -7.470627058162127e-16,
+    1.0,
+    4.974284741266605e-16
+   ],
+   "measured_angle": 0.09948317721953477,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RL_foot_pin_joint",
+   "child": "RL_foot",
+   "parent": "RL_link",
+   "origin_cm": [
+    -11.78162,
+    4.006078000000002,
+    -11.220765
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -6.712745956586336e-16,
+    1.0,
+    4.2797202697417915e-16
+   ],
+   "measured_angle": 0.09948317721953323,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_hip_joint",
+   "child": "RR_hip",
+   "parent": "base",
+   "origin_cm": [
+    -8.022300000000001,
+    -2.4238219999999977,
+    0.920925
+   ],
+   "primary": [
+    0.9396927112094519,
+    0.0,
+    0.342019894888923
+   ],
+   "secondary": [
+    -0.342019894888923,
+    0.0,
+    0.939692711209452
+   ],
+   "third": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    0.9396927112094517,
+    -2.7945676149276637e-16,
+    0.34201989488892287
+   ],
+   "measured_angle": 0.09948376736367513,
+   "motion_links": [],
+   "lower": -0.4999999999992816,
+   "upper": 0.4999999999992816
+  },
+  {
+   "name": "RR_femur_joint",
+   "child": "RR_femur",
+   "parent": "RR_hip",
+   "origin_cm": [
+    -9.284040000000001,
+    -4.176021999999998,
+    0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -4.08106705493878e-16,
+    1.0,
+    -2.017938311274117e-16
+   ],
+   "measured_angle": 0.09948376736367637,
+   "motion_links": [],
+   "lower": -1.2000000000000213,
+   "upper": 1.2000000000000213
+  },
+  {
+   "name": "RR_pinion_joint",
+   "child": "RR_pinion",
+   "parent": "RR_hip",
+   "origin_cm": [
+    -10.975480000000001,
+    -4.581021999999997,
+    -0.15395500000000029
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -6.569473277682535e-16,
+    1.0,
+    3.924577160520092e-16
+   ],
+   "measured_angle": 0.09948376736367634,
+   "motion_links": [
+    [
+     "RR_pinion_joint",
+     "RR_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": -1.49999999999959,
+   "upper": 1.49999999999959
+  },
+  {
+   "name": "RR_gear_joint",
+   "child": "RR_gear",
+   "parent": "RR_hip",
+   "origin_cm": [
+    -9.284040000000001,
+    -4.176021999999998,
+    0.4616850000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -4.08106705493878e-16,
+    1.0,
+    -2.0179383112741158e-16
+   ],
+   "measured_angle": 0.09948376736367637,
+   "motion_links": [
+    [
+     "RR_pinion_joint",
+     "RR_gear_joint",
+     true,
+     6.283185307179586,
+     3.141592653589793
+    ]
+   ],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_crank_pin_joint",
+   "child": "RR_quad",
+   "parent": "RR_gear",
+   "origin_cm": [
+    -7.991630000000002,
+    -4.516021999999998,
+    1.223055
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    5.169596725476247e-16,
+    1.0,
+    -7.654294390502479e-16
+   ],
+   "measured_angle": 0.09948376736367641,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_knee_joint",
+   "child": "RR_tibia",
+   "parent": "RR_femur",
+   "origin_cm": [
+    -5.477190000000001,
+    -4.326021999999999,
+    -6.000345
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 5.565153866627102e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_quad_pin_joint",
+   "child": "RR_tibia",
+   "parent": "RR_quad",
+   "origin_cm": [
+    -4.184790000000001,
+    -4.466021999999999,
+    -5.238975
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 5.565150621028868e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_link_pin_joint",
+   "child": "RR_link",
+   "parent": "RR_femur",
+   "origin_cm": [
+    -6.525060000000002,
+    -4.066021999999999,
+    -5.871135000000001
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": null,
+   "measured_angle": 5.565156870613051e-07,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_ankle_joint",
+   "child": "RR_foot",
+   "parent": "RR_tibia",
+   "origin_cm": [
+    -10.73375,
+    -4.426021999999997,
+    -11.349975
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -7.470699607356086e-16,
+    1.0,
+    4.974269726784679e-16
+   ],
+   "measured_angle": 0.09948317721954165,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  },
+  {
+   "name": "RR_foot_pin_joint",
+   "child": "RR_foot",
+   "parent": "RR_link",
+   "origin_cm": [
+    -11.78162,
+    -4.006021999999997,
+    -11.220765
+   ],
+   "primary": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "secondary": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "third": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "type": "RevoluteJointMotion",
+   "axis_measured": [
+    -6.712745956587039e-16,
+    1.0,
+    4.2797202697422885e-16
+   ],
+   "measured_angle": 0.09948317721952277,
+   "motion_links": [],
+   "lower": null,
+   "upper": null
+  }
+ ],
+ "status": "ok",
+ "grounded": [
+  "base"
+ ]
+}

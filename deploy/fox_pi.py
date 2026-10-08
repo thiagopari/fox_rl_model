@@ -40,6 +40,7 @@ NEUTRAL_DEG = {name: 90.0 for name in SERVOS}   # adafruit servo angle (0..180) 
 DIRECTION = {name: 1 for name in SERVOS}        # -1 where a larger servo angle turns the joint against the policy's +
 DEG_PER_RAD = 180.0 / math.pi                   # 500-2500 us = 180 deg (adafruit_motor); correct if the travel differs
 LIMIT_DEG = {name: (NEUTRAL_DEG[name] - 50.0, NEUTRAL_DEG[name] + 50.0) for name in SERVOS}   # never command beyond
+HEIGHT_TRIM_MM = {leg: 0.0 for leg in LEGS}   # + = leg longer at the stance (--stand / --balance); "height_trim_mm"
 CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "servo_calib.json")   # written by fox_calib.py
 IMU_LEVEL = np.eye(3)   # mount tilt correction, from --level-imu (servo_calib.json "imu_level_gravity")
 
@@ -81,7 +82,6 @@ DT, MAX_TARGET = 0.02, 0.8   # 50 Hz like training; |target| clamp in rad (train
 # Sagittal leg geometry at the CAD stance (urdf/fox.urdf): femur hip pivot -> knee, shin knee -> ankle, in mm, and their
 # angles from straight down (+ = toward the front). --balance / --stand lengthen or shorten legs with it (2-link IK).
 LEG_GEOM = {"F": (75.0, 67.7, math.radians(-20.5), math.radians(4.5)), "R": (75.0, 75.0, math.radians(30.5), math.radians(-44.5))}
-HEIGHT_TRIM_MM = {leg: 0.0 for leg in LEGS}   # + = leg longer at the stance; servo_calib.json "height_trim_mm"
 
 
 def leg_fk(leg, pivot, gear):

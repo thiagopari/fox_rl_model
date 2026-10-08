@@ -18,16 +18,16 @@
     "gear_rad": -0.15
    },
    "RL": {
-    "swing_rad": -0.0442,
-    "extension_m": 0.009,
+    "swing_rad": -0.0491,
+    "extension_m": 0.0084,
     "femur_rad": -0.0,
     "shin_rad": -0.15,
     "knee_rad": -0.15,
     "gear_rad": -0.15
    },
    "RR": {
-    "swing_rad": -0.0491,
-    "extension_m": 0.0084,
+    "swing_rad": -0.0442,
+    "extension_m": 0.009,
     "femur_rad": -0.0,
     "shin_rad": -0.15,
     "knee_rad": -0.15,
@@ -52,16 +52,16 @@
     "gear_rad": 0.0
    },
    "RL": {
-    "swing_rad": 0.2084,
-    "extension_m": 0.0172,
+    "swing_rad": 0.1992,
+    "extension_m": 0.0161,
     "femur_rad": 0.3,
-    "shin_rad": 0.0,
+    "shin_rad": -0.0,
     "knee_rad": -0.3,
     "gear_rad": 0.0
    },
    "RR": {
-    "swing_rad": 0.1992,
-    "extension_m": 0.0161,
+    "swing_rad": 0.2084,
+    "extension_m": 0.0172,
     "femur_rad": 0.3,
     "shin_rad": -0.0,
     "knee_rad": -0.3,
@@ -109,9 +109,9 @@
   "pivot +a with gear -a: rigid pendulum swing (knee fixed, hip-foot length kept)": true,
   "reduced tree matches the exact mechanism (feet < 1 mm, standing height < 1 mm)": true
  },
- "reduced_vs_exact_max_foot_error_m": 7.296952158690431e-06,
+ "reduced_vs_exact_max_foot_error_m": 7.29692430521037e-06,
  "standing_base_z_m": {
-  "scene.xml": 0.14616,
-  "scene_reduced.xml": 0.14672
+  "scene.xml": 0.14852,
+  "scene_reduced.xml": 0.1489
  }
 }

@@ -340,13 +340,20 @@ The servos stalled when the robot readjusted on the ground. v7 (`Fox_Prototype_0
   by under 0.02 g, so they stay valid. Re-run `FoxScrewScan` before rebuilding the mechanism: the bearing bodies were
   renamed.
 
+**The sim model `v7/` is the robot as it will be built: without the rear spacer** (no longer screws).
+* It is the v6 export (base, legs, every joint) with the 8 v7 gear and pinion parts, the 2:1 motion links and the v7
+  pinion range, derived by `tools/raw_v7_without_spacer.py` into `raw_v7_nospacer/`.
+* The Fusion design still has the spacer (its renders are in `v7/validation/cad/`).
+* `tools/build_robot.py --raw raw_v7 --out <dir>` rebuilds the spacer version.
+
 **Stance:** base level, each foot where its worst pitch servo's static load is lowest. That puts the front feet 25.5 mm
-ahead of the hips and the rear feet 28.6 mm behind. Set in `v7/mechanism.json`; servo angles from the CAD pose:
+ahead of the hips and the rear feet 34.1 mm behind (28.6 mm with the spacer). Set in `v7/mechanism.json`; servo angles
+from the CAD pose:
 
 | Leg | pivot servo | gear servo |
 |---|---|---|
 | front | −8.6° | +11.3° |
-| rear | +25.6° | −10.4° |
+| rear | +22.9° | −41.9° |
 
 These angles are the new home offsets.
 
@@ -356,17 +363,26 @@ Servo load (`tools/servo_load.py`; trot: 0.75 kg on 2 feet × 1.5), as a share o
 |---|---|---|---|
 | v6, CAD pose | 89 % | 43 % / 51 % | 89 % / 62 % |
 | v6, best level stance (feet under hips) | 72 % | 46 % / 46 % | 72 % / 72 % |
-| **v7, its stance** | **34 %** | 30 % / 30 % | 34 % / 34 % |
+| **v7 without the spacer (the sim model), its stance** | **40 %** | 30 % / 30 % | 40 % / 40 % |
+| v7 with the spacer, its stance | 34 % | 30 % / 30 % | 34 % / 34 % |
 
-Standing still in MuJoCo (0.55 kg, 4 feet), the worst servo goes from 23 % (v6) to 10 % (v7) of stall.
+Standing still in MuJoCo (0.54 kg, 4 feet), the worst servo goes from 23 % (v6) to 11 % (v7 without the spacer; 10 %
+with it).
 
-**Checks** (`v7/validation/`):
-* Fusion: tooth overlap 0.0 mm³ on all 4 legs; every rear body moved by exactly the lift and nothing else moved; no new
-  interference; the spacer is seated on both faces; 40 joints + 4 motion links healthy; the drive tests give
-  gear = −pinion / 2 and keep both parallelograms (worst 5.5e-5 rad).
-* MuJoCo: stands level at the stance (upright 1.0000, all feet down); servo roles at 2:1; the reduced tree matches the
-  exact mechanism within 7 µm; pose test and 20 s of random actions pass.
-* `rear_stack_section.png` shows pelvis, spacer and plate on the screw axis; `v7_*.png` are Fusion renders.
+**Checks:**
+* Fusion, the CAD design with the spacer (`v7/validation/cad/`):
+  * tooth overlap 0.0 mm³ on all 4 legs;
+  * every rear body moved by exactly the lift and nothing else moved, with no new interference;
+  * the spacer is seated on both faces;
+  * 40 joints + 4 motion links healthy; the drive tests give gear = −pinion / 2 and keep both parallelograms (worst
+    5.5e-5 rad).
+
+  `rear_stack_section.png` shows pelvis, spacer and plate on the screw axis; `v7_*.png` are Fusion renders.
+* MuJoCo, the sim model without the spacer (`v7/validation/`):
+  * stands level at its stance (upright 1.0000, all feet down);
+  * servo roles at 2:1;
+  * the reduced tree matches the exact mechanism within 7 µm;
+  * pose test and 20 s of random actions pass.
 
 **To use it** (not done yet, on purpose):
 1. `FOX_MODEL=v7 OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py` writes `v7/usd/fox.usd`.
@@ -418,8 +434,10 @@ that has unsaved changes or that someone used in the last 2 minutes.
 4. `~/.venvs/fox_rl/bin/python tools/build_robot.py`, then the checks below.
 
 v7 the same way, with the configs in `tools/fusion/v7/` (`scan.json`, `build.json`, `export.json`) placed next to each
-add-in, `tools/screw_graph.py analysis/screw_scan_v7.json analysis/link_map_v7.json`, then
-`tools/build_robot.py --raw raw_v7 --out v7` and the MuJoCo checks with `FOX_MODEL=v7`. `FoxMakeV7` itself runs once
+add-in, and `tools/screw_graph.py analysis/screw_scan_v7.json analysis/link_map_v7.json`. The export is `raw_v7/`, which
+includes the spacer. Then:
+* the sim model (no spacer): `tools/raw_v7_without_spacer.py && tools/build_robot.py --raw raw_v7_nospacer --out v7`;
+* the MuJoCo checks with `FOX_MODEL=v7`. `FoxMakeV7` itself runs once
 (it refuses to overwrite `Fox_Prototype_03_v7_RL`).
 
 ## Validation

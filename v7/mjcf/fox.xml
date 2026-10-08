@@ -78,19 +78,19 @@
     <mesh name="RR_link_col" file="collision/RR_link.stl"/>
   </asset>
   <worldbody>
-    <body name="base" pos="0.000000 0.000000 0.162237">
+    <body name="base" pos="0.000000 0.000000 0.152840">
       <freejoint name="root"/>
-      <inertial pos="-0.003388 0.000909 0.012183" mass="0.335624" fullinertia="2.5961e-04 1.6032e-03 1.7363e-03 -5.4895e-06 5.4520e-05 -6.0693e-06"/>
+      <inertial pos="-0.000626 0.000923 0.016196" mass="0.330454" fullinertia="2.7830e-04 1.4975e-03 1.6114e-03 -4.0202e-06 -9.4188e-05 -9.4332e-06"/>
       <geom class="visual" mesh="base_vis" rgba="0.33 0.42 0.52 1"/>
       <geom class="collision" mesh="base_col"/>
       <site name="imu" pos="0 0 0"/>
-      <body name="FL_hip" pos="0.071686 0.024238 -0.002007">
+      <body name="FL_hip" pos="0.071686 0.024238 0.007390">
         <joint name="FL_hip_joint" axis="0.984808 0 -0.173648" range="-0.5000 0.5000"/>
-        <inertial pos="0.019700 0.000171 -0.009614" mass="0.029637" fullinertia="3.9041e-06 6.8017e-06 6.0682e-06 -8.1673e-07 1.8881e-07 -1.3948e-07"/>
+        <inertial pos="0.019700 0.000171 -0.009614" mass="0.029637" fullinertia="3.9041e-06 6.8017e-06 6.0682e-06 -8.1673e-07 1.8878e-07 -1.3949e-07"/>
         <geom class="visual" mesh="FL_hip_vis" rgba="0.12 0.12 0.13 1"/>
         <geom class="collision" mesh="FL_hip_col"/>
         <body name="FL_femur" pos="0.013073 0.017273 -0.002610">
-          <joint name="FL_femur_joint" axis="0 1 -0" range="-1.2000 1.2000"/>
+          <joint name="FL_femur_joint" axis="0 1 0" range="-1.2000 1.2000"/>
           <inertial pos="-0.012342 0.001294 -0.031474" mass="0.004892" fullinertia="2.9926e-06 3.4422e-06 4.9069e-07 -2.7059e-08 -1.1146e-06 -6.8278e-08"/>
           <geom class="visual" mesh="FL_femur_vis" rgba="0.45 0.68 0.9 1"/>
           <geom class="collision" mesh="FL_femur_col"/>
@@ -108,7 +108,7 @@
           </body>
           <body name="FL_link" pos="-0.021174 -0.001350 -0.067174">
             <joint name="FL_link_pin_joint" axis="0 1 -0" class="pin"/>
-            <inertial pos="-0.001602 -0.002100 -0.031180" mass="0.002351" fullinertia="1.0619e-06 1.1189e-06 6.3295e-08 2.0817e-21 -2.0390e-07 0.0000e+00"/>
+            <inertial pos="-0.001602 -0.002100 -0.031180" mass="0.002351" fullinertia="1.0619e-06 1.1189e-06 6.3295e-08 6.9389e-22 -2.0390e-07 -2.7756e-21"/>
             <geom class="visual" mesh="FL_link_vis" rgba="0.85 0.6 0.3 1"/>
             <geom class="collision" mesh="FL_link_col"/>
           </body>
@@ -120,25 +120,25 @@
           <geom class="collision" mesh="FL_pinion_col"/>
         </body>
         <body name="FL_gear" pos="0.013073 0.017273 -0.002610">
-          <joint name="FL_gear_joint" axis="0 1 -0" class="pin"/>
+          <joint name="FL_gear_joint" axis="0 1 0" class="pin"/>
           <inertial pos="-0.000793 0.008634 0.000296" mass="0.004045" fullinertia="1.9190e-07 3.4494e-07 2.2208e-07 -1.1349e-08 1.3114e-08 4.2423e-09"/>
           <geom class="visual" mesh="FL_gear_vis" rgba="0.3 0.3 0.32 1"/>
           <geom class="collision" mesh="FL_gear_col"/>
           <body name="FL_quad" pos="-0.014050 0.003650 0.005252">
-            <joint name="FL_crank_pin_joint" axis="0 1 -0" class="pin"/>
-            <inertial pos="-0.015922 -0.001600 -0.031734" mass="0.002608" fullinertia="1.2810e-06 1.4922e-06 2.1513e-07 -8.3267e-21 -4.8116e-07 1.1102e-20"/>
+            <joint name="FL_crank_pin_joint" axis="-0 1 -0" class="pin"/>
+            <inertial pos="-0.015922 -0.001600 -0.031734" mass="0.002608" fullinertia="1.2810e-06 1.4922e-06 2.1513e-07 -9.7145e-21 -4.8116e-07 1.0755e-20"/>
             <geom class="visual" mesh="FL_quad_vis" rgba="0.85 0.6 0.3 1"/>
             <geom class="collision" mesh="FL_quad_col"/>
           </body>
         </body>
       </body>
-      <body name="FR_hip" pos="0.071686 -0.024262 -0.002007">
+      <body name="FR_hip" pos="0.071686 -0.024262 0.007390">
         <joint name="FR_hip_joint" axis="0.984808 0 -0.173648" range="-0.5000 0.5000"/>
-        <inertial pos="0.019655 -0.000085 -0.009564" mass="0.029637" fullinertia="3.8948e-06 6.8294e-06 6.0767e-06 7.9968e-07 2.0274e-07 1.4076e-07"/>
+        <inertial pos="0.019655 -0.000085 -0.009564" mass="0.029637" fullinertia="3.8948e-06 6.8294e-06 6.0767e-06 7.9968e-07 2.0276e-07 1.4076e-07"/>
         <geom class="visual" mesh="FR_hip_vis" rgba="0.12 0.12 0.13 1"/>
         <geom class="collision" mesh="FR_hip_col"/>
         <body name="FR_femur" pos="0.013073 -0.017248 -0.002610">
-          <joint name="FR_femur_joint" axis="0 1 -0" range="-1.2000 1.2000"/>
+          <joint name="FR_femur_joint" axis="0 1 0" range="-1.2000 1.2000"/>
           <inertial pos="-0.012344 -0.001294 -0.031473" mass="0.004892" fullinertia="2.9930e-06 3.4425e-06 4.9053e-07 2.7070e-08 -1.1144e-06 6.8262e-08"/>
           <geom class="visual" mesh="FR_femur_vis" rgba="0.45 0.68 0.9 1"/>
           <geom class="collision" mesh="FR_femur_col"/>
@@ -156,7 +156,7 @@
           </body>
           <body name="FR_link" pos="-0.021174 0.001350 -0.067174">
             <joint name="FR_link_pin_joint" axis="0 1 -0" class="pin"/>
-            <inertial pos="-0.001602 0.002100 -0.031180" mass="0.002351" fullinertia="1.0619e-06 1.1189e-06 6.3295e-08 -3.4694e-21 -2.0390e-07 5.5511e-21"/>
+            <inertial pos="-0.001602 0.002100 -0.031180" mass="0.002351" fullinertia="1.0619e-06 1.1189e-06 6.3295e-08 -6.9389e-22 -2.0390e-07 8.3267e-21"/>
             <geom class="visual" mesh="FR_link_vis" rgba="0.85 0.6 0.3 1"/>
             <geom class="collision" mesh="FR_link_col"/>
           </body>
@@ -168,21 +168,21 @@
           <geom class="collision" mesh="FR_pinion_col"/>
         </body>
         <body name="FR_gear" pos="0.013073 -0.017248 -0.002610">
-          <joint name="FR_gear_joint" axis="0 1 -0" class="pin"/>
+          <joint name="FR_gear_joint" axis="0 1 0" class="pin"/>
           <inertial pos="-0.000793 -0.008635 0.000296" mass="0.004045" fullinertia="1.9190e-07 3.4494e-07 2.2208e-07 1.1349e-08 1.3114e-08 -4.2423e-09"/>
           <geom class="visual" mesh="FR_gear_vis" rgba="0.3 0.3 0.32 1"/>
           <geom class="collision" mesh="FR_gear_col"/>
           <body name="FR_quad" pos="-0.014050 -0.003650 0.005252">
             <joint name="FR_crank_pin_joint" axis="-0 1 -0" class="pin"/>
-            <inertial pos="-0.015922 0.001600 -0.031734" mass="0.002608" fullinertia="1.2810e-06 1.4922e-06 2.1513e-07 1.2490e-20 -4.8116e-07 -6.9389e-21"/>
+            <inertial pos="-0.015922 0.001600 -0.031734" mass="0.002608" fullinertia="1.2810e-06 1.4922e-06 2.1513e-07 1.3184e-20 -4.8116e-07 -3.4694e-21"/>
             <geom class="visual" mesh="FR_quad_vis" rgba="0.85 0.6 0.3 1"/>
             <geom class="collision" mesh="FR_quad_col"/>
           </body>
         </body>
       </body>
-      <body name="RL_hip" pos="-0.080446 0.024238 0.009046">
-        <joint name="RL_hip_joint" axis="0.939693 -0 0.34202" range="-0.5000 0.5000"/>
-        <inertial pos="-0.017765 0.000192 -0.012504" mass="0.030137" fullinertia="4.1667e-06 7.0409e-06 6.0618e-06 8.3796e-07 -4.9535e-07 -4.1168e-09"/>
+      <body name="RL_hip" pos="-0.073606 0.024238 -0.000351">
+        <joint name="RL_hip_joint" axis="0.939693 0 0.34202" range="-0.5000 0.5000"/>
+        <inertial pos="-0.017765 0.000192 -0.012504" mass="0.030137" fullinertia="4.1667e-06 7.0408e-06 6.0618e-06 8.3795e-07 -4.9538e-07 -4.1078e-09"/>
         <geom class="visual" mesh="RL_hip_vis" rgba="0.12 0.12 0.13 1"/>
         <geom class="collision" mesh="RL_hip_col"/>
         <body name="RL_femur" pos="-0.012394 0.017273 -0.004429">
@@ -190,9 +190,9 @@
           <inertial pos="0.017979 0.001290 -0.030090" mass="0.005150" fullinertia="2.8108e-06 3.7559e-06 9.8944e-07 4.2601e-08 1.5752e-06 -7.1122e-08"/>
           <geom class="visual" mesh="RL_femur_vis" rgba="0.45 0.68 0.9 1"/>
           <geom class="collision" mesh="RL_femur_col"/>
-          <body name="RL_tibia" pos="0.038068 0.001750 -0.064620">
+          <body name="RL_tibia" pos="0.038069 0.001750 -0.064620">
             <joint name="RL_knee_joint" axis="0 1 0" class="pin" range="-1.2000 0.7400"/>
-            <inertial pos="-0.015755 0.004603 -0.013634" mass="0.005301" fullinertia="1.6361e-06 3.5704e-06 1.9640e-06 -5.2016e-08 -1.6942e-06 -4.4316e-08"/>
+            <inertial pos="-0.015755 0.004603 -0.013635" mass="0.005301" fullinertia="1.6361e-06 3.5704e-06 1.9640e-06 -5.2016e-08 -1.6942e-06 -4.4316e-08"/>
             <geom class="visual" mesh="RL_tibia_vis" rgba="0.62 0.8 0.95 1"/>
             <geom class="collision" mesh="RL_tibia_col"/>
             <body name="RL_foot" pos="-0.052566 0.001000 -0.053496">
@@ -221,19 +221,19 @@
           <geom class="visual" mesh="RL_gear_vis" rgba="0.3 0.3 0.32 1"/>
           <geom class="collision" mesh="RL_gear_col"/>
           <body name="RL_quad" pos="0.012924 0.003650 0.007614">
-            <joint name="RL_crank_pin_joint" axis="-0 1 -0" class="pin"/>
-            <inertial pos="0.021186 -0.001600 -0.028498" mass="0.002615" fullinertia="1.0914e-06 1.5019e-06 4.1433e-07 -2.7756e-21 6.3852e-07 1.7347e-21"/>
+            <joint name="RL_crank_pin_joint" axis="0 1 0" class="pin"/>
+            <inertial pos="0.021186 -0.001600 -0.028498" mass="0.002615" fullinertia="1.0914e-06 1.5019e-06 4.1433e-07 -6.9389e-22 6.3852e-07 2.4286e-21"/>
             <geom class="visual" mesh="RL_quad_vis" rgba="0.85 0.6 0.3 1"/>
             <geom class="collision" mesh="RL_quad_col"/>
           </body>
         </body>
       </body>
-      <body name="RR_hip" pos="-0.080223 -0.024238 0.009209">
-        <joint name="RR_hip_joint" axis="0.939693 -0 0.34202" range="-0.5000 0.5000"/>
-        <inertial pos="-0.017248 0.000038 -0.013309" mass="0.031628" fullinertia="4.4267e-06 7.5622e-06 6.4034e-06 -8.8515e-07 -4.6397e-07 5.1359e-08"/>
+      <body name="RR_hip" pos="-0.073382 -0.024238 -0.000188">
+        <joint name="RR_hip_joint" axis="0.939693 0 0.34202" range="-0.5000 0.5000"/>
+        <inertial pos="-0.017248 0.000038 -0.013309" mass="0.031628" fullinertia="4.4267e-06 7.5621e-06 6.4034e-06 -8.8515e-07 -4.6400e-07 5.1350e-08"/>
         <geom class="visual" mesh="RR_hip_vis" rgba="0.12 0.12 0.13 1"/>
         <geom class="collision" mesh="RR_hip_col"/>
-        <body name="RR_femur" pos="-0.012617 -0.017522 -0.004592">
+        <body name="RR_femur" pos="-0.012618 -0.017522 -0.004593">
           <joint name="RR_femur_joint" axis="-0 1 -0" range="-1.2000 1.2000"/>
           <inertial pos="0.018067 -0.001017 -0.030156" mass="0.005087" fullinertia="2.7482e-06 3.6800e-06 9.7355e-07 -4.0090e-08 1.5469e-06 6.6705e-08"/>
           <geom class="visual" mesh="RR_femur_vis" rgba="0.45 0.68 0.9 1"/>
@@ -263,14 +263,14 @@
           <geom class="visual" mesh="RR_pinion_vis" rgba="0.3 0.3 0.32 1"/>
           <geom class="collision" mesh="RR_pinion_col"/>
         </body>
-        <body name="RR_gear" pos="-0.012617 -0.017522 -0.004592">
+        <body name="RR_gear" pos="-0.012618 -0.017522 -0.004593">
           <joint name="RR_gear_joint" axis="-0 1 -0" class="pin"/>
           <inertial pos="0.000730 -0.008385 0.000430" mass="0.004045" fullinertia="1.9729e-07 3.4494e-07 2.1668e-07 -1.0439e-08 -1.7486e-08 -6.1494e-09"/>
           <geom class="visual" mesh="RR_gear_vis" rgba="0.3 0.3 0.32 1"/>
           <geom class="collision" mesh="RR_gear_col"/>
           <body name="RR_quad" pos="0.012924 -0.003400 0.007614">
-            <joint name="RR_crank_pin_joint" axis="0 1 -0" class="pin"/>
-            <inertial pos="0.021316 0.001600 -0.028638" mass="0.002586" fullinertia="1.0647e-06 1.4634e-06 4.0257e-07 8.3267e-21 6.2120e-07 3.4694e-21"/>
+            <joint name="RR_crank_pin_joint" axis="0 1 0" class="pin"/>
+            <inertial pos="0.021316 0.001600 -0.028638" mass="0.002586" fullinertia="1.0647e-06 1.4634e-06 4.0257e-07 6.2450e-21 6.2120e-07 4.1633e-21"/>
             <geom class="visual" mesh="RR_quad_vis" rgba="0.85 0.6 0.3 1"/>
             <geom class="collision" mesh="RR_quad_col"/>
           </body>

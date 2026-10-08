@@ -2,9 +2,9 @@
 <robot name="fox">
   <link name="base">
     <inertial>
-      <origin xyz="-0.003388 0.000909 0.012183" rpy="0 0 0"/>
-      <mass value="0.335624"/>
-      <inertia ixx="2.5961e-04" ixy="-5.4895e-06" ixz="5.4520e-05" iyy="1.6032e-03" iyz="-6.0693e-06" izz="1.7363e-03"/>
+      <origin xyz="-0.000626 0.000923 0.016196" rpy="0 0 0"/>
+      <mass value="0.330454"/>
+      <inertia ixx="2.7830e-04" ixy="-4.0202e-06" ixz="-9.4188e-05" iyy="1.4975e-03" iyz="-9.4332e-06" izz="1.6114e-03"/>
     </inertial>
     <visual>
       <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0"/>
@@ -20,7 +20,7 @@
     <inertial>
       <origin xyz="0.019238 0.004055 -0.008620" rpy="0 0 0"/>
       <mass value="0.034924"/>
-      <inertia ixx="7.2768e-06" ixy="-4.7010e-07" ixz="3.4718e-07" iyy="7.7475e-06" iyz="-8.9203e-07" izz="9.6381e-06"/>
+      <inertia ixx="7.2768e-06" ixy="-4.7010e-07" ixz="3.4715e-07" iyy="7.7475e-06" iyz="-8.9204e-07" izz="9.6381e-06"/>
     </inertial>
     <visual>
       <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0"/>
@@ -84,7 +84,7 @@
     <inertial>
       <origin xyz="0.019199 -0.003978 -0.008578" rpy="0 0 0"/>
       <mass value="0.034924"/>
-      <inertia ixx="7.2788e-06" ixy="4.5755e-07" ixz="3.5908e-07" iyy="7.7713e-06" iyz="8.8935e-07" izz="9.6598e-06"/>
+      <inertia ixx="7.2788e-06" ixy="4.5755e-07" ixz="3.5910e-07" iyy="7.7713e-06" iyz="8.8935e-07" izz="9.6598e-06"/>
     </inertial>
     <visual>
       <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0"/>
@@ -148,7 +148,7 @@
     <inertial>
       <origin xyz="-0.017473 0.004018 -0.011466" rpy="0 0 0"/>
       <mass value="0.035424"/>
-      <inertia ixx="7.6036e-06" ixy="6.1729e-07" ixz="-6.8444e-07" iyy="7.9863e-06" iyz="-8.0232e-07" izz="9.5722e-06"/>
+      <inertia ixx="7.6036e-06" ixy="6.1728e-07" ixz="-6.8448e-07" iyy="7.9862e-06" iyz="-8.0232e-07" izz="9.5722e-06"/>
     </inertial>
     <visual>
       <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0"/>
@@ -212,7 +212,7 @@
     <inertial>
       <origin xyz="-0.017073 -0.003665 -0.012221" rpy="0 0 0"/>
       <mass value="0.036913"/>
-      <inertia ixx="7.9814e-06" ixy="-7.4692e-07" ixz="-6.3379e-07" iyy="8.5404e-06" iyz="9.3749e-07" izz="9.9767e-06"/>
+      <inertia ixx="7.9814e-06" ixy="-7.4692e-07" ixz="-6.3382e-07" iyy="8.5404e-06" iyz="9.3749e-07" izz="9.9767e-06"/>
     </inertial>
     <visual>
       <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0"/>
@@ -273,7 +273,7 @@
     </collision>
   </link>
   <joint name="FL_hip_joint" type="revolute">
-    <origin xyz="0.071686 0.024238 -0.002007" rpy="0 0 0"/>
+    <origin xyz="0.071686 0.024238 0.007390" rpy="0 0 0"/>
     <parent link="base"/>
     <child link="FL_hip"/>
     <axis xyz="0.984808 0 -0.173648"/>
@@ -284,7 +284,7 @@
     <origin xyz="0.013073 0.017273 -0.002610" rpy="0 0 0"/>
     <parent link="FL_hip"/>
     <child link="FL_thigh"/>
-    <axis xyz="0 1 -0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="-1.2000" upper="1.2000" effort="1.410" velocity="10.50"/>
     <dynamics damping="0" friction="0"/>
   </joint>
@@ -306,7 +306,7 @@
     <mimic joint="FL_calf_joint" multiplier="0.358775" offset="0"/>
   </joint>
   <joint name="FR_hip_joint" type="revolute">
-    <origin xyz="0.071686 -0.024262 -0.002007" rpy="0 0 0"/>
+    <origin xyz="0.071686 -0.024262 0.007390" rpy="0 0 0"/>
     <parent link="base"/>
     <child link="FR_hip"/>
     <axis xyz="0.984808 0 -0.173648"/>
@@ -317,7 +317,7 @@
     <origin xyz="0.013073 -0.017248 -0.002610" rpy="0 0 0"/>
     <parent link="FR_hip"/>
     <child link="FR_thigh"/>
-    <axis xyz="0 1 -0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="-1.2000" upper="1.2000" effort="1.410" velocity="10.50"/>
     <dynamics damping="0" friction="0"/>
   </joint>
@@ -339,10 +339,10 @@
     <mimic joint="FR_calf_joint" multiplier="0.358775" offset="0"/>
   </joint>
   <joint name="RL_hip_joint" type="revolute">
-    <origin xyz="-0.080446 0.024238 0.009046" rpy="0 0 0"/>
+    <origin xyz="-0.073606 0.024238 -0.000351" rpy="0 0 0"/>
     <parent link="base"/>
     <child link="RL_hip"/>
-    <axis xyz="0.939693 -0 0.34202"/>
+    <axis xyz="0.939693 0 0.34202"/>
     <limit lower="-0.5000" upper="0.5000" effort="0.470" velocity="10.50"/>
     <dynamics damping="0" friction="0"/>
   </joint>
@@ -355,7 +355,7 @@
     <dynamics damping="0" friction="0"/>
   </joint>
   <joint name="RL_calf_joint" type="revolute">
-    <origin xyz="0.038068 0.001750 -0.064620" rpy="0 0 0"/>
+    <origin xyz="0.038069 0.001750 -0.064620" rpy="0 0 0"/>
     <parent link="RL_thigh"/>
     <child link="RL_calf"/>
     <axis xyz="0 1 0"/>
@@ -372,15 +372,15 @@
     <mimic joint="RL_calf_joint" multiplier="-1.000000" offset="0"/>
   </joint>
   <joint name="RR_hip_joint" type="revolute">
-    <origin xyz="-0.080223 -0.024238 0.009209" rpy="0 0 0"/>
+    <origin xyz="-0.073382 -0.024238 -0.000188" rpy="0 0 0"/>
     <parent link="base"/>
     <child link="RR_hip"/>
-    <axis xyz="0.939693 -0 0.34202"/>
+    <axis xyz="0.939693 0 0.34202"/>
     <limit lower="-0.5000" upper="0.5000" effort="0.470" velocity="10.50"/>
     <dynamics damping="0" friction="0"/>
   </joint>
   <joint name="RR_thigh_joint" type="revolute">
-    <origin xyz="-0.012617 -0.017522 -0.004592" rpy="0 0 0"/>
+    <origin xyz="-0.012618 -0.017522 -0.004593" rpy="0 0 0"/>
     <parent link="RR_hip"/>
     <child link="RR_thigh"/>
     <axis xyz="-0 1 -0"/>

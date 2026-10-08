@@ -1,16 +1,16 @@
 {
  "links": {
   "base": {
-   "mass_g": 335.62,
+   "mass_g": 330.45,
    "com_link_m": [
-    -0.00339,
-    0.00091,
-    0.01218
+    -0.00063,
+    0.00092,
+    0.0162
    ],
    "physically_valid": true,
-   "mesh_faces_full": 624612,
+   "mesh_faces_full": 624222,
    "visual_faces": 59998,
-   "mesh_z_min_world_m": -0.023364748805761337
+   "mesh_z_min_world_m": -0.02533758617937565
   },
   "FL_hip": {
    "mass_g": 29.64,
@@ -22,7 +22,7 @@
    "physically_valid": true,
    "mesh_faces_full": 53466,
    "visual_faces": 20000,
-   "mesh_z_min_world_m": -0.031153932213783264
+   "mesh_z_min_world_m": -0.021757030859589577
   },
   "FL_pinion": {
    "mass_g": 1.24,
@@ -34,7 +34,7 @@
    "physically_valid": true,
    "mesh_faces_full": 19712,
    "visual_faces": 19712,
-   "mesh_z_min_world_m": -0.014679290354251862
+   "mesh_z_min_world_m": -0.005282390397042036
   },
   "FL_gear": {
    "mass_g": 4.04,
@@ -46,7 +46,7 @@
    "physically_valid": true,
    "mesh_faces_full": 5878,
    "visual_faces": 5878,
-   "mesh_z_min_world_m": -0.017316853627562523
+   "mesh_z_min_world_m": -0.00791995320469141
   },
   "FL_femur": {
    "mass_g": 4.89,
@@ -58,7 +58,7 @@
    "physically_valid": true,
    "mesh_faces_full": 9420,
    "visual_faces": 9420,
-   "mesh_z_min_world_m": -0.08082296699285507
+   "mesh_z_min_world_m": -0.07142606377601624
   },
   "FL_quad": {
    "mass_g": 2.61,
@@ -70,7 +70,7 @@
    "physically_valid": true,
    "mesh_faces_full": 540,
    "visual_faces": 540,
-   "mesh_z_min_world_m": -0.07361055910587311
+   "mesh_z_min_world_m": -0.06421366333961487
   },
   "FL_tibia": {
    "mass_g": 5.49,
@@ -82,7 +82,7 @@
    "physically_valid": true,
    "mesh_faces_full": 1842,
    "visual_faces": 1842,
-   "mesh_z_min_world_m": -0.1458173245191574
+   "mesh_z_min_world_m": -0.13642042875289917
   },
   "FL_foot": {
    "mass_g": 2.52,
@@ -94,7 +94,7 @@
    "physically_valid": true,
    "mesh_faces_full": 3382,
    "visual_faces": 3382,
-   "mesh_z_min_world_m": -0.160236656665802
+   "mesh_z_min_world_m": -0.15083976089954376
   },
   "FL_link": {
    "mass_g": 2.35,
@@ -106,7 +106,7 @@
    "physically_valid": true,
    "mesh_faces_full": 480,
    "visual_faces": 480,
-   "mesh_z_min_world_m": -0.14351040124893188
+   "mesh_z_min_world_m": -0.13411350548267365
   },
   "FR_hip": {
    "mass_g": 29.64,
@@ -118,7 +118,7 @@
    "physically_valid": true,
    "mesh_faces_full": 53466,
    "visual_faces": 20000,
-   "mesh_z_min_world_m": -0.031153932213783264
+   "mesh_z_min_world_m": -0.021757030859589577
   },
   "FR_pinion": {
    "mass_g": 1.24,
@@ -130,7 +130,7 @@
    "physically_valid": true,
    "mesh_faces_full": 19712,
    "visual_faces": 19712,
-   "mesh_z_min_world_m": -0.014680780470371246
+   "mesh_z_min_world_m": -0.005283880513161421
   },
   "FR_gear": {
    "mass_g": 4.04,
@@ -142,7 +142,7 @@
    "physically_valid": true,
    "mesh_faces_full": 5878,
    "visual_faces": 5878,
-   "mesh_z_min_world_m": -0.017316853627562523
+   "mesh_z_min_world_m": -0.00791995320469141
   },
   "FR_femur": {
    "mass_g": 4.89,
@@ -154,7 +154,7 @@
    "physically_valid": true,
    "mesh_faces_full": 9420,
    "visual_faces": 9420,
-   "mesh_z_min_world_m": -0.08082296699285507
+   "mesh_z_min_world_m": -0.07142606377601624
   },
   "FR_quad": {
    "mass_g": 2.61,
@@ -166,7 +166,7 @@
    "physically_valid": true,
    "mesh_faces_full": 540,
    "visual_faces": 540,
-   "mesh_z_min_world_m": -0.07361055910587311
+   "mesh_z_min_world_m": -0.06421366333961487
   },
   "FR_tibia": {
    "mass_g": 5.82,
@@ -178,7 +178,7 @@
    "physically_valid": true,
    "mesh_faces_full": 2972,
    "visual_faces": 2972,
-   "mesh_z_min_world_m": -0.14582128822803497
+   "mesh_z_min_world_m": -0.13642439246177673
   },
   "FR_foot": {
    "mass_g": 2.52,
@@ -190,7 +190,7 @@
    "physically_valid": true,
    "mesh_faces_full": 3382,
    "visual_faces": 3382,
-   "mesh_z_min_world_m": -0.160236656665802
+   "mesh_z_min_world_m": -0.15083976089954376
   },
   "FR_link": {
    "mass_g": 2.35,
@@ -202,7 +202,7 @@
    "physically_valid": true,
    "mesh_faces_full": 480,
    "visual_faces": 480,
-   "mesh_z_min_world_m": -0.14351040124893188
+   "mesh_z_min_world_m": -0.13411350548267365
   },
   "RL_hip": {
    "mass_g": 30.14,
@@ -213,8 +213,8 @@
    ],
    "physically_valid": true,
    "mesh_faces_full": 50884,
-   "visual_faces": 20000,
-   "mesh_z_min_world_m": -0.025332890450954437
+   "visual_faces": 19998,
+   "mesh_z_min_world_m": -0.03472984954714775
   },
   "RL_pinion": {
    "mass_g": 1.24,
@@ -226,7 +226,7 @@
    "physically_valid": true,
    "mesh_faces_full": 19726,
    "visual_faces": 19726,
-   "mesh_z_min_world_m": -0.008814016357064247
+   "mesh_z_min_world_m": -0.018211016431450844
   },
   "RL_gear": {
    "mass_g": 4.04,
@@ -238,7 +238,7 @@
    "physically_valid": true,
    "mesh_faces_full": 5890,
    "visual_faces": 5890,
-   "mesh_z_min_world_m": -0.008066775277256966
+   "mesh_z_min_world_m": -0.017463674768805504
   },
   "RL_femur": {
    "mass_g": 5.15,
@@ -250,7 +250,7 @@
    "physically_valid": true,
    "mesh_faces_full": 10076,
    "visual_faces": 10076,
-   "mesh_z_min_world_m": -0.0659550353884697
+   "mesh_z_min_world_m": -0.07535199820995331
   },
   "RL_quad": {
    "mass_g": 2.61,
@@ -262,7 +262,7 @@
    "physically_valid": true,
    "mesh_faces_full": 536,
    "visual_faces": 536,
-   "mesh_z_min_world_m": -0.05638545751571655
+   "mesh_z_min_world_m": -0.06578242033720016
   },
   "RL_tibia": {
    "mass_g": 5.3,
@@ -274,7 +274,7 @@
    "physically_valid": true,
    "mesh_faces_full": 10602,
    "visual_faces": 10602,
-   "mesh_z_min_world_m": -0.11713448166847229
+   "mesh_z_min_world_m": -0.1265314370393753
   },
   "RL_foot": {
    "mass_g": 3.07,
@@ -286,7 +286,7 @@
    "physically_valid": true,
    "mesh_faces_full": 2874,
    "visual_faces": 2874,
-   "mesh_z_min_world_m": -0.14144280552864075
+   "mesh_z_min_world_m": -0.15083976089954376
   },
   "RL_link": {
    "mass_g": 2.06,
@@ -298,7 +298,7 @@
    "physically_valid": true,
    "mesh_faces_full": 712,
    "visual_faces": 712,
-   "mesh_z_min_world_m": -0.11520589143037796
+   "mesh_z_min_world_m": -0.12460284680128098
   },
   "RR_hip": {
    "mass_g": 31.63,
@@ -310,7 +310,7 @@
    "physically_valid": true,
    "mesh_faces_full": 51966,
    "visual_faces": 20000,
-   "mesh_z_min_world_m": -0.025332890450954437
+   "mesh_z_min_world_m": -0.03472984954714775
   },
   "RR_pinion": {
    "mass_g": 1.24,
@@ -322,7 +322,7 @@
    "physically_valid": true,
    "mesh_faces_full": 18736,
    "visual_faces": 18736,
-   "mesh_z_min_world_m": -0.008817601948976517
+   "mesh_z_min_world_m": -0.018214602023363113
   },
   "RR_gear": {
    "mass_g": 4.04,
@@ -334,7 +334,7 @@
    "physically_valid": true,
    "mesh_faces_full": 5890,
    "visual_faces": 5890,
-   "mesh_z_min_world_m": -0.008066781796514988
+   "mesh_z_min_world_m": -0.0174636822193861
   },
   "RR_femur": {
    "mass_g": 5.09,
@@ -346,7 +346,7 @@
    "physically_valid": true,
    "mesh_faces_full": 11482,
    "visual_faces": 11482,
-   "mesh_z_min_world_m": -0.0659550353884697
+   "mesh_z_min_world_m": -0.07535199820995331
   },
   "RR_quad": {
    "mass_g": 2.59,
@@ -358,7 +358,7 @@
    "physically_valid": true,
    "mesh_faces_full": 548,
    "visual_faces": 548,
-   "mesh_z_min_world_m": -0.05638545751571655
+   "mesh_z_min_world_m": -0.06578242033720016
   },
   "RR_tibia": {
    "mass_g": 4.95,
@@ -370,7 +370,7 @@
    "physically_valid": true,
    "mesh_faces_full": 1380,
    "visual_faces": 1380,
-   "mesh_z_min_world_m": -0.11714021116495132
+   "mesh_z_min_world_m": -0.12653717398643494
   },
   "RR_foot": {
    "mass_g": 3.01,
@@ -382,7 +382,7 @@
    "physically_valid": true,
    "mesh_faces_full": 2878,
    "visual_faces": 2878,
-   "mesh_z_min_world_m": -0.14144280552864075
+   "mesh_z_min_world_m": -0.15083976089954376
   },
   "RR_link": {
    "mass_g": 2.01,
@@ -394,7 +394,7 @@
    "physically_valid": true,
    "mesh_faces_full": 720,
    "visual_faces": 720,
-   "mesh_z_min_world_m": -0.11520589143037796
+   "mesh_z_min_world_m": -0.12460284680128098
   }
  },
  "joints": {
@@ -404,7 +404,7 @@
    "origin_world_m": [
     0.07169,
     0.02424,
-    -0.00201
+    0.00739
    ],
    "axis": [
     0.984808,
@@ -424,12 +424,12 @@
    "origin_world_m": [
     0.08476,
     0.04151,
-    -0.00462
+    0.00478
    ],
    "axis": [
     0.0,
     1.0,
-    -0.0
+    0.0
    ],
    "servo": true,
    "closes_loop": false,
@@ -444,7 +444,7 @@
    "origin_world_m": [
     0.10254,
     0.04581,
-    -0.00745
+    0.00195
    ],
    "axis": [
     0.0,
@@ -464,12 +464,12 @@
    "origin_world_m": [
     0.08476,
     0.04151,
-    -0.00462
+    0.00478
    ],
    "axis": [
     0.0,
     1.0,
-    -0.0
+    0.0
    ],
    "servo": false,
    "closes_loop": false,
@@ -481,10 +481,10 @@
    "origin_world_m": [
     0.07071,
     0.04516,
-    0.00064
+    0.01003
    ],
    "axis": [
-    0.0,
+    -0.0,
     1.0,
     -0.0
    ],
@@ -498,7 +498,7 @@
    "origin_world_m": [
     0.05849,
     0.04151,
-    -0.07487
+    -0.06547
    ],
    "axis": [
     0.0,
@@ -515,7 +515,7 @@
    "origin_world_m": [
     0.04444,
     0.04466,
-    -0.06961
+    -0.06022
    ],
    "axis": [
     0.0,
@@ -532,7 +532,7 @@
    "origin_world_m": [
     0.06359,
     0.04016,
-    -0.07179
+    -0.06239
    ],
    "axis": [
     0.0,
@@ -549,7 +549,7 @@
    "origin_world_m": [
     0.06386,
     0.04426,
-    -0.14232
+    -0.13293
    ],
    "axis": [
     -0.0,
@@ -566,7 +566,7 @@
    "origin_world_m": [
     0.05138,
     0.04056,
-    -0.14101
+    -0.13162
    ],
    "axis": [
     -0.0,
@@ -583,7 +583,7 @@
    "origin_world_m": [
     0.07169,
     -0.02426,
-    -0.00201
+    0.00739
    ],
    "axis": [
     0.984808,
@@ -603,12 +603,12 @@
    "origin_world_m": [
     0.08476,
     -0.04151,
-    -0.00462
+    0.00478
    ],
    "axis": [
     0.0,
     1.0,
-    -0.0
+    0.0
    ],
    "servo": true,
    "closes_loop": false,
@@ -623,7 +623,7 @@
    "origin_world_m": [
     0.10255,
     -0.04559,
-    -0.00745
+    0.00195
    ],
    "axis": [
     0.0,
@@ -643,12 +643,12 @@
    "origin_world_m": [
     0.08476,
     -0.04151,
-    -0.00462
+    0.00478
    ],
    "axis": [
     0.0,
     1.0,
-    -0.0
+    0.0
    ],
    "servo": false,
    "closes_loop": false,
@@ -660,7 +660,7 @@
    "origin_world_m": [
     0.07071,
     -0.04516,
-    0.00064
+    0.01003
    ],
    "axis": [
     -0.0,
@@ -677,7 +677,7 @@
    "origin_world_m": [
     0.05849,
     -0.04151,
-    -0.07487
+    -0.06547
    ],
    "axis": [
     0.0,
@@ -694,7 +694,7 @@
    "origin_world_m": [
     0.04444,
     -0.04466,
-    -0.06961
+    -0.06022
    ],
    "axis": [
     0.0,
@@ -711,7 +711,7 @@
    "origin_world_m": [
     0.06359,
     -0.04016,
-    -0.07179
+    -0.06239
    ],
    "axis": [
     0.0,
@@ -728,7 +728,7 @@
    "origin_world_m": [
     0.06386,
     -0.04426,
-    -0.14232
+    -0.13293
    ],
    "axis": [
     -0.0,
@@ -745,7 +745,7 @@
    "origin_world_m": [
     0.05138,
     -0.04056,
-    -0.14101
+    -0.13162
    ],
    "axis": [
     -0.0,
@@ -760,13 +760,13 @@
    "parent": "base",
    "child": "RL_hip",
    "origin_world_m": [
-    -0.08045,
+    -0.07361,
     0.02424,
-    0.00905
+    -0.00035
    ],
    "axis": [
     0.939693,
-    -0.0,
+    0.0,
     0.34202
    ],
    "servo": true,
@@ -780,9 +780,9 @@
    "parent": "RL_hip",
    "child": "RL_femur",
    "origin_world_m": [
-    -0.09284,
+    -0.086,
     0.04151,
-    0.00462
+    -0.00478
    ],
    "axis": [
     -0.0,
@@ -800,9 +800,9 @@
    "parent": "RL_hip",
    "child": "RL_pinion",
    "origin_world_m": [
-    -0.10975,
+    -0.10291,
     0.04581,
-    -0.00154
+    -0.01094
    ],
    "axis": [
     -0.0,
@@ -820,9 +820,9 @@
    "parent": "RL_hip",
    "child": "RL_gear",
    "origin_world_m": [
-    -0.09284,
+    -0.086,
     0.04151,
-    0.00462
+    -0.00478
    ],
    "axis": [
     -0.0,
@@ -837,14 +837,14 @@
    "parent": "RL_gear",
    "child": "RL_quad",
    "origin_world_m": [
-    -0.07992,
+    -0.07308,
     0.04516,
-    0.01223
+    0.00283
    ],
    "axis": [
-    -0.0,
+    0.0,
     1.0,
-    -0.0
+    0.0
    ],
    "servo": false,
    "closes_loop": false,
@@ -854,9 +854,9 @@
    "parent": "RL_femur",
    "child": "RL_tibia",
    "origin_world_m": [
-    -0.05477,
+    -0.04793,
     0.04326,
-    -0.06
+    -0.0694
    ],
    "axis": [
     0.0,
@@ -871,9 +871,9 @@
    "parent": "RL_quad",
    "child": "RL_tibia",
    "origin_world_m": [
-    -0.04185,
+    -0.03501,
     0.04466,
-    -0.05239
+    -0.06179
    ],
    "axis": [
     0.0,
@@ -888,9 +888,9 @@
    "parent": "RL_femur",
    "child": "RL_link",
    "origin_world_m": [
-    -0.06525,
+    -0.05841,
     0.04066,
-    -0.05871
+    -0.06811
    ],
    "axis": [
     0.0,
@@ -905,9 +905,9 @@
    "parent": "RL_tibia",
    "child": "RL_foot",
    "origin_world_m": [
-    -0.10734,
+    -0.1005,
     0.04426,
-    -0.1135
+    -0.1229
    ],
    "axis": [
     -0.0,
@@ -922,9 +922,9 @@
    "parent": "RL_link",
    "child": "RL_foot",
    "origin_world_m": [
-    -0.11782,
+    -0.11098,
     0.04006,
-    -0.11221
+    -0.1216
    ],
    "axis": [
     -0.0,
@@ -939,13 +939,13 @@
    "parent": "base",
    "child": "RR_hip",
    "origin_world_m": [
-    -0.08022,
+    -0.07338,
     -0.02424,
-    0.00921
+    -0.00019
    ],
    "axis": [
     0.939693,
-    -0.0,
+    0.0,
     0.34202
    ],
    "servo": true,
@@ -959,9 +959,9 @@
    "parent": "RR_hip",
    "child": "RR_femur",
    "origin_world_m": [
-    -0.09284,
+    -0.086,
     -0.04176,
-    0.00462
+    -0.00478
    ],
    "axis": [
     -0.0,
@@ -979,9 +979,9 @@
    "parent": "RR_hip",
    "child": "RR_pinion",
    "origin_world_m": [
-    -0.10975,
+    -0.10291,
     -0.04581,
-    -0.00154
+    -0.01094
    ],
    "axis": [
     -0.0,
@@ -999,9 +999,9 @@
    "parent": "RR_hip",
    "child": "RR_gear",
    "origin_world_m": [
-    -0.09284,
+    -0.086,
     -0.04176,
-    0.00462
+    -0.00478
    ],
    "axis": [
     -0.0,
@@ -1016,14 +1016,14 @@
    "parent": "RR_gear",
    "child": "RR_quad",
    "origin_world_m": [
-    -0.07992,
+    -0.07308,
     -0.04516,
-    0.01223
+    0.00283
    ],
    "axis": [
     0.0,
     1.0,
-    -0.0
+    0.0
    ],
    "servo": false,
    "closes_loop": false,
@@ -1033,9 +1033,9 @@
    "parent": "RR_femur",
    "child": "RR_tibia",
    "origin_world_m": [
-    -0.05477,
+    -0.04793,
     -0.04326,
-    -0.06
+    -0.0694
    ],
    "axis": [
     0.0,
@@ -1050,9 +1050,9 @@
    "parent": "RR_quad",
    "child": "RR_tibia",
    "origin_world_m": [
-    -0.04185,
+    -0.03501,
     -0.04466,
-    -0.05239
+    -0.06179
    ],
    "axis": [
     0.0,
@@ -1067,9 +1067,9 @@
    "parent": "RR_femur",
    "child": "RR_link",
    "origin_world_m": [
-    -0.06525,
+    -0.05841,
     -0.04066,
-    -0.05871
+    -0.06811
    ],
    "axis": [
     0.0,
@@ -1084,9 +1084,9 @@
    "parent": "RR_tibia",
    "child": "RR_foot",
    "origin_world_m": [
-    -0.10734,
+    -0.1005,
     -0.04426,
-    -0.1135
+    -0.1229
    ],
    "axis": [
     -0.0,
@@ -1101,9 +1101,9 @@
    "parent": "RR_link",
    "child": "RR_foot",
    "origin_world_m": [
-    -0.11782,
+    -0.11098,
     -0.04006,
-    -0.11221
+    -0.1216
    ],
    "axis": [
     -0.0,
@@ -1120,7 +1120,7 @@
    "parts": [
     "base"
    ],
-   "mass_g": 335.62,
+   "mass_g": 330.45,
    "physically_valid": true
   },
   "FL_hip": {
@@ -1252,8 +1252,8 @@
    "physically_valid": true
   }
  },
- "standing_height_base_origin_m": 0.162236656665802,
- "total_mass_g": 549.7,
+ "standing_height_base_origin_m": 0.15283976089954376,
+ "total_mass_g": 544.5,
  "mechanism": {
   "servo_map": {
    "thigh": "pivot",
@@ -1272,7 +1272,7 @@
      -0.037049,
      0.007424
     ],
-    "foot_fit_err_rad": 0.0006925702083920848,
+    "foot_fit_err_rad": 0.0006925702083904195,
     "knee_range_rad": [
      -1.2,
      1.2
@@ -1285,7 +1285,7 @@
      -1.3962,
      1.3964
     ],
-    "parallelogram_err_m": 2.9120439557145715e-06
+    "parallelogram_err_m": 2.9120439556945557e-06
    },
    "FR": {
     "foot_poly": [
@@ -1295,7 +1295,7 @@
      -0.037049,
      0.007424
     ],
-    "foot_fit_err_rad": 0.0006925702083908636,
+    "foot_fit_err_rad": 0.0006925702083917518,
     "knee_range_rad": [
      -1.2,
      1.2
@@ -1308,17 +1308,17 @@
      -1.3962,
      1.3964
     ],
-    "parallelogram_err_m": 2.912043955718384e-06
+    "parallelogram_err_m": 2.912043955698368e-06
    },
    "RL": {
     "foot_poly": [
-     -0.0,
+     0.0,
      -1.0,
-     -0.0,
-     -0.0,
+     0.0,
+     0.0,
      -0.0
     ],
-    "foot_fit_err_rad": 2.930988785010413e-14,
+    "foot_fit_err_rad": 2.986499936241671e-14,
     "knee_range_rad": [
      -1.2,
      0.74
@@ -1331,17 +1331,17 @@
      -1.3963,
      1.3963
     ],
-    "parallelogram_err_m": 1.9999999999187335e-07
+    "parallelogram_err_m": 2.0000000001962892e-07
    },
    "RR": {
     "foot_poly": [
      0.0,
      -1.0,
      0.0,
-     0.0,
-     0.0
+     -0.0,
+     -0.0
     ],
-    "foot_fit_err_rad": 3.8746783559417963e-14,
+    "foot_fit_err_rad": 3.186340080674199e-14,
     "knee_range_rad": [
      -1.2,
      0.74
@@ -1354,7 +1354,7 @@
      -1.3963,
      1.3963
     ],
-    "parallelogram_err_m": 1.9999999999187335e-07
+    "parallelogram_err_m": 2.000000000335067e-07
    }
   },
   "stance": {
@@ -1365,14 +1365,14 @@
     "FR_thigh_joint": -0.149512,
     "FR_calf_joint": 0.051304,
     "FR_foot_joint": 0.01811,
-    "RL_thigh_joint": 0.447024,
-    "RL_calf_joint": -0.355882,
-    "RL_foot_joint": 0.355882,
-    "RR_thigh_joint": 0.447739,
-    "RR_calf_joint": -0.356233,
-    "RR_foot_joint": 0.356233
+    "RL_thigh_joint": 0.399538,
+    "RL_calf_joint": -0.034191,
+    "RL_foot_joint": 0.034191,
+    "RR_thigh_joint": 0.399534,
+    "RR_calf_joint": -0.034175,
+    "RR_foot_joint": 0.034175
    },
-   "base_height_m": 0.16024,
+   "base_height_m": 0.15084,
    "servo_deg_from_cad": {
     "FL_hip": 0.0,
     "FL_pivot": -8.57,
@@ -1381,36 +1381,36 @@
     "FR_pivot": -8.57,
     "FR_gear": 11.25,
     "RL_hip": 0.0,
-    "RL_pivot": 25.61,
-    "RL_gear": -10.44,
+    "RL_pivot": 22.89,
+    "RL_gear": -41.87,
     "RR_hip": 0.0,
-    "RR_pivot": 25.65,
-    "RR_gear": -10.49
+    "RR_pivot": 22.89,
+    "RR_gear": -41.87
    },
    "legs": {
     "FL": {
      "foot_ahead_of_hip_mm": 25.5,
      "pivot_lever_mm": 25.47,
      "gear_lever_mm": 25.48,
-     "residual_m": 3.7572805132793374e-08
+     "residual_m": 3.757070461858636e-08
     },
     "FR": {
      "foot_ahead_of_hip_mm": 25.5,
      "pivot_lever_mm": 25.47,
      "gear_lever_mm": 25.48,
-     "residual_m": 3.7570924767138525e-08
+     "residual_m": 3.756998743359441e-08
     },
     "RL": {
-     "foot_ahead_of_hip_mm": -28.6,
-     "pivot_lever_mm": 28.62,
-     "gear_lever_mm": 28.61,
-     "residual_m": 3.2502708994727736e-08
+     "foot_ahead_of_hip_mm": -34.1,
+     "pivot_lever_mm": 34.11,
+     "gear_lever_mm": 34.1,
+     "residual_m": 3.603814635252944e-08
     },
     "RR": {
-     "foot_ahead_of_hip_mm": -28.7,
-     "pivot_lever_mm": 28.53,
-     "gear_lever_mm": 28.62,
-     "residual_m": 3.251622867662951e-08
+     "foot_ahead_of_hip_mm": -34.1,
+     "pivot_lever_mm": 34.11,
+     "gear_lever_mm": 34.1,
+     "residual_m": 3.6040441648427235e-08
     }
    },
    "note": "base level, soles at the front feet CAD height, feet where the worst pitch servo load is lowest (levers: servo N m per N of vertical foot force)"

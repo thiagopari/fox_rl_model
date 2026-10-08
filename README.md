@@ -387,9 +387,19 @@ On the robot:
 * print the femurs: `v7_femur_front_1/_2.stl` and `v7_femur_back.stl`, plus `v7_femur_back_mirrored.stl` for the other
   side. These are his modified femurs (horn pocket at the hip, `~/Downloads/Femur modified 1/2.stl`,
   `Femur Back Modified.stl`), unchanged except the 0.3 mm bearing relief on the hip hub. They print pocket face down;
-* buy 4 × 623ZZ bearings and two M3 screws 20 mm longer than the current rear ones.
-  * A printed bushing instead of the 623ZZ is a plain bearing, so the femur drags the gear through friction.
-  * Never combine a printed bushing with the gear's Ø10.0 press-fit seat: that locks the gear to the femur.
+* the gear runs on a 623ZZ (buy 4) or on a printed bushing (no bearings):
+  * **623ZZ:** `v7_crank_gear_24T.stl`, whose Ø10.0 seat is a press fit on the bearing's outer ring.
+  * **Printed bushing:** `v7_crank_gear_24T_printed_bushing.stl` + `v7_bushing_10x3x4.stl` (4 each).
+    * The gear's seat is a Ø10.4 running fit on the Ø10.0 bushing.
+    * Its inner lip ends 0.3 mm below the clamped bushing, so the horn screw clamps only the bushing to the femur and can
+      never pinch the gear.
+    * Print the bushing upright, solid, in PETG/nylon if possible (PLA works).
+    * Grease it or use PTFE dry lube. With the screw tight, the gear must spin freely by hand; if not, sand the bushing.
+    * A plain bushing still drags a little: about 5 % of a servo's stall torque at full load.
+  * Never put a printed bushing in the press-fit gear: that locks the gear to the femur.
+* the rear spacer needs M4×35 screws (M4×16 is too short for its 33 mm stack). Without it: v6 geometry + 2:1 gears + the
+  min-load stance gives a worst servo of 40 % of stall, against 34 % with the spacer and 72 % for v6 today
+  (`tools/servo_load.py`).
 * recalibrate the homes to the v7 stance.
 * `deploy/fox_pi.py`'s stand/balance IK still assumes 1:1 gears (`gear = -(thigh + calf)`), so it needs the ratio
   before `--stand` / `--balance` run on v7.

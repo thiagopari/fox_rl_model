@@ -67,6 +67,7 @@ def load_calib(path=CALIB_FILE):
     LIMIT_DEG.update({k: (float(v[0]), float(v[1])) for k, v in known(c.get("limit_deg", {})).items()})
     if "imu_level_gravity" in c:
         IMU_LEVEL[:] = level_rotation(c["imu_level_gravity"])
+    HEIGHT_TRIM_MM.update({k: float(v) for k, v in c.get("height_trim_mm", {}).items() if k in LEGS})
 
 
 load_calib()
@@ -76,6 +77,110 @@ PLUS = {"hip": "the foot moves to the robot's LEFT", "pivot": "the femur turns, 
         "gear": "the shin turns, foot moving FORWARD; the femur stays"}   # policy + for each servo (fox_cfg.py servo map)
 
 DT, MAX_TARGET = 0.02, 0.8   # 50 Hz like training; |target| clamp in rad (training stays well inside)
+
+# Sagittal leg geometry at the CAD stance (urdf/fox.urdf): femur hip pivot -> knee, shin knee -> ankle, in mm, and their
+# angles from straight down (+ = toward the front). --balance / --stand lengthen or shorten legs with it (2-link IK).
+LEG_GEOM = {"F": (75.0, 67.7, math.radians(-20.5), math.radians(4.5)), "R": (75.0, 75.0, math.radians(30.5), math.radians(-44.5))}
+HEIGHT_TRIM_MM = {leg: 0.0 for leg in LEGS}   # + = leg longer at the stance; servo_calib.json "height_trim_mm"
+
+
+def leg_fk(leg, pivot, gear):
+    """Ankle position (x fwd, z up; mm from the hip pivot) for pivot / gear servo targets (rad from home)."""
+    l1, l2, a1, a2 = LEG_GEOM[leg[0]]
+    b1, b2 = a1 - pivot, a2 + gear              # pivot + turns the knee back; gear + swings the foot forward
+    return l1 * math.sin(b1) + l2 * math.sin(b2), -l1 * math.cos(b1) - l2 * math.cos(b2)
+
+
+def leg_reach(leg):
+    """How much longer than at the stance a leg can get (mm) while keeping 15 deg of knee bend."""
+    l1, l2, a1, a2 = LEG_GEOM[leg[0]]
+    x0, z0 = leg_fk(leg, 0.0, 0.0)
+    return math.sqrt(l1 * l1 + l2 * l2 + 2 * l1 * l2 * math.cos(math.radians(15.0))) - math.hypot(x0, z0)
+
+
+def leg_ik(leg, dh):
+    """Pivot and gear targets (rad from home) that make a leg dh mm longer, its ankle staying above the same point."""
+    l1, l2, a1, a2 = LEG_GEOM[leg[0]]
+    x, z = leg_fk(leg, 0.0, 0.0)
+    z -= dh
+    d = math.hypot(x, z)
+    a = (l1 * l1 - l2 * l2 + d * d) / (2.0 * d)               # knee: where the circles |K| = l1 and |K - ankle| = l2 meet,
+    h = math.sqrt(max(l1 * l1 - a * a, 0.0))                  # on the side the stance knee is on
+    mx, mz = a * x / d, a * z / d
+    k0 = (l1 * math.sin(a1), -l1 * math.cos(a1))
+    kx, kz = min(((mx + h * z / d, mz - h * x / d), (mx - h * z / d, mz + h * x / d)),
+                 key=lambda k: (k[0] - k0[0]) ** 2 + (k[1] - k0[1]) ** 2)
+    return a1 - math.atan2(kx, -kz), math.atan2(x - kx, -(z - kz)) - a2
+
+
+def stance(dh):
+    """12 targets: every leg at its height trim + dh[leg] mm, hips at home."""
+    t = np.zeros(12)
+    for i, leg in enumerate(LEGS):
+        t[4 + i], t[8 + i] = leg_ik(leg, HEIGHT_TRIM_MM[leg] + dh[leg])
+    return t
+
+
+def level_offsets(p, r, low=-40.0):
+    """Leg length changes (mm) for pitch / roll corrections p, r (mm: front up, left up). The common height is free, so
+    when a leg can't get longer (the front legs are nearly straight at the stance) the whole robot is lowered."""
+    raw = {leg: (p if leg[0] == "F" else -p) + (r if leg[1] == "L" else -r) for leg in LEGS}
+    common = min(0.0, min(leg_reach(leg) - HEIGHT_TRIM_MM[leg] - raw[leg] for leg in LEGS))
+    return {leg: max(low, raw[leg] + common) for leg in LEGS}
+
+
+def attitude(down):
+    """(pitch, roll) in deg from a gravity direction: nose down +, left side down +."""
+    return tuple(math.degrees(math.asin(float(np.clip(v, -1.0, 1.0)))) for v in down[:2])
+
+
+def balance(robot, capture=10.0, tol=1.0, gain=1.0, seconds=None, log=None):
+    """--balance: stand; average the IMU attitude for the first `capture` s (hold the robot steady the way it should
+    stay) as the target; then keep pitch and roll within +-tol deg of it by lengthening / shortening the legs (integral
+    control, `gain` mm per deg per s). Ends limp on Ctrl-C or a fall; after `seconds` it keeps holding its last pose."""
+    p = r = 0.0
+    robot.write(stance(level_offsets(p, r)))
+    print("capturing the target for %.1f s: hold the robot steady in the attitude it should keep" % capture, flush=True)
+    samples, end = [], time.perf_counter() + capture
+    while time.perf_counter() < end:
+        samples.append(attitude(read_retry(robot)[1]))
+        time.sleep(DT)
+    ref = np.mean(samples, axis=0)
+    print("target pitch %+.1f deg, roll %+.1f deg (+-%.1f); balancing%s" % (ref[0], ref[1], tol,
+          " for %.0f s" % seconds if seconds else " until Ctrl-C (limp)"), flush=True)
+    out = open(log, "w") if log else None
+    if out:
+        out.write("t,pitch,roll,err_pitch,err_roll," + ",".join("dh_" + leg for leg in LEGS) + "," + ",".join(SERVOS) + "\n")
+    k, tilted, finished, tick = 0, 0, False, time.perf_counter()
+    try:
+        while seconds is None or k * DT < seconds:
+            down = read_retry(robot)[1]
+            tilted = tilted + 1 if down[2] > -0.5 else 0
+            if tilted >= 3:
+                print("tilted over: stopping")
+                break
+            e = np.array(attitude(down)) - ref
+            u = np.where(np.abs(e) > tol, gain * e * DT, 0.0)
+            p, r = float(np.clip(p + u[0], -30.0, 30.0)), float(np.clip(r + u[1], -30.0, 30.0))
+            dh = level_offsets(p, r)
+            targets = np.clip(stance(dh), -MAX_TARGET, MAX_TARGET)
+            robot.write(targets)
+            if out:
+                out.write("%.4f,%.2f,%.2f,%.2f,%.2f,%s,%s\n" % (time.perf_counter(), *attitude(down), *e,
+                          ",".join("%.1f" % dh[leg] for leg in LEGS), ",".join("%.1f" % servo_deg(n, t) for n, t in zip(SERVOS, targets))))
+            if k % 25 == 0:
+                print("  error pitch %+5.1f roll %+5.1f deg | legs %s mm" % (*e, " ".join("%s %+5.1f" % (leg, dh[leg]) for leg in LEGS)),
+                      flush=True)
+            k += 1
+            tick += DT
+            time.sleep(max(0.0, tick - time.perf_counter()))
+        finished = seconds is not None and k * DT >= seconds
+    finally:
+        if not finished:
+            robot.limp()
+        if out:
+            out.close()
+        print("%d steps%s" % (k, "; holding the last pose" if finished else "; limp"), flush=True)
 
 
 class FoxPolicy:
@@ -293,7 +398,11 @@ def main():
     p.add_argument("--wiggle", choices=SERVOS, help="move one servo +/- around its centre (the others stay limp)")
     p.add_argument("--amplitude", type=float, default=10.0, help="--wiggle size in deg (57 for timing a servo on video)")
     p.add_argument("--set", metavar="SERVO=DEG", help="move one servo straight to DEG from its centre, hold 2 s, limp")
-    p.add_argument("--seconds", type=float, help="run the policy this long, then return to home and keep holding")
+    p.add_argument("--seconds", type=float, help="run the policy (or --balance) this long, then keep holding")
+    p.add_argument("--balance", action="store_true", help="no policy: hold the attitude captured in the first --capture s "
+                   "(hold the robot steady meanwhile) within +-tol deg by changing leg lengths")
+    p.add_argument("--capture", type=float, default=10.0, help="--balance: seconds to capture the target attitude")
+    p.add_argument("--tol", type=float, default=1.0, help="--balance: allowed pitch / roll error, deg")
     p.add_argument("--log", metavar="CSV", help="policy run: write time, IMU, command and servo targets every step")
     p.add_argument("--stand", type=float, metavar="SECONDS", help="all servos to home (no policy), print the body tilt, limp")
     p.add_argument("--level-imu", type=float, metavar="SECONDS", help="stand at home, robot level and untouched: average the "
@@ -360,6 +469,12 @@ def main():
     finally:
         if a.wiggle or a.set or a.stand or (a.dry_run and (a.check_imu or a.level_imu)):
             robot.limp()
+    if a.balance:
+        try:
+            balance(robot, capture=a.capture, tol=a.tol, seconds=a.seconds or (3.0 if a.dry_run else None), log=a.log)
+        except KeyboardInterrupt:
+            pass
+        return
     steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
     walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=steps, hold_at_end=bool(a.seconds), log=a.log)
 

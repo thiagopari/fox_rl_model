@@ -13,13 +13,18 @@ import json
 import os
 import sys
 import termios
+import time
 import tty
 
-from fox_pi import CALIB_FILE, CHANNEL, DIRECTION, NEUTRAL_DEG, PLUS, SERVOS
+from fox_pi import CALIB_FILE, CHANNEL, DIRECTION, NEUTRAL_DEG, PLUS, SERVOS, STAND_DEG
+
+LAST_FILE = os.path.join(os.path.dirname(CALIB_FILE), "calib_last.json")
 
 HELP = """ up/down  select servo       left/right  -/+1 deg     A / D  -/+5 deg      g  go to an angle      c  go to home
- h  home = this angle        < / >  min / max = this angle   r  flip direction   #  change channel
+ P  all servos to the stand pose          S  stand pose = every holding servo's angle (what --stand / --balance use)
+ h  home = this angle (the CAD stance)    < / >  min / max = this angle   r  flip direction   #  change channel
  space  limp this servo      L  limp all                q  quit (all limp)
+ every move is also recorded in calib_last.json (survives a dead battery or a crash)
  direction: +1 if right-arrow (larger angle) moves the joint the way "+ means" says, else -1"""
 
 
@@ -81,7 +86,8 @@ def main():
         if os.path.exists(CALIB_FILE):                   # keep entries this tool doesn't edit (imu_level_gravity)
             with open(CALIB_FILE) as f:
                 data = json.load(f)
-        data.update({"channel": CHANNEL, "home_deg": NEUTRAL_DEG, "direction": DIRECTION, "limit_deg": limits})
+        data.update({"channel": CHANNEL, "home_deg": NEUTRAL_DEG, "direction": DIRECTION, "limit_deg": limits,
+                     "stand_deg": STAND_DEG})
         tmp = CALIB_FILE + ".tmp"
         with open(tmp, "w") as f:
             json.dump(data, f, indent=1)
@@ -91,10 +97,17 @@ def main():
 
     stale = "NOT SAVED: servo_calib.json was changed outside this session. Quit (q) and restart to load it"
 
+    def record():
+        tmp = LAST_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "deg": now}, f, indent=1)
+        os.replace(tmp, LAST_FILE)
+
     def go(n, deg):
         deg = min(180.0, max(0.0, round(float(deg), 1)))
         hw.move(CHANNEL[n], deg)
         now[n] = deg
+        record()
         lo, hi = lim(n)
         return "%s (ch %d) -> %.1f deg%s" % (n, CHANNEL[n], deg, "" if lo <= deg <= hi else "  OUTSIDE its range %.1f-%.1f" % (lo, hi))
 
@@ -104,11 +117,12 @@ def main():
                 print(status, flush=True)
             return
         rows = ["\x1b[2J\x1b[H Fox servo calibration -> %s%s" % (CALIB_FILE, "   [DRY RUN]" if args.dry_run else ""), "",
-                "   servo      ch   home   now     range (*=set)   dir  + means"]
+                "   servo      ch   home   stand  now     range (*=set)   dir  + means"]
         for i, n in enumerate(SERVOS):
             lo, hi = lim(n)
-            rows.append("%s %-9s %3d  %5.1f  %-6s  %5.1f-%5.1f %s   %+d   %s" % (
-                ">" if i == sel else " ", n, CHANNEL[n], NEUTRAL_DEG[n], "limp" if now[n] is None else "%.1f" % now[n],
+            rows.append("%s %-9s %3d  %5.1f  %5s  %-6s  %5.1f-%5.1f %s   %+d   %s" % (
+                ">" if i == sel else " ", n, CHANNEL[n], NEUTRAL_DEG[n], "%.1f" % STAND_DEG[n] if n in STAND_DEG else "-",
+                "limp" if now[n] is None else "%.1f" % now[n],
                 lo, hi, "*" if n in limits else " ", DIRECTION[n], PLUS[n.split("_")[1]]))
         rows += ["", " " + status, "", HELP]
         sys.stdout.write("\n".join(rows) + "\n")
@@ -159,13 +173,26 @@ def main():
                     msg = "not a number: %r" % v
             elif k == "c":
                 msg = go(n, NEUTRAL_DEG[n])
+            elif k == "P":
+                for m in SERVOS:
+                    go(m, STAND_DEG.get(m, NEUTRAL_DEG[m]))
+                msg = "all servos at the stand pose" if STAND_DEG else "no stand pose saved yet: all servos at home"
+            elif k == "S":
+                held = {m: now[m] for m in SERVOS if now[m] is not None}
+                if not held:
+                    msg = "no servo is holding: move them into the pose first (P starts from the stand pose)"
+                else:
+                    STAND_DEG.update(held)
+                    msg = ("stand pose saved: %s" % ", ".join("%s %.1f" % kv for kv in held.items())) if save() else stale
             elif k == " ":
                 hw.limp(CHANNEL[n])
                 now[n], msg = None, "%s limp" % n
+                record()
             elif k == "L":
                 for m in SERVOS:
                     hw.limp(CHANNEL[m])
                     now[m] = None
+                record()
                 msg = "all limp"
             elif k in ("h", "<", ">"):
                 if now[n] is None:

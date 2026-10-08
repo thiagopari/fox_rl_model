@@ -374,8 +374,16 @@ Standing still in MuJoCo (0.55 kg, 4 feet), the worst servo goes from 23 % (v6) 
    servo angles as action offsets).
 
 On the robot:
-* print `print/v7_crank_gear_24T.stl` and `v7_pinion_12T.stl` (4 each), `v7_rear_hip_spacer.stl` (1) and, for the bearing
-  fix, `v7_femur_{FL,FR,RL,RR}.stl`; buy 4 × 623ZZ bearings and two M3 screws 20 mm longer than the current rear ones;
+* print `print/v7_crank_gear_24T.stl` (4) and `v7_rear_hip_spacer.stl` (1);
+* print `v7_pinion_12T.stl` (4). It carries Thiago's servo-horn interface (4 hooks and the cross-horn pocket under a 0.3 mm
+  plate, from `~/Downloads/Gear modified (1).stl`), so the servo's own cross horn drives it instead of a printed spline. The
+  teeth are the new 12T m1.0 ones, with his Ø2 hole and Ø6.4 counterbore. It prints teeth-down;
+* print the femurs: `v7_femur_front_1/_2.stl` and `v7_femur_back.stl`, plus `v7_femur_back_mirrored.stl` for the other
+  side. These are his modified femurs (horn pocket at the hip, `~/Downloads/Femur modified 1/2.stl`,
+  `Femur Back Modified.stl`), unchanged except the 0.3 mm bearing relief on the hip hub. They print pocket face down;
+* buy 4 × 623ZZ bearings and two M3 screws 20 mm longer than the current rear ones.
+  * A printed bushing instead of the 623ZZ is a plain bearing, so the femur drags the gear through friction.
+  * Never combine a printed bushing with the gear's Ø10.0 press-fit seat: that locks the gear to the femur.
 * recalibrate the homes to the v7 stance.
 * `deploy/fox_pi.py`'s stand/balance IK still assumes 1:1 gears (`gear = -(thigh + calf)`), so it needs the ratio
   before `--stand` / `--balance` run on v7.

@@ -1,0 +1,422 @@
+{
+ "checks": {
+  "timeline marker at the end": {
+   "ok": true,
+   "detail": [
+    242,
+    242
+   ]
+  },
+  "rear hip brackets un-fused from the pelvis (3 Combine features suppressed), no new errors": {
+   "ok": true,
+   "detail": {
+    "found": [
+     [
+      "Combine1",
+      "Component41(Mirror) (1)"
+     ],
+     [
+      "Combine2",
+      "Component41(Mirror) (1)"
+     ],
+     [
+      "Combine2",
+      "Servo Pelv Upper"
+     ]
+    ],
+    "sick": []
+   }
+  },
+  "gear FL Body1: 1.0 cm long along component z": {
+   "ok": true,
+   "detail": [
+    0.0,
+    1.0
+   ]
+  },
+  "gear FL: its bores are on the H pin": {
+   "ok": true,
+   "detail": [
+    1.5,
+    0.7649,
+    0.7649,
+    0.7649,
+    0.7649,
+    0.7649
+   ]
+  },
+  "gear FL: one solid after the edit": {
+   "ok": true,
+   "detail": {
+    "volume_before": 2.0326,
+    "volume_after": 3.262,
+    "lumps": 1,
+    "inboard_end_z": 0.0,
+    "outward": 1.0,
+    "phase_turn_deg": -260.955
+   }
+  },
+  "gear FR Body4: 1.0 cm long along component z": {
+   "ok": true,
+   "detail": [
+    -10.0521,
+    -9.0521
+   ]
+  },
+  "gear FR: its bores are on the H pin": {
+   "ok": true,
+   "detail": [
+    1.5,
+    0.7649,
+    0.7649,
+    0.7649,
+    0.7649,
+    0.7649
+   ]
+  },
+  "gear FR: one solid after the edit": {
+   "ok": true,
+   "detail": {
+    "volume_before": 2.0326,
+    "volume_after": 3.262,
+    "lumps": 1,
+    "inboard_end_z": -9.0521,
+    "outward": -1.0,
+    "phase_turn_deg": -260.954
+   }
+  },
+  "pinion FL Body1: 1.0 cm long along component z": {
+   "ok": true,
+   "detail": [
+    -1.0,
+    0.0
+   ]
+  },
+  "pinion FL: its bores are on the P pin": {
+   "ok": true,
+   "detail": [
+    0.0,
+    0.7649,
+    0.7649,
+    0.7649,
+    0.7649,
+    0.7649
+   ]
+  },
+  "pinion FL: one solid after the edit": {
+   "ok": true,
+   "detail": {
+    "volume_before": 1.8042,
+    "volume_after": 0.9703,
+    "lumps": 1,
+    "inboard_end_z": 0.0,
+    "outward": -1.0,
+    "phase_turn_deg": -80.955
+   }
+  },
+  "pinion FR Body2: 1.0 cm long along component z": {
+   "ok": true,
+   "detail": [
+    9.0521,
+    10.0521
+   ]
+  },
+  "pinion FR: its bores are on the P pin": {
+   "ok": true,
+   "detail": [
+    0.0008,
+    0.7646,
+    0.7643,
+    0.7643,
+    0.7641,
+    0.7641
+   ]
+  },
+  "pinion FR: one solid after the edit": {
+   "ok": true,
+   "detail": {
+    "volume_before": 1.8039,
+    "volume_after": 0.9703,
+    "lumps": 1,
+    "inboard_end_z": 9.0521,
+    "outward": 1.0,
+    "phase_turn_deg": -80.954
+   }
+  },
+  "rear gear / pinion placements differ from the front only by a turn about x": {
+   "ok": true,
+   "detail": [
+    7.344736299742159e-16,
+    5.9164567891575885e-31
+   ]
+  },
+  "moved occurrences lie wholly behind REAR_Y": {
+   "ok": true,
+   "detail": []
+  },
+  "rear pinion pair is a top-level occurrence": {
+   "ok": true,
+   "detail": null
+  },
+  "rear occurrences moved": {
+   "ok": true,
+   "detail": []
+  },
+  "no rear body moved only part of the way": {
+   "ok": true,
+   "detail": []
+  },
+  "FL femur found, its component used once": {
+   "ok": true,
+   "detail": "Front Leg:1+Femur(Mirror) (1):1"
+  },
+  "FL femur: hub end face found": {
+   "ok": true,
+   "detail": [
+    1.7995785766154415,
+    2.149578576615441
+   ]
+  },
+  "FL femur hub relief": {
+   "ok": true,
+   "detail": [
+    0.00392,
+    0.00392
+   ]
+  },
+  "FR femur found, its component used once": {
+   "ok": true,
+   "detail": "Front Leg(Mirror):1+Femur(Mirror) (1)(Mirror):1"
+  },
+  "FR femur: hub end face found": {
+   "ok": true,
+   "detail": [
+    -6.752534316615442,
+    -7.102534316615442
+   ]
+  },
+  "FR femur hub relief": {
+   "ok": true,
+   "detail": [
+    0.00392,
+    0.00392
+   ]
+  },
+  "RL femur found, its component used once": {
+   "ok": true,
+   "detail": "Hind Leg:1+Femur:1"
+  },
+  "RL femur: hub end face found": {
+   "ok": true,
+   "detail": [
+    1.7995785766154402,
+    2.1495785766154403
+   ]
+  },
+  "RL femur hub relief": {
+   "ok": true,
+   "detail": [
+    0.00392,
+    0.00392
+   ]
+  },
+  "RR femur found, its component used once": {
+   "ok": true,
+   "detail": "Hind Leg(Mirror):1+Femur(Mirror) (2):1"
+  },
+  "RR femur: hub end face found": {
+   "ok": true,
+   "detail": [
+    -6.802534314809399,
+    -7.102534314809411
+   ]
+  },
+  "RR femur hub relief": {
+   "ok": true,
+   "detail": [
+    0.00392,
+    0.00392
+   ]
+  },
+  "FL gear seat (printed)": {
+   "ok": true,
+   "detail": [
+    -0.02464,
+    -0.02464
+   ]
+  },
+  "FR gear seat (printed)": {
+   "ok": true,
+   "detail": [
+    -0.02464,
+    -0.02464
+   ]
+  },
+  "casing: >= 1 mm wall around the M4 hole at (-1.695, -3.263, 3.171)": {
+   "ok": true,
+   "detail": 1.0
+  },
+  "casing: >= 1 mm wall around the M4 hole at (-3.258, -3.263, 3.171)": {
+   "ok": true,
+   "detail": 1.0
+  },
+  "casing: >= 1 mm wall around the M4 hole at (-3.258, -13.444, 3.524)": {
+   "ok": true,
+   "detail": 1.0
+  },
+  "casing: >= 1 mm wall around the M4 hole at (-1.695, -13.444, 3.524)": {
+   "ok": true,
+   "detail": 1.0
+  },
+  "casing: 4 M4 clearance holes, one solid": {
+   "ok": true,
+   "detail": [
+    0.20923,
+    0.20923
+   ]
+  },
+  "rear bodies moved by exactly the lift, the rest stayed": {
+   "ok": true,
+   "detail": {
+    "wrong": [],
+    "n_wrong": 0,
+    "missing": [],
+    "n_rear": 147,
+    "new": []
+   }
+  },
+  "rear gear and pinion axes moved by exactly the lift": {
+   "ok": true,
+   "detail": 0.0
+  },
+  "teeth mesh without overlap on all 4 legs": {
+   "ok": true,
+   "detail": {
+    "FL": 0.0,
+    "FR": 0.0,
+    "RL": 0.0,
+    "RR": 0.0
+   }
+  },
+  "no new interference from the lifted rear module or the spacer (mm^3: after, before)": {
+   "ok": true,
+   "detail": {
+    "pairs_tested": 9,
+    "new": []
+   }
+  },
+  "no new timeline errors / warnings": {
+   "ok": true,
+   "detail": {
+    "before": [],
+    "after": []
+   }
+  }
+ },
+ "source_version": 14,
+ "unjoined": [
+  [
+   "Combine1",
+   "Component41(Mirror) (1)"
+  ],
+  [
+   "Combine2",
+   "Component41(Mirror) (1)"
+  ],
+  [
+   "Combine2",
+   "Servo Pelv Upper"
+  ]
+ ],
+ "joints": {
+  "joints": 0,
+  "as_built": 0,
+  "rigid_groups": 0
+ },
+ "parts": {
+  "gear": {
+   "FL": {
+    "volume_before": 2.0326,
+    "volume_after": 3.262,
+    "lumps": 1,
+    "inboard_end_z": 0.0,
+    "outward": 1.0,
+    "phase_turn_deg": -260.955
+   },
+   "FR": {
+    "volume_before": 2.0326,
+    "volume_after": 3.262,
+    "lumps": 1,
+    "inboard_end_z": -9.0521,
+    "outward": -1.0,
+    "phase_turn_deg": -260.954
+   }
+  },
+  "pinion": {
+   "FL": {
+    "volume_before": 1.8042,
+    "volume_after": 0.9703,
+    "lumps": 1,
+    "inboard_end_z": 0.0,
+    "outward": -1.0,
+    "phase_turn_deg": -80.955
+   },
+   "FR": {
+    "volume_before": 1.8039,
+    "volume_after": 0.9703,
+    "lumps": 1,
+    "inboard_end_z": 9.0521,
+    "outward": 1.0,
+    "phase_turn_deg": -80.954
+   }
+  }
+ },
+ "rear_phase": {
+  "gear_turn_front_to_rear_deg": 129.0,
+  "pinion_turn_front_to_rear_deg": -0.0,
+  "line_front_deg": -170.955,
+  "line_rear_deg": -20.0,
+  "gear_offset_deg": -6.955,
+  "pinion_turn_deg": 14.864
+ },
+ "moved": {
+  "occurrences": [
+   "Pevis:1",
+   "Hind Leg:1",
+   "Hind Leg(Mirror):1",
+   "12Channel PWM v2:1",
+   "DS-843MG v1(Mirror) (1):2",
+   "DS-843MG v1(Mirror) (1):3",
+   "Component40(Mirror) (1):1",
+   "Component41(Mirror) (1):1",
+   "XL4015 StepDown DC-DC 5A (CC-CV) v1:1",
+   "m(Mirror):2"
+  ],
+  "root_bodies": [
+   "Body2",
+   "Body3",
+   "Body4",
+   "Body27",
+   "Body28",
+   "Body29",
+   "Body41"
+  ],
+  "in_context": {}
+ },
+ "snapshot": true,
+ "tooth_overlap_mm3": {
+  "FL": 0.0,
+  "FR": 0.0,
+  "RL": 0.0,
+  "RR": 0.0
+ },
+ "renders": {
+  "v7_left.png": true,
+  "v7_iso.png": true,
+  "v7_FL_gears.png": true,
+  "v7_RL_gears.png": true,
+  "v7_rear_side.png": true
+ },
+ "saved": true,
+ "status": "ok"
+}

@@ -13,7 +13,7 @@ LOGS="$PFX/drive_c/users/thiago/AppData/Local/Autodesk/Autodesk Fusion 360/U2X2E
 running() { ps -eo args | grep -qE 'Fusion36[0]\.exe'; }
 if running; then
   idle=$(DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus gdbus call --session --dest org.gnome.Mutter.IdleMonitor \
-         --object-path /org/gnome/Mutter/IdleMonitor/Core --method org.gnome.Mutter.IdleMonitor.GetIdletime | tr -dc '0-9')
+         --object-path /org/gnome/Mutter/IdleMonitor/Core --method org.gnome.Mutter.IdleMonitor.GetIdletime | sed -E 's/.*uint64 ([0-9]+).*/\1/')
   [ "${idle:-0}" -lt 120000 ] && { echo "USER ACTIVE (idle ${idle} ms) - not restarting Fusion"; exit 3; }
   T=$(wmctrl -l | grep -E 'Autodesk Fusion' | cut -d' ' -f5-)
   echo "$T" | grep -q '\*' && { echo "UNSAVED CHANGES in Fusion ($T) - not restarting"; exit 4; }

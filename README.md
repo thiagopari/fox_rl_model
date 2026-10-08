@@ -343,7 +343,16 @@ The servos stalled when the robot readjusted on the ground. v7 (`Fox_Prototype_0
 **The sim model `v7/` is the robot as it will be built: without the rear spacer** (no longer screws).
 * It is the v6 export (base, legs, every joint) with the 8 v7 gear and pinion parts, the 2:1 motion links and the v7
   pinion range, derived by `tools/raw_v7_without_spacer.py` into `raw_v7_nospacer/`.
-* The Fusion design still has the spacer (its renders are in `v7/validation/cad/`).
+* The design `Fox_Prototype_03_v7_RL` has the spacer (its renders are in `v7/validation/cad/`).
+* **The as-built CAD is `Fox_Prototype_03_v7b_RL` + `Fox_Prototype_03_v7b_RL_Mechanism`.** It was made by `FoxMakeV7`
+  with `tools/fusion/v7b/make.json`: v6 geometry (no spacer), the 2:1 gears, the printed-bushing gear seat (Ø10.4) and
+  the femur hub relief, plus the M4 casing holes. The bushings are named `printed bushing L/R` and move with the femur.
+  * Checks in `v7/validation/cad_v7b/`: all 43 CAD checks pass, with tooth overlap 0 mm³ and every edit's volume
+    exact; 40 joints + 4 motion links.
+  * Drive tests: gear = −pinion / 2 and both parallelograms hold (worst 5.5e-5 rad). The model is 543.9 g, against
+    544.5 g for the derived sim model.
+  * To try it in Fusion, drive `XX_pinion_joint` to see the 2:1 drive. Lock `XX_pinion_joint`, then drive
+    `XX_femur_joint`: the gear holds still and the knee bends.
 * `tools/build_robot.py --raw raw_v7 --out <dir>` rebuilds the spacer version.
 
 **Stance:** base level, each foot where its worst pitch servo's static load is lowest. That puts the front feet 25.5 mm
@@ -396,7 +405,7 @@ On the robot:
   * Screw stacks: front 13.5 mm (casing tab, pelvis flange), so M4×16 fits; rear 33.2 mm with the spacer, so M4×35.
   * Both thread into the pelvis flange. Its CAD holes are Ø2.8: open them to ~Ø3.4 for an M4 self-tap, or Ø4.6 for a
     through-bolt with a nut (rear M4×40).
-  * The CAD design still has the old holes. `tools/fusion/FoxV7M4Holes` applies the same change once Fusion is free.
+  * `Fox_Prototype_03_v7b_RL` has these holes. The spacer design `Fox_Prototype_03_v7_RL` still has the old Ø2.8 ones.
 * print `v7_pinion_12T.stl` (4). It carries Thiago's servo-horn interface (4 hooks and the cross-horn pocket under a 0.3 mm
   plate, from `~/Downloads/Gear modified (1).stl`), so the servo's own cross horn drives it instead of a printed spline. The
   teeth are the new 12T m1.0 ones, with his Ø2 hole and Ø6.4 counterbore. It prints teeth-down;
@@ -437,8 +446,11 @@ v7 the same way, with the configs in `tools/fusion/v7/` (`scan.json`, `build.jso
 add-in, and `tools/screw_graph.py analysis/screw_scan_v7.json analysis/link_map_v7.json`. The export is `raw_v7/`, which
 includes the spacer. Then:
 * the sim model (no spacer): `tools/raw_v7_without_spacer.py && tools/build_robot.py --raw raw_v7_nospacer --out v7`;
-* the MuJoCo checks with `FOX_MODEL=v7`. `FoxMakeV7` itself runs once
-(it refuses to overwrite `Fox_Prototype_03_v7_RL`).
+* the MuJoCo checks with `FOX_MODEL=v7`. `FoxMakeV7` runs once per variant: it refuses to overwrite the name given
+  in its `make.json`. Without a `make.json` it builds `Fox_Prototype_03_v7_RL`.
+
+The as-built v7b works the same way. Use `tools/fusion/v7b/make.json` for `FoxMakeV7`, then the `v7b/` scan and build
+configs, with `tools/screw_graph.py analysis/screw_scan_v7b.json analysis/link_map_v7b.json`.
 
 ## Validation
 All checks pass (reports in `validation/`):

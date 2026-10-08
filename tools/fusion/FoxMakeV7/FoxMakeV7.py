@@ -16,23 +16,37 @@
 #   4. The three Combine features that fused both rear hip brackets into the rear pelvis are suppressed: the brackets turn
 #      with the hip servos (FoxScrewScan / FoxBuildLinkModel always suppressed them in memory), and the fused body would
 #      not follow the rear module when it moves.
+# Optional make.json next to this file (defaults = the v7 above): new_name, lift (cm; 0 = rear not raised), spacer (bool),
+# bushing ('printed': Ø10.4 running-fit gear seat with the lip 0.3 mm below the clamped bushing, '623': Ø10.0 press fit
+# for a 623ZZ; both relieve the femur hub to a Ø4.4 boss), m4_casing_holes (bool: the 4 pelvis screw holes of the
+# casing Ø4.6), shots / result (render folder, result file). v7b = no spacer, printed bushings, M4 holes.
 # Checks: no tooth overlap on any leg, the rear moved by exactly the lift and nothing else moved, no new interference,
-# spacer seated on both faces, timeline healthy. Renders go to C:\fusion_jobs\v7\.
+# spacer seated on both faces, timeline healthy. Renders go to C:\fusion_jobs\<shots>\.
 import adsk.core, adsk.fusion, json, math, os, threading, time, traceback
 
 DRY_RUN = False                       # True: build + check + render, then discard
 COPY_ID, SOURCE_NAME = 'urn:adsk.wipprod:dm.lineage:sWQJByHaTNKGDxKGjmsT6g', 'Fox_Prototype_03_v6_RL'
-NEW_NAME = 'Fox_Prototype_03_v7_RL'
+_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'make.json')
+_cfg = json.load(open(_cfg_path)) if os.path.exists(_cfg_path) else {}
+NEW_NAME = _cfg.get('new_name', 'Fox_Prototype_03_v7_RL')
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROF = json.load(open(os.path.join(HERE, 'profiles.json')))
 PIV = json.load(open(os.path.join(HERE, 'link_map.json')))['pivots']   # v6 pins, source frame (cm)
 OUT = r'C:\fusion_jobs'
-SHOTS = os.path.join(OUT, 'v7')
+SHOTS = os.path.join(OUT, _cfg.get('shots', 'v7'))
+RESULT = _cfg.get('result', 'make_v7.json')
 MID_X, REAR_Y = -2.476478, -6.0      # sagittal plane; the rear module lies behind source y = REAR_Y ...
 HALF_WIDTH = 7.0                     # ... within this of the sagittal plane (a spare battery bay sits beside the robot)
 UNJOIN = [('Combine1', 'Component41(Mirror) (1)'), ('Combine2', 'Component41(Mirror) (1)'), ('Combine2', 'Servo Pelv Upper')]
 PLATE = 'raspberry_pi_mount'         # root body that carries both pelvises: stays
-LIFT = 2.0                           # cm along the rear screws
+LIFT = float(_cfg.get('lift', 2.0))  # cm along the rear screws
+SPACER_ON = bool(_cfg.get('spacer', True)) and LIFT > 0
+BUSHING = _cfg.get('bushing')         # None | 'printed' | '623'
+M4_HOLES = bool(_cfg.get('m4_casing_holes', False))
+FEMURS = {'FL': 'Front Leg:1+Femur(Mirror) (1):1', 'FR': 'Front Leg(Mirror):1+Femur(Mirror) (1)(Mirror):1',
+          'RL': 'Hind Leg:1+Femur:1', 'RR': 'Hind Leg(Mirror):1+Femur(Mirror) (2):1'}
+CASING_HOLES = [((-1.695, -3.263, 3.171), (0.0, -0.342020, -0.939693)), ((-3.258, -3.263, 3.171), (0.0, -0.342020, -0.939693)),
+                ((-3.258, -13.444, 3.524), (0.0, 0.173648, -0.984808)), ((-1.695, -13.444, 3.524), (0.0, 0.173648, -0.984808))]
 DOWN = (0.0, -0.342020, -0.939693)   # rear pelvis screw axis, pointing down (hole scan)
 SCREWS = ((-1.695, -3.263, 3.171), (-3.258, -3.263, 3.171))   # where the screws leave the pelvis flange top: s = 0
 # spacer, in s along DOWN (pelvis flange bottom 0.80 before the lift, plate tab top 0.82), u along x, w across (+w toward
@@ -270,6 +284,92 @@ def edit_part(spec, root, mgr):
     return report
 
 
+def tube(mgr, p, d, s0, s1, r_in, r_out):        # world cylinder (r_in 0) or tube along the line p + s d, s0..s1
+    at = lambda s: P3(p[0] + d[0] * s, p[1] + d[1] * s, p[2] + d[2] * s)     # noqa: E731
+    outer = mgr.createCylinderOrCone(at(s0), r_out, at(s1), r_out)
+    if r_in > 0:
+        mgr.booleanOperation(outer, mgr.createCylinderOrCone(at(s0), r_in, at(s1), r_in), adsk.fusion.BooleanTypes.DifferenceBooleanType)
+    return outer
+
+
+def combine(comp, target, tool_world, occ, op, name, mgr):
+    """Add a world-space tool body to the component (base feature) and combine it with the target body."""
+    if occ is not None:
+        mgr.transform(tool_world, inverse(occ.transform2))
+    bf = comp.features.baseFeatures.add()
+    bf.startEdit()
+    comp.bRepBodies.add(tool_world, bf)
+    bf.finishEdit()
+    bf.name = name + ' (tool)'
+    tools = adsk.core.ObjectCollection.create()
+    tools.add(bf.bodies.item(0))
+    ci = comp.features.combineFeatures.createInput(target, tools)
+    ci.operation, ci.isKeepToolBodies = op, False
+    comp.features.combineFeatures.add(ci).name = name
+
+
+def bushing_edits(root, mgr, lift_v):
+    """Femur hubs: Ø4.4 boss + 0.3 mm relief (they clamp only the bushing / bearing inner ring). Gear seat: 'printed' =
+    Ø10.4 running fit with the lip 0.3 mm below the clamped bushing; '623' = Ø10.0 press fit. Shared gear component."""
+    X = (1, 0, 0)
+    for leg, path in FEMURS.items():
+        occ = by_path(root, path)
+        if not check('%s femur found, its component used once' % leg, occ is not None and root.allOccurrencesByComponent(occ.component).count == 1, path):
+            return False
+        H = [PIV[leg]['H'][i] + (lift_v[i] if leg[0] == 'R' else 0.0) for i in range(3)]
+        s = 1.0 if H[0] > MID_X else -1.0
+        body = occ.bRepBodies.itemByName('Body1')
+        ends = [f.pointOnFace.x for f in body.faces if f.geometry.objectType == adsk.core.Plane.classType()
+                and abs(abs(f.geometry.normal.x) - 1) < 1e-6 and math.hypot(f.pointOnFace.y - H[1], f.pointOnFace.z - H[2]) < 0.305]
+        if not check('%s femur: hub end face found' % leg, ends, ends):
+            return False
+        x_end = max(ends) if s > 0 else min(ends)
+        comp, native = occ.component, body.nativeObject
+        v0 = native.volume
+        combine(comp, native, tube(mgr, (x_end - s * 0.03, H[1], H[2]), X, 0.0, s * 0.08, 0.22, 0.32), occ,
+                adsk.fusion.FeatureOperations.CutFeatureOperation, 'Hub relief: bushing inner part only', mgr)
+        native = comp.bRepBodies.itemByName('Body1')
+        want = math.pi * (0.30 ** 2 - 0.22 ** 2) * 0.03
+        check('%s femur hub relief' % leg, abs((v0 - native.volume) - want) < 0.0003 and native.lumps.count == 1, [round(v0 - native.volume, 5), round(want, 5)])
+    gocc = by_path(root, PARTS[0]['occ'])
+    for bname, leg in PARTS[0]['bodies'].items():
+        native = gocc.component.bRepBodies.itemByName(bname)
+        H = PIV[leg]['H']
+        s = 1.0 if H[0] > MID_X else -1.0
+        bb = gocc.bRepBodies.itemByName(bname).boundingBox
+        x_in = bb.minPoint.x if s > 0 else bb.maxPoint.x
+        v0 = native.volume
+        if BUSHING == 'printed':
+            tool, op, want = tube(mgr, (x_in, H[1], H[2]), X, s * 0.07, s * 0.545, 0.0, 0.52), adsk.fusion.FeatureOperations.CutFeatureOperation, \
+                -(math.pi * (0.52 ** 2 - 0.51 ** 2) * 0.44 + math.pi * (0.52 ** 2 - 0.40 ** 2) * 0.03)
+        else:
+            tool, op, want = tube(mgr, (x_in, H[1], H[2]), X, s * 0.10, s * 0.54, 0.50, 0.53), adsk.fusion.FeatureOperations.JoinFeatureOperation, \
+                math.pi * (0.51 ** 2 - 0.50 ** 2) * 0.44
+        combine(gocc.component, native, tool, gocc, op, 'Seat for a %s' % ('printed bushing (10.4 mm)' if BUSHING == 'printed' else '623ZZ (10.0 mm)'), mgr)
+        native = gocc.component.bRepBodies.itemByName(bname)
+        check('%s gear seat (%s)' % (leg, BUSHING), abs((native.volume - v0) - want) < 0.0005 and native.lumps.count == 1, [round(native.volume - v0, 5), round(want, 5)])
+    return True
+
+
+def casing_m4(root, mgr):
+    """The casing's 4 pelvis screw holes Ø2.8 -> Ø4.6 (M4 clearance), along each tilted axis, over its 5 mm tab."""
+    native = root.bRepBodies.itemByName(PLATE)
+    for p, d in CASING_HOLES:
+        shell = tube(mgr, p, d, 0.85, 1.29, 0.23, 0.33)
+        t = mgr.copy(native)
+        mgr.booleanOperation(t, shell, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+        if not check('casing: >= 1 mm wall around the M4 hole at %s' % (p,), t.volume / shell.volume > 0.999, round(t.volume / shell.volume, 4)):
+            return False
+    v0 = native.volume
+    for k, (p, d) in enumerate(CASING_HOLES):
+        combine(root, root.bRepBodies.itemByName(PLATE), tube(mgr, p, d, 0.72, 1.42, 0.0, 0.23), None,
+                adsk.fusion.FeatureOperations.CutFeatureOperation, 'M4 clearance hole %d (4.6 mm)' % (k + 1), mgr)
+    native = root.bRepBodies.itemByName(PLATE)
+    want = 4 * math.pi * (0.23 ** 2 - 0.14 ** 2) * 0.50
+    return check('casing: 4 M4 clearance holes, one solid', abs((v0 - native.volume) - want) < 0.02 * want and native.lumps.count == 1,
+                 [round(v0 - native.volume, 5), round(want, 5)])
+
+
 def render(app, name, target, eye, extent):
     vp = app.activeViewport
     cam = vp.camera
@@ -367,7 +467,7 @@ def _work():
     phase = adsk.core.Matrix3D.create()
     phase.setToRotation(turn, V3(1, 0, 0), P3(*PIV['RL']['P']))
     errs = []
-    for o in move_occ:
+    for o in (move_occ if LIFT else [o for o in move_occ if o.name == PARTS[1]['rear']]):
         try:
             m = o.transform2.copy()
             if o.name == PARTS[1]['rear']:
@@ -389,7 +489,7 @@ def _work():
     coll = adsk.core.ObjectCollection.create()
     for b in move_root:
         coll.add(b)
-    if coll.count:
+    if coll.count and LIFT:
         mi_ = root.features.moveFeatures.createInput2(coll)
         mi_.defineAsFreeMove(T)
         mf = root.features.moveFeatures.add(mi_)
@@ -425,30 +525,40 @@ def _work():
         f.name = 'Rear module up %.0f mm (body modelled in context)' % (LIFT * 10)
         _res['moved']['in_context'][path] = [nb.name for nb in natives]
     adsk.doEvents()
-    # spacer: block between the lifted pelvis flange and the plate tab, two M3 clearance holes on the screw axes
-    d = V3(*DOWN)
-    w = d.crossProduct(V3(1, 0, 0))
-    sp = SPACER
-    mid = P3((SCREWS[0][0] + SCREWS[1][0]) / 2, SCREWS[0][1], SCREWS[0][2])
-    sm, wm = (sp['s0'] + sp['s1']) / 2, (sp['w0'] + sp['w1']) / 2
-    centre = moved(mid, adsk.core.Matrix3D.create())
-    centre.translateBy(V3(d.x * sm + w.x * wm, d.y * sm + w.y * wm, d.z * sm + w.z * wm))
-    block = mgr.createBox(adsk.core.OrientedBoundingBox3D.create(centre, V3(1, 0, 0), w, 2 * sp['half_u'], sp['w1'] - sp['w0'], sp['s1'] - sp['s0']))
-    for s0 in SCREWS:
-        p, q = P3(*s0), P3(*s0)
-        p.translateBy(V3(d.x * (sp['s0'] - 0.1), d.y * (sp['s0'] - 0.1), d.z * (sp['s0'] - 0.1)))
-        q.translateBy(V3(d.x * (sp['s1'] + 0.1), d.y * (sp['s1'] + 0.1), d.z * (sp['s1'] + 0.1)))
-        mgr.booleanOperation(block, mgr.createCylinderOrCone(p, sp['hole_r'], q, sp['hole_r']), adsk.fusion.BooleanTypes.DifferenceBooleanType)
-    so = root.occurrences.addNewComponent(adsk.core.Matrix3D.create())
-    sc = so.component
-    sc.name = 'Rear Hip Spacer'
-    bf = sc.features.baseFeatures.add()
-    bf.startEdit()
-    sc.bRepBodies.add(block, bf)
-    bf.finishEdit()
-    bf.name = 'Spacer %.0f mm (2x M3 clearance)' % (LIFT * 10)
-    sc.bRepBodies.item(0).name = 'Rear Hip Spacer %.1f mm' % ((sp['s1'] - sp['s0']) * 10)
-    _res['spacer'] = {'volume_cm3': round(sc.bRepBodies.item(0).volume, 4), 'size_cm': [2 * sp['half_u'], round(sp['w1'] - sp['w0'], 3), round(sp['s1'] - sp['s0'], 3)]}
+    centre = None
+    if SPACER_ON:
+        # spacer: block between the lifted pelvis flange and the plate tab, two M3 clearance holes on the screw axes
+        d = V3(*DOWN)
+        w = d.crossProduct(V3(1, 0, 0))
+        sp = SPACER
+        mid = P3((SCREWS[0][0] + SCREWS[1][0]) / 2, SCREWS[0][1], SCREWS[0][2])
+        sm, wm = (sp['s0'] + sp['s1']) / 2, (sp['w0'] + sp['w1']) / 2
+        centre = moved(mid, adsk.core.Matrix3D.create())
+        centre.translateBy(V3(d.x * sm + w.x * wm, d.y * sm + w.y * wm, d.z * sm + w.z * wm))
+        block = mgr.createBox(adsk.core.OrientedBoundingBox3D.create(centre, V3(1, 0, 0), w, 2 * sp['half_u'], sp['w1'] - sp['w0'], sp['s1'] - sp['s0']))
+        for s0 in SCREWS:
+            p, q = P3(*s0), P3(*s0)
+            p.translateBy(V3(d.x * (sp['s0'] - 0.1), d.y * (sp['s0'] - 0.1), d.z * (sp['s0'] - 0.1)))
+            q.translateBy(V3(d.x * (sp['s1'] + 0.1), d.y * (sp['s1'] + 0.1), d.z * (sp['s1'] + 0.1)))
+            mgr.booleanOperation(block, mgr.createCylinderOrCone(p, sp['hole_r'], q, sp['hole_r']), adsk.fusion.BooleanTypes.DifferenceBooleanType)
+        so = root.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+        sc = so.component
+        sc.name = 'Rear Hip Spacer'
+        bf = sc.features.baseFeatures.add()
+        bf.startEdit()
+        sc.bRepBodies.add(block, bf)
+        bf.finishEdit()
+        bf.name = 'Spacer %.0f mm (2x M3 clearance)' % (LIFT * 10)
+        sc.bRepBodies.item(0).name = 'Rear Hip Spacer %.1f mm' % ((sp['s1'] - sp['s0']) * 10)
+        _res['spacer'] = {'volume_cm3': round(sc.bRepBodies.item(0).volume, 4), 'size_cm': [2 * sp['half_u'], round(sp['w1'] - sp['w0'], 3), round(sp['s1'] - sp['s0'], 3)]}
+        adsk.doEvents()
+    lift_v = [-DOWN[0] * LIFT, -DOWN[1] * LIFT, -DOWN[2] * LIFT]
+    if BUSHING:
+        if not bushing_edits(root, mgr, lift_v):
+            return
+    if M4_HOLES:
+        if not casing_m4(root, mgr):
+            return
     adsk.doEvents()
     # checks
     B1 = bodies(root)
@@ -494,34 +604,36 @@ def _work():
             new_int.append([a, b, round(v1 * 1000, 2), round(v0 * 1000, 2)])
     check('no new interference from the lifted rear module or the spacer (mm^3: after, before)', not new_int,
           {'pairs_tested': n_pairs, 'new': new_int[:30]})
-    spk = next(k for k in new_keys if k.startswith('Rear Hip Spacer'))
-    mm = app.measureManager
-    seat = {k: round(mm.measureMinimumDistance(B1[spk][0], B1[k][0]).value * 10, 3) if k in B1 else 'missing'
-            for k in ('Pevis:1|Body1', 'root|' + PLATE)}
-    check('spacer seated on the pelvis flange and the plate tab (gap mm)', all(v != 'missing' and v < 0.05 for v in seat.values()), seat)
+    if SPACER_ON:
+        spk = next(k for k in new_keys if k.startswith('Rear Hip Spacer'))
+        mm = app.measureManager
+        seat = {k: round(mm.measureMinimumDistance(B1[spk][0], B1[k][0]).value * 10, 3) if k in B1 else 'missing'
+                for k in ('Pevis:1|Body1', 'root|' + PLATE)}
+        check('spacer seated on the pelvis flange and the plate tab (gap mm)', all(v != 'missing' and v < 0.05 for v in seat.values()), seat)
     sick1 = sick()
     check('no new timeline errors / warnings', set(sick1) <= set(sick0), {'before': sick0, 'after': sick1})
     # renders (views only; nothing is hidden)
     os.makedirs(SHOTS, exist_ok=True)
     H, P = PIV['FL']['H'], PIV['FL']['P']
     Hr, Pr = [PIV['RL']['H'][i] + lift[i] for i in range(3)], [PIV['RL']['P'][i] + lift[i] for i in range(3)]
-    c_sp = [centre.x, centre.y, centre.z]
     _res['renders'] = {
         'v7_left.png': render(app, 'v7_left.png', (MID_X, -8.6, -3.0), (MID_X + 60, -8.6, -3.0), 32.0),
         'v7_iso.png': render(app, 'v7_iso.png', (MID_X, -8.0, -3.0), (MID_X + 40, 30, 28), 38.0),
         'v7_FL_gears.png': render(app, 'v7_FL_gears.png', (3.1, (H[1] + P[1]) / 2, (H[2] + P[2]) / 2), (23.1, (H[1] + P[1]) / 2, (H[2] + P[2]) / 2), 6.0),
         'v7_RL_gears.png': render(app, 'v7_RL_gears.png', (3.1, (Hr[1] + Pr[1]) / 2, (Hr[2] + Pr[2]) / 2), (23.1, (Hr[1] + Pr[1]) / 2, (Hr[2] + Pr[2]) / 2), 6.0),
         'v7_rear_side.png': render(app, 'v7_rear_side.png', (MID_X, -1.0, -2.0), (MID_X + 60, -1.0, -2.0), 20.0)}
-    hide = [o for o in occs if o.name in ('Hind Leg:1', 'Hind Leg(Mirror):1', 'XL4015 StepDown DC-DC 5A (CC-CV) v1:1',
-                                          '12Channel PWM v2:1', 'DS-843MG v1(Mirror) (1):2', 'm(Mirror):2')]
-    was = [o.isLightBulbOn for o in hide]
-    for o in hide:
-        o.isLightBulbOn = False
-    _res['renders']['v7_spacer.png'] = render(app, 'v7_spacer.png', tuple(c_sp), (c_sp[0] + 20, c_sp[1] + 14, c_sp[2] + 8), 10.0)
-    _res['renders']['v7_spacer_side.png'] = render(app, 'v7_spacer_side.png', tuple(c_sp), (c_sp[0] + 40, c_sp[1], c_sp[2]), 10.0)
-    for o, on in zip(hide, was):
-        o.isLightBulbOn = on
-    check('visibility restored after the spacer views', [o.isLightBulbOn for o in hide] == was)
+    if SPACER_ON:
+        c_sp = [centre.x, centre.y, centre.z]
+        hide = [o for o in occs if o.name in ('Hind Leg:1', 'Hind Leg(Mirror):1', 'XL4015 StepDown DC-DC 5A (CC-CV) v1:1',
+                                              '12Channel PWM v2:1', 'DS-843MG v1(Mirror) (1):2', 'm(Mirror):2')]
+        was = [o.isLightBulbOn for o in hide]
+        for o in hide:
+            o.isLightBulbOn = False
+        _res['renders']['v7_spacer.png'] = render(app, 'v7_spacer.png', tuple(c_sp), (c_sp[0] + 20, c_sp[1] + 14, c_sp[2] + 8), 10.0)
+        _res['renders']['v7_spacer_side.png'] = render(app, 'v7_spacer_side.png', tuple(c_sp), (c_sp[0] + 40, c_sp[1], c_sp[2]), 10.0)
+        for o, on in zip(hide, was):
+            o.isLightBulbOn = on
+        check('visibility restored after the spacer views', [o.isLightBulbOn for o in hide] == was)
 
 
 def _finish():
@@ -531,11 +643,17 @@ def _finish():
         app = adsk.core.Application.get()
         folder = app.data.findFileById(COPY_ID).parentFolder
         design = adsk.fusion.Design.cast(doc.products.itemByProductType('DesignProductType'))
+        if BUSHING:                  # renamed last too: body names are part of the check keys
+            bcomp = design.allComponents.itemByName(PARTS[0]['comp'])
+            for old, side in (('Body2', 'L'), ('Body5', 'R')):
+                bcomp.bRepBodies.itemByName(old).name = ('printed bushing %s' if BUSHING == 'printed' else '623ZZ bearing %s') % side
         for spec in PARTS:           # renamed last: occurrence paths (the check keys) carry the component name
             if spec['rename']:
                 design.allComponents.itemByName(spec['comp']).name = spec['rename']
-        _res['saved'] = doc.saveAs(NEW_NAME, folder, 'Fox v7: 2:1 gear-servo drive (12T:24T m1.0), rear hips +%.0f mm on a spacer; from %s v%s'
-                                   % (LIFT * 10, SOURCE_NAME, _res.get('source_version')), '')
+        what = ['2:1 gear-servo drive (12T:24T m1.0)', 'rear hips +%.0f mm on a spacer' % (LIFT * 10) if SPACER_ON else 'rear not raised (no spacer)']
+        what += ['gear on a %s' % ('printed bushing (10.4 mm running fit)' if BUSHING == 'printed' else '623ZZ (10.0 mm press fit)')] if BUSHING else []
+        what += ['M4 casing holes'] if M4_HOLES else []
+        _res['saved'] = doc.saveAs(NEW_NAME, folder, 'Fox v7: %s; from %s v%s' % (', '.join(what), SOURCE_NAME, _res.get('source_version')), '')
         _res['status'] = 'ok'
     elif doc:
         _res['status'] = 'ok (dry run, discarded)' if ok else 'FAILED CHECKS: discarded, nothing saved'
@@ -546,7 +664,7 @@ def _finish():
 
 def _write():  # result file appears only once, with a final status
     os.makedirs(OUT, exist_ok=True)
-    with open(os.path.join(OUT, 'make_v7.json'), 'w') as f:
+    with open(os.path.join(OUT, RESULT), 'w') as f:
         json.dump(_res, f, indent=1, default=str)
 
 

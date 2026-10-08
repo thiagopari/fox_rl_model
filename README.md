@@ -374,7 +374,13 @@ Standing still in MuJoCo (0.55 kg, 4 feet), the worst servo goes from 23 % (v6) 
    servo angles as action offsets).
 
 On the robot:
-* print `print/v7_crank_gear_24T.stl` (4) and `v7_rear_hip_spacer.stl` (1);
+* print `print/v7_crank_gear_24T.stl` (4) and `v7_rear_hip_spacer.stl` (1). The spacer has M4 clearance holes (Ø4.6);
+* print `print/v7_middle_casing.stl`, the Pi casing (`raspberry_pi_mount`). Its 4 pelvis screw holes are M4 clearance
+  holes (Ø4.6, along the tilted screw axes: 10° at the front, 20° at the rear). It prints with the Pi deck on the bed.
+  * Screw stacks: front 13.5 mm (casing tab, pelvis flange), so M4×16 fits; rear 33.2 mm with the spacer, so M4×35.
+  * Both thread into the pelvis flange. Its CAD holes are Ø2.8: open them to ~Ø3.4 for an M4 self-tap, or Ø4.6 for a
+    through-bolt with a nut (rear M4×40).
+  * The CAD design still has the old holes. `tools/fusion/FoxV7M4Holes` applies the same change once Fusion is free.
 * print `v7_pinion_12T.stl` (4). It carries Thiago's servo-horn interface (4 hooks and the cross-horn pocket under a 0.3 mm
   plate, from `~/Downloads/Gear modified (1).stl`), so the servo's own cross horn drives it instead of a printed spline. The
   teeth are the new 12T m1.0 ones, with his Ø2 hole and Ø6.4 counterbore. It prints teeth-down;

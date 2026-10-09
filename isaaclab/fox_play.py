@@ -12,10 +12,11 @@ Click into the viewport first (the window needs keyboard focus), then hold:
 Keys add up while held. The camera follows robot 0; green/blue arrows show commanded vs actual velocity.
 Check without a keyboard: add --eval --headless --num_envs 16 (scripted commands, prints achieved velocities).
 Default checkpoint: the newest model_*.pt under logs/rsl_rl/<the task's experiment>. Also writes exported/policy.onnx next to it
-(the file the Raspberry Pi would run).
+(the file the Raspberry Pi would run) and exported/policy.json, how deploy/fox_pi.py turns its output into servo targets.
 """
 import argparse
 import glob
+import json
 import os
 import sys
 
@@ -82,6 +83,7 @@ def main():
     policy = runner.get_inference_policy(device=env.unwrapped.device)
     try:
         runner.export_policy_to_onnx(path=os.path.join(os.path.dirname(path), "exported"), filename="policy.onnx")
+        export_contract(env, os.path.join(os.path.dirname(path), "exported", "policy.json"))
     except Exception as e:  # export is a convenience for the hardware step; driving does not need it
         print("[WARN] ONNX export skipped:", e)
     term = env.unwrapped.command_manager.get_term("base_velocity")
@@ -103,6 +105,22 @@ def main():
     env.close()
 
 
+def export_contract(env, path):
+    """policy.json (deploy/fox_pi.py policy_contract): the servo order, each servo's action scale and offset (rad from
+    the CAD pose: servo target = offset + scale * output), the gear ratio and the command ranges it was trained on."""
+    u = env.unwrapped
+    act = u.action_manager.get_term("joint_pos")
+    row = lambda v: v[0].tolist() if torch.is_tensor(v) else [float(v)] * act.action_dim   # noqa: E731
+    servo = {"hip": "hip", "thigh": "pivot", "calf": "gear"}
+    r = u.cfg.commands.base_velocity.ranges
+    c = {"task": TASK, "servos": ["%s_%s" % (j[:2], servo[j[3:-6]]) for j in act._joint_names],
+         "scale": row(act._scale), "offset_rad": row(act._offset), "gear_ratio": float(u.cfg.scene.robot.actuators["servos"].gear_ratio),
+         "command_ranges": {k: list(getattr(r, k)) for k in ("lin_vel_x", "lin_vel_y", "ang_vel_z")}}
+    with open(path, "w") as f:
+        json.dump(c, f, indent=1)
+    print("[INFO] wrote %s: gears %g:1, commands %s" % (path, c["gear_ratio"], c["command_ranges"]))
+
+
 def evaluate(env, policy, term):
     """Hold each command 4 s; report the mean achieved base velocity (body frame) over the last 2 s, all robots,
     plus smoothness: mean servo-command change per policy step (rad), mean foot swing (air) time at touchdown, and
@@ -116,7 +134,10 @@ def evaluate(env, policy, term):
     act = u.action_manager.get_term("joint_pos")
     hip_a, hip_j = [i for i, n in enumerate(act._joint_names) if n.endswith("_hip_joint")], robot.find_joints(".*_hip_joint")[0]
     hip_target = hip_angle = 0.0
-    for c in ((0.0, 0.0, 0.0), (0.2, 0.0, 0.0), (0.3, 0.0, 0.0), (-0.2, 0.0, 0.0), (0.0, 0.15, 0.0), (0.0, 0.0, 0.8), (0.2, 0.0, 0.5)):
+    r = u.cfg.commands.base_velocity.ranges                 # only what the task trains (a straight task: no turns)
+    inside = lambda c: all(lo - 1e-6 <= v <= hi + 1e-6 for v, (lo, hi) in zip(c, (r.lin_vel_x, r.lin_vel_y, r.ang_vel_z)))  # noqa: E731
+    for c in filter(inside, ((0.0, 0.0, 0.0), (0.2, 0.0, 0.0), (0.3, 0.0, 0.0), (-0.2, 0.0, 0.0), (0.0, 0.15, 0.0),
+                             (0.0, 0.0, 0.8), (0.2, 0.0, 0.5))):
         acc, falls = [], 0
         for k in range(200):
             with torch.inference_mode():
@@ -126,7 +147,7 @@ def evaluate(env, policy, term):
             now = cs.data.current_contact_time.torch[:, feet] > 0
             first, down = now & ~down, now   # touchdowns; compute_first_contact misses all of them 2-16 s into an episode
             if k >= 100 and any(c):          # (Isaac Lab 3.0-beta2: float32 sensor time vs a 1e-8 tolerance)
-                steps.append(float((u.action_manager.action - u.action_manager.prev_action).abs().mean()) * 0.25)  # x action scale
+                steps.append(float(((u.action_manager.action - u.action_manager.prev_action) * act._scale).abs().mean()))  # rad
                 swings += cs.data.last_air_time.torch[:, feet][first].tolist()
             if k >= 100 and not any(c):                      # standing still = no steps
                 taps += int(first.sum())

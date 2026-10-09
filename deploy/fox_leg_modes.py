@@ -20,6 +20,7 @@ import termios
 import time
 import tty
 
+import fox_pi
 from fox_calib import Servos
 from fox_pi import CHANNEL, DEG_PER_RAD, DIRECTION, LEGS, LIMIT_DEG, NEUTRAL_DEG, leg_fk, leg_ik, leg_reach
 
@@ -32,17 +33,17 @@ HELP = """ w / s  pendulum: leg swings forward / back 5 deg     e / d  extension
 
 
 def targets(leg, n, m):
-    """(hip, pivot, gear) in rad from home: the extension from the 1:1 IK (its gear = the shin's turn), the pendulum
-    (the whole leg turned by m["swing"]), then the single-servo offsets (servo deg)."""
-    piv, shin = leg_ik(leg, m["ext"]) if m["ext"] else (0.0, 0.0)
+    """(hip, pivot, gear) in rad from home: the extension from fox_pi.leg_ik (servo angles at fox_pi.GEAR_RATIO = n), the
+    pendulum (the whole leg turned by m["swing"]), then the single-servo offsets (servo deg)."""
+    piv, gear = leg_ik(leg, m["ext"]) if m["ext"] else (0.0, 0.0)
     a = math.radians(m["swing"])
-    return [0.0, piv - a + math.radians(m["pivot"]), n * (shin + a) + math.radians(m["gear"])]
+    return [0.0, piv - a + math.radians(m["pivot"]), gear + n * a + math.radians(m["gear"])]
 
 
 def predict(leg, n, piv, gear):
     """What the model expects, both servos holding their targets: ankle mm forward / up from home, knee bend change (deg)."""
     x0, z0 = leg_fk(leg, 0.0, 0.0)
-    x, z = leg_fk(leg, piv, gear / n)
+    x, z = leg_fk(leg, piv, gear)
     return x - x0, z - z0, math.degrees(-piv - gear / n)
 
 
@@ -74,6 +75,9 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="no hardware")
     args = ap.parse_args()
     leg, n = args.leg, args.ratio
+    if n != fox_pi.GEAR_RATIO:
+        print("note: servo_calib.json says %g:1 gears; using --ratio %g" % (fox_pi.GEAR_RATIO, n), flush=True)
+    fox_pi.GEAR_RATIO = n                                  # leg_fk / leg_ik read it
     check(leg, n)
     names = ["%s_%s" % (leg, s) for s in ("hip", "pivot", "gear")]
     hw, tty_in = Servos(args.dry_run), sys.stdin.isatty()

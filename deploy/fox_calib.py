@@ -62,12 +62,21 @@ class Servos:
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="no hardware")
+    ap.add_argument("--gear-ratio", type=float, help="record the gear servo drive in servo_calib.json and quit: 1 = 12T:12T "
+                    "gears, 2 = v7 12T:24T (fox_pi.py refuses a policy trained for another ratio)")
     args = ap.parse_args()
     tty_in = sys.stdin.isatty()
     saved = {}
     if os.path.exists(CALIB_FILE):
         with open(CALIB_FILE) as f:
             saved = json.load(f)
+    if args.gear_ratio is not None:
+        saved["gear_ratio"] = args.gear_ratio
+        with open(CALIB_FILE + ".tmp", "w") as f:
+            json.dump(saved, f, indent=1)
+        os.replace(CALIB_FILE + ".tmp", CALIB_FILE)
+        print("gear_ratio = %g saved in %s (recalibrate the gear servos' homes after changing gears)" % (args.gear_ratio, CALIB_FILE))
+        return
     limits = {k: list(v) for k, v in saved.get("limit_deg", {}).items() if k in SERVOS}   # only the ones you set
     stamp = os.path.getmtime(CALIB_FILE) if os.path.exists(CALIB_FILE) else None       # to spot edits made meanwhile
     now = {n: None for n in SERVOS}                                                       # None = limp

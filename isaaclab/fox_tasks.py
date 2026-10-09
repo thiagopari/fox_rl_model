@@ -4,11 +4,12 @@ Registers  Fox-Velocity-Flat             training (2048 robots, randomized); pol
            Fox-Velocity-Flat-Blind       hardware-ready: the policy sees only the IMU (gyro, gravity), the command and
                                          its own last servo commands (5-step history); realistic servos (latency,
                                          backlash, torque-speed line, gain spread); smooth trot, stands at zero command
-           Fox-V7-Velocity-Flat-Blind    the same on the v7 design (2:1 gear servo drive, rear hips 20 mm higher):
-                                         model in v7/ (tools/build_robot.py --out v7; its USD from tools/isaacsim_import.py)
+           Fox-V7-Velocity-Flat-Blind    the same on the v7 robot (2:1 gear servo drive, no spacer): model in v7/
+                                         (tools/build_robot.py --out v7; its USD from tools/isaacsim_import.py)
+           Fox-V7-...-Blind-Straight     v7, forward / backward only, hips held at the stance (no hip servos needed)
            Fox-...-Play variants         driving / evaluation (few robots, no pushes or noise)
 Built on Isaac Lab's quadruped velocity task (the Go1 recipe), re-scaled for a 0.54 kg, 15 cm tall robot. The policy
-outputs the 12 SERVO targets (hip, pivot, gear servo angles around the stance, scale 0.25 rad) that FoxServoActuator
+outputs the 12 SERVO targets (hip, pivot, gear servo angles around the stance, scale 0.25 rad; v7 gear 0.5) that FoxServoActuator
 (fox_cfg.py) turns into joint torques through the leg mechanism. 50 Hz policy, 200 Hz physics.
 Train with isaaclab/fox_train.py, drive with isaaclab/fox_play.py.
 """
@@ -182,15 +183,29 @@ class FoxBlindEnvCfg(FoxFlatEnvCfg):
 
 @configclass
 class FoxBlindV7EnvCfg(FoxBlindEnvCfg):
-    """Blind task on the v7 model: its gear ratio, and its level stance as reset pose and as the servo targets' zero."""
+    """Blind task on the v7 model: its gear ratio, and its level stance as reset pose and as the servo targets' zero.
+    The gear servos' actions are scaled by N (0.5 rad at 2:1): N times the servo angle moves the shin as one did at 1:1."""
 
     def __post_init__(self):
         super().__post_init__()
         robot, offsets = fox_model_cfg(os.path.join(FOX_DIR, "v7"))
+        n = robot.actuators["servos"].gear_ratio
         self.scene.robot = robot.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.robot.actuators = {"servos": FOX_SERVO_REAL_CFG.replace(gear_ratio=robot.actuators["servos"].gear_ratio)}
+        self.scene.robot.actuators = {"servos": FOX_SERVO_REAL_CFG.replace(gear_ratio=n)}
         self.actions.joint_pos.use_default_offset = False
         self.actions.joint_pos.offset = offsets
+        self.actions.joint_pos.scale = {".*_hip_joint": 0.25, ".*_thigh_joint": 0.25, ".*_calf_joint": 0.25 * n}
+
+
+@configclass
+class FoxBlindV7StraightEnvCfg(FoxBlindV7EnvCfg):
+    """v7, forward / backward only: sideways and turning commands are 0, so FoxServoAction holds the hips at the stance
+    on every step. For the first runs on the robot, without working hip servos."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
+        self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
 
 
 def _blind_play(cfg):
@@ -217,6 +232,13 @@ class FoxBlindV7EnvCfg_PLAY(FoxBlindV7EnvCfg):
 
 
 @configclass
+class FoxBlindV7StraightEnvCfg_PLAY(FoxBlindV7StraightEnvCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        _blind_play(self)
+
+
+@configclass
 class FoxBlindPPORunnerCfg(FoxFlatPPORunnerCfg):
     max_iterations = 2000                    # the realistic servos take longer to learn
     experiment_name = "fox_flat_blind"
@@ -228,12 +250,19 @@ class FoxBlindV7PPORunnerCfg(FoxBlindPPORunnerCfg):
     experiment_name = "fox_flat_blind_v7"
 
 
+@configclass
+class FoxBlindV7StraightPPORunnerCfg(FoxBlindPPORunnerCfg):
+    experiment_name = "fox_flat_blind_v7_straight"
+
+
 for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Play", "FoxFlatEnvCfg_PLAY", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Blind", "FoxBlindEnvCfg", "FoxBlindPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Blind-Play", "FoxBlindEnvCfg_PLAY", "FoxBlindPPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind", "FoxBlindV7EnvCfg", "FoxBlindV7PPORunnerCfg"),
-                          ("Fox-V7-Velocity-Flat-Blind-Play", "FoxBlindV7EnvCfg_PLAY", "FoxBlindV7PPORunnerCfg")):
+                          ("Fox-V7-Velocity-Flat-Blind-Play", "FoxBlindV7EnvCfg_PLAY", "FoxBlindV7PPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Straight", "FoxBlindV7StraightEnvCfg", "FoxBlindV7StraightPPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Straight-Play", "FoxBlindV7StraightEnvCfg_PLAY", "FoxBlindV7StraightPPORunnerCfg")):
     if _id not in gym.registry:
         gym.register(id=_id, entry_point="isaaclab.envs:ManagerBasedRLEnv", disable_env_checker=True,
                      kwargs={"env_cfg_entry_point": f"{__name__}:{_cfg}", "rsl_rl_cfg_entry_point": f"{__name__}:{_agent}"})

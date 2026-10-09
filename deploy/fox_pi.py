@@ -42,6 +42,7 @@ DEG_PER_RAD = 180.0 / math.pi                   # 500-2500 us = 180 deg (adafrui
 LIMIT_DEG = {name: (NEUTRAL_DEG[name] - 50.0, NEUTRAL_DEG[name] + 50.0) for name in SERVOS}   # never command beyond
 HEIGHT_TRIM_MM = {leg: 0.0 for leg in LEGS}   # + = leg longer at the stance (--stand / --balance); "height_trim_mm"
 STAND_DEG = {}   # the robot's standing pose in servo degrees ("stand_deg"): --stand / --balance start from it, not home
+GEAR_RATIO = 1.0   # gear servo turns per crank turn ("gear_ratio"): 1 = 12T:12T gears, 2 = v7 12T:24T (fox_calib.py --gear-ratio)
 CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "servo_calib.json")   # written by fox_calib.py
 IMU_LEVEL = np.eye(3)   # mount tilt correction, from --level-imu (servo_calib.json "imu_level_gravity")
 
@@ -56,16 +57,20 @@ def level_rotation(g0):
 
 
 def load_calib(path=CALIB_FILE):
-    """Measured values from fox_calib.py override the guesses above: channel, home (deg), direction, limits (deg)."""
+    """Measured values from fox_calib.py override the guesses above: channel, home (deg), direction, limits (deg), gear
+    ratio. A gear servo's default range is home +-50 deg times the ratio (the same shin range at 2:1)."""
+    global GEAR_RATIO
     if not os.path.exists(path):
         return
     with open(path) as f:
         c = json.load(f)
     known = lambda d: {k: v for k, v in d.items() if k in SERVOS}  # noqa: E731
+    GEAR_RATIO = float(c.get("gear_ratio", 1.0))
     CHANNEL.update({k: int(v) for k, v in known(c.get("channel", {})).items()})
     NEUTRAL_DEG.update({k: float(v) for k, v in known(c.get("home_deg", {})).items()})
     DIRECTION.update({k: 1 if v >= 0 else -1 for k, v in known(c.get("direction", {})).items()})
-    LIMIT_DEG.update({n: (NEUTRAL_DEG[n] - 50.0, NEUTRAL_DEG[n] + 50.0) for n in SERVOS})
+    span = lambda n: 50.0 * (GEAR_RATIO if n.endswith("_gear") else 1.0)  # noqa: E731
+    LIMIT_DEG.update({n: (NEUTRAL_DEG[n] - span(n), NEUTRAL_DEG[n] + span(n)) for n in SERVOS})
     LIMIT_DEG.update({k: (float(v[0]), float(v[1])) for k, v in known(c.get("limit_deg", {})).items()})
     if "imu_level_gravity" in c:
         IMU_LEVEL[:] = level_rotation(c["imu_level_gravity"])
@@ -79,7 +84,8 @@ IMU_TO_BODY = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]   # BNO055 axes -> body (x fwd
 PLUS = {"hip": "the foot moves to the robot's LEFT", "pivot": "the femur turns, knee moving BACK; the shin keeps its angle",
         "gear": "the shin turns, foot moving FORWARD; the femur stays"}   # policy + for each servo (fox_cfg.py servo map)
 
-DT, MAX_TARGET = 0.02, 0.8   # 50 Hz like training; |target| clamp in rad (training stays well inside)
+DT, MAX_TARGET = 0.02, 0.8   # 50 Hz like training; |target - stance| clamp in rad at action scale 0.25 (training stays
+# well inside); a servo with a larger scale gets a proportionally wider clamp
 
 # Sagittal leg geometry at the CAD stance (urdf/fox.urdf): femur hip pivot -> knee, shin knee -> ankle, in mm, and their
 # angles from straight down (+ = toward the front). --balance / --stand lengthen or shorten legs with it (2-link IK).
@@ -89,7 +95,7 @@ LEG_GEOM = {"F": (75.0, 67.7, math.radians(-20.5), math.radians(4.5)), "R": (75.
 def leg_fk(leg, pivot, gear):
     """Ankle position (x fwd, z up; mm from the hip pivot) for pivot / gear servo targets (rad from home)."""
     l1, l2, a1, a2 = LEG_GEOM[leg[0]]
-    b1, b2 = a1 - pivot, a2 + gear              # pivot + turns the knee back; gear + swings the foot forward
+    b1, b2 = a1 - pivot, a2 + gear / GEAR_RATIO   # pivot + turns the knee back; gear + swings the foot forward
     return l1 * math.sin(b1) + l2 * math.sin(b2), -l1 * math.cos(b1) - l2 * math.cos(b2)
 
 
@@ -113,7 +119,7 @@ def leg_ik(leg, dh, pivot0=0.0, gear0=0.0):
     k0 = (l1 * math.sin(a1 - pivot0), -l1 * math.cos(a1 - pivot0))
     kx, kz = min(((mx + h * z / d, mz - h * x / d), (mx - h * z / d, mz + h * x / d)),
                  key=lambda k: (k[0] - k0[0]) ** 2 + (k[1] - k0[1]) ** 2)
-    return a1 - math.atan2(kx, -kz), math.atan2(x - kx, -(z - kz)) - a2
+    return a1 - math.atan2(kx, -kz), (math.atan2(x - kx, -(z - kz)) - a2) * GEAR_RATIO
 
 
 def stand_targets():
@@ -172,7 +178,8 @@ def balance(robot, capture=10.0, tol=1.0, gain=1.0, seconds=None, log=None):
             u = np.where(np.abs(e) > tol, gain * e * DT, 0.0)
             p, r = float(np.clip(p + u[0], -30.0, 30.0)), float(np.clip(r + u[1], -30.0, 30.0))
             dh = level_offsets(p, r)
-            targets = np.clip(stance(dh), -MAX_TARGET, MAX_TARGET)
+            span = np.array([MAX_TARGET * (GEAR_RATIO if n.endswith("_gear") else 1.0) for n in SERVOS])   # 2:1: twice the angle
+            targets = np.clip(stance(dh), -span, span)
             robot.write(targets)
             if out:
                 out.write("%.4f,%.2f,%.2f,%.2f,%.2f,%s,%s\n" % (time.perf_counter(), *attitude(down), *e,
@@ -195,13 +202,18 @@ def balance(robot, capture=10.0, tol=1.0, gain=1.0, seconds=None, log=None):
 class FoxPolicy:
     """policy.onnx's contract, checked in Isaac Lab by tools/check_policy_io.py. Observation (105 floats): per term the
     last 5 readings, oldest first: gyro (rad/s, body), gravity direction (unit, (0, 0, -1) level), command (vx, vy m/s,
-    yaw rad/s), its own previous output as sent (12). Output: servo targets = 0.25 * output (rad from the stance), SERVOS
-    order. For straight commands (no sideways, no turning) the hip outputs are set to 0: the hips hold the stance."""
+    yaw rad/s), its own previous output as sent (12). Output: servo targets = offset + scale * output (rad from home),
+    SERVOS order; scale / offset come from the policy.json exported with the ONNX (policy_contract), 0.25 / 0 for the
+    v1-v4 policies. For straight commands (no sideways, no turning) the hip outputs are set to 0: the hips hold the
+    stance."""
 
-    H, SCALE = 5, 0.25
+    H = 5
 
-    def __init__(self, infer):
+    def __init__(self, infer, scale=0.25, offset=0.0):
         self.infer = infer
+        self.scale, self.offset = np.broadcast_to(np.asarray(scale, float), (12,)), np.broadcast_to(np.asarray(offset, float), (12,))
+        span = MAX_TARGET * self.scale / 0.25           # the safety clamp, wider for a servo with a larger scale
+        self.lo, self.hi = self.offset - span, self.offset + span
 
     def reset(self, gyro, gravity, command):
         self.hist = [collections.deque([np.array(x, np.float32)] * self.H, maxlen=self.H)    # copies: callers may
@@ -218,7 +230,22 @@ class FoxPolicy:
         self.action = np.array(self.infer(self.obs), np.float32).reshape(12)     # as sent: what the policy observes next
         if not hips_free(command):
             self.action[:4] = 0.0
-        return self.SCALE * self.action
+        return self.offset + self.scale * self.action
+
+    def clip(self, targets):
+        return np.clip(targets, self.lo, self.hi)
+
+
+def policy_contract(path):
+    """policy.json next to policy.onnx (written by isaaclab/fox_play.py): servo order, per-servo scale and offset (rad
+    from home), the gear ratio it was trained for and its command ranges. Without one: the v1-v4 contract."""
+    meta = os.path.join(os.path.dirname(os.path.abspath(path)), "policy.json")
+    c = {"servos": SERVOS, "scale": [0.25] * 12, "offset_rad": [0.0] * 12, "gear_ratio": 1.0,
+         "command_ranges": {"lin_vel_x": [-0.3, 0.3], "lin_vel_y": [-0.2, 0.2], "ang_vel_z": [-1.0, 1.0]}}
+    if os.path.exists(meta):
+        with open(meta) as f:
+            c.update(json.load(f))
+    return c
 
 
 def hips_free(command):
@@ -323,9 +350,10 @@ class Keys:
     """Keyboard over SSH: W/S, A/D, Q/E step the command (the sim's keys), space or L = stop."""
 
     STEP = {"w": (0.1, 0, 0), "s": (-0.1, 0, 0), "a": (0, 0.1, 0), "d": (0, -0.1, 0), "q": (0, 0, 0.5), "e": (0, 0, -0.5)}
-    LIMIT = np.array([0.3, 0.2, 1.0])   # the training command ranges
 
-    def __init__(self):
+    def __init__(self, ranges):
+        """ranges: the policy's training command ranges (policy_contract): commands are kept inside them."""
+        self.lo, self.hi = (np.array([ranges[k][i] for k in ("lin_vel_x", "lin_vel_y", "ang_vel_z")]) for i in (0, 1))
         self.cmd, self.saved = np.zeros(3), None
         if sys.stdin.isatty():
             self.saved = termios.tcgetattr(sys.stdin)
@@ -337,7 +365,7 @@ class Keys:
             if c in " l":
                 self.cmd[:] = 0.0
             elif c in self.STEP:
-                self.cmd = np.clip(self.cmd + self.STEP[c], -self.LIMIT, self.LIMIT)
+                self.cmd = np.clip(self.cmd + self.STEP[c], self.lo, self.hi)
             print("command vx %+.2f m/s  vy %+.2f m/s  yaw %+.2f rad/s" % tuple(self.cmd), flush=True)
         return self.cmd
 
@@ -355,11 +383,11 @@ def read_retry(robot):
     raise RuntimeError("no IMU reading for 0.5 s")
 
 
-def walk(robot, policy, steps=None, hold_at_end=False, log=None):
+def walk(robot, policy, ranges, steps=None, hold_at_end=False, log=None):
     """50 Hz policy loop. Ends limp (Ctrl-C, tilt, errors); with hold_at_end a run that reaches `steps` instead ends
-    at home and leaves the servos holding (the PCA9685 keeps pulsing after the program exits). log: CSV path, one row
-    per step (time, gyro, gravity, command, servo targets in deg)."""
-    keys, overruns, k, finished, tilted = Keys(), 0, 0, False, 0
+    at the policy's stance and leaves the servos holding (the PCA9685 keeps pulsing after the program exits). log: CSV
+    path, one row per step (time, gyro, gravity, command, servo targets in deg). ranges: the policy's command ranges."""
+    keys, overruns, k, finished, tilted = Keys(ranges), 0, 0, False, 0
     out = open(log, "w") if log else None
     if out:
         out.write("t,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,cmd_vx,cmd_vy,cmd_yaw," + ",".join(SERVOS) + "\n")
@@ -367,7 +395,7 @@ def walk(robot, policy, steps=None, hold_at_end=False, log=None):
         targets = policy.reset(*read_retry(robot), keys.cmd)
         tick = time.perf_counter()
         while steps is None or k < steps:
-            robot.write(np.clip(targets, -MAX_TARGET, MAX_TARGET))
+            robot.write(policy.clip(targets))
             tick += DT
             late = tick - time.perf_counter()
             if late > 0:
@@ -384,14 +412,14 @@ def walk(robot, policy, steps=None, hold_at_end=False, log=None):
             if out:
                 out.write("%.4f,%s,%s,%s,%s\n" % (time.perf_counter(), ",".join("%.4f" % v for v in gyro),
                           ",".join("%.4f" % v for v in down), ",".join("%.2f" % v for v in cmd),
-                          ",".join("%.1f" % servo_deg(n, t) for n, t in zip(SERVOS, np.clip(targets, -MAX_TARGET, MAX_TARGET)))))
+                          ",".join("%.1f" % servo_deg(n, t) for n, t in zip(SERVOS, policy.clip(targets)))))
             k += 1
         finished = steps is not None and k >= steps
     finally:
         keys.close()
         if finished and hold_at_end:
-            robot.write(np.zeros(12))
-            print("time up: servos back at home and still holding (limp them with fox_calib.py L, or power)")
+            robot.write(policy.offset)
+            print("time up: servos back at the stance and still holding (limp them with fox_calib.py L, or power)")
         else:
             robot.limp()
         print("%d steps, %d over the 20 ms budget%s" % (k, overruns, "; log: " + log if log else ""))
@@ -485,8 +513,17 @@ def main():
         except KeyboardInterrupt:
             pass
         return
+    c = policy_contract(a.policy)
+    if list(c["servos"]) != SERVOS:
+        raise SystemExit("policy.json lists the servos in another order than fox_pi.SERVOS")
+    if float(c["gear_ratio"]) != GEAR_RATIO:
+        raise SystemExit("%s was trained for %g:1 gears, but servo_calib.json says the robot has %g:1 (fox_calib.py --gear-ratio)"
+                         % (a.policy, float(c["gear_ratio"]), GEAR_RATIO))
+    print("policy %s: gears %g:1, commands vx %s vy %s yaw %s" % (a.policy, GEAR_RATIO, *(c["command_ranges"][k] for k in
+          ("lin_vel_x", "lin_vel_y", "ang_vel_z"))), flush=True)
     steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
-    walk(robot, FoxPolicy(onnx_infer(a.policy)), steps=steps, hold_at_end=bool(a.seconds), log=a.log)
+    walk(robot, FoxPolicy(onnx_infer(a.policy), c["scale"], c["offset_rad"]), c["command_ranges"], steps=steps,
+         hold_at_end=bool(a.seconds), log=a.log)
 
 
 if __name__ == "__main__":

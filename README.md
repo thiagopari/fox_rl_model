@@ -268,7 +268,15 @@ Status: verified only against the simulator (`tools/check_policy_io.py`); it has
      about 1 A per servo at peak, and share ground with the Pi. The policy was trained on the 6 V torque and speed;
      brown-outs reset the Pi and the PCA9685.
    * **Copy:** `scp deploy/fox_pi.py policies/fox_flat_blind_v4/policy.onnx policies/fox_flat_blind_v4/policy.onnx.data
-     pi@<pi>:~/fox/`. The `.data` file must sit next to the `.onnx`.
+     pi@<pi>:~/fox/`. The `.data` file must sit next to the `.onnx`, and so must `policy.json` for policies that have
+     one. Give each policy its own folder.
+   * **policy.json** (written by `isaaclab/fox_play.py` with the ONNX) is the policy's contract:
+     * servo target = offset + scale × output, per servo;
+     * the gear ratio it was trained for: `fox_pi.py` refuses to run it on a robot whose `servo_calib.json` says
+       otherwise;
+     * its command ranges: the keyboard stays inside them, so the forward / backward policy only takes W/S.
+
+     Policies without one (v1–v4) mean 0.25 × output around home, 1:1 gears.
    * **Smoke test:** `python3 fox_pi.py policy.onnx --dry-run` (no hardware) must report 0 steps over the 20 ms budget.
      On the robot it prints the same count. If the servo writes push the loop over budget, the I2C bus is too slow.
 1. **Calibrate** with `fox_calib.py`, an interactive tool: `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_calib.py'`.
@@ -357,28 +365,30 @@ The servos stalled when the robot readjusted on the ground. v7 (`Fox_Prototype_0
     `XX_femur_joint`: the gear holds still and the knee bends.
 * `tools/build_robot.py --raw raw_v7 --out <dir>` rebuilds the spacer version.
 
-**Stance:** base level, each foot where its worst pitch servo's static load is lowest. That puts the front feet 25.5 mm
-ahead of the hips and the rear feet 34.1 mm behind (28.6 mm with the spacer). Set in `v7/mechanism.json`; servo angles
-from the CAD pose:
+**Stance:** base level, each foot where its worst pitch servo's static load is lowest, with the force where the foot
+really stands. A tilted sole stands on its lower edge, a flat one on its whole length (`build_robot.sole_contact`). The
+rear foot stays parallel to the femur, so it tilts with the rear pivot servo.
 
-| Leg | pivot servo | gear servo |
-|---|---|---|
-| front | −8.6° | +11.3° |
-| rear | +22.9° | −41.9° |
+| Leg | foot vs hip | sole | pivot servo | gear servo |
+|---|---|---|---|---|
+| front | 22.0 mm ahead | heel edge, tilted 6.0° | −9.7° | +13.8° |
+| rear | 35.1 mm behind | toe edge, tilted 25.7° | +25.7° | −49.6° |
 
-These angles are the new home offsets.
+Set in `v7/mechanism.json`. The servo angles are from the CAD pose (the homes); they are the policy's zero action.
+`MAX_FOOT_TILT` (`tools/build_robot.py`) caps the tilt. It costs servo margin: a 25 / 20 / 15° cap gives a worst servo
+of 43 / 55 / 66 % (41 % uncapped), so it is left at a sanity bound of 30°.
 
 Servo load (`tools/servo_load.py`; trot: 0.75 kg on 2 feet × 1.5), as a share of the 0.47 N·m stall torque:
 
 | | Worst servo | Front pivot / gear | Rear pivot / gear |
 |---|---|---|---|
-| v6, CAD pose | 89 % | 43 % / 51 % | 89 % / 62 % |
-| v6, best level stance (feet under hips) | 72 % | 46 % / 46 % | 72 % / 72 % |
-| **v7 without the spacer (the sim model), its stance** | **40 %** | 30 % / 30 % | 40 % / 40 % |
-| v7 with the spacer, its stance | 34 % | 30 % / 30 % | 34 % / 34 % |
+| v6, CAD pose | 90 % | 43 % / 51 % | 90 % / 62 % |
+| v6, best level stance | 75 % | 39 % / 41 % | 75 % / 75 % |
+| **v7 without the spacer (the sim model), its stance** | **41 %** | 26 % / 26 % | 41 % / 41 % |
+| v7 with the spacer, its stance | 36 % | 26 % / 26 % | 36 % / 36 % |
 
-Standing still in MuJoCo (0.54 kg, 4 feet), the worst servo goes from 23 % (v6) to 11 % (v7 without the spacer; 10 %
-with it).
+(Before 2026-10-09 the force sat at the sole's centre fixed in its CAD position, which a tilted foot doesn't stand on:
+72 / 40 / 34 %.) Standing still in MuJoCo (0.54 kg, 4 feet), the worst servo goes from 23 % (v6) to 10 % (v7).
 
 **Checks:**
 * Fusion, the CAD design with the spacer (`v7/validation/cad/`):
@@ -395,10 +405,13 @@ with it).
   * the reduced tree matches the exact mechanism within 7 µm;
   * pose test and 20 s of random actions pass.
 
-**To use it** (not done yet, on purpose):
-1. `FOX_MODEL=v7 OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py` writes `v7/usd/fox.usd`.
-2. Train `Fox-V7-Velocity-Flat-Blind` (`isaaclab/fox_cfg.py` `fox_model_cfg()`: ratio 2, stance as reset pose, and its
-   servo angles as action offsets).
+**In Isaac Lab** (approved 2026-10-09):
+* `FOX_MODEL=v7 OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/isaacsim_import.py` wrote `v7/usd/fox.usd`.
+* `Fox-V7-Velocity-Flat-Blind` and `Fox-V7-Velocity-Flat-Blind-Straight` use it (`isaaclab/fox_cfg.py`
+  `fox_model_cfg()`): ratio 2, the stance as reset pose, and its servo angles as action offsets.
+* The gear servos' actions are scaled 0.5 rad (0.25 × the ratio), so an action moves the shin as much as at 1:1.
+* `-Straight` is forward / backward only (vx ±0.3 m/s, no sideways or turning), so the hips always hold the stance. It
+  is for the first runs without hip servos.
 
 On the robot:
 * print `print/v7_crank_gear_24T.stl` (4) and `v7_rear_hip_spacer.stl` (1). The spacer has M4 clearance holes (Ø4.6);
@@ -427,9 +440,12 @@ On the robot:
 * the rear spacer needs M4×35 screws (M4×16 is too short for its 33 mm stack). Without it: v6 geometry + 2:1 gears + the
   min-load stance gives a worst servo of 40 % of stall, against 34 % with the spacer and 72 % for v6 today
   (`tools/servo_load.py`).
-* recalibrate the homes to the v7 stance.
-* `deploy/fox_pi.py`'s stand/balance IK still assumes 1:1 gears (`gear = -(thigh + calf)`), so it needs the ratio
-  before `--stand` / `--balance` run on v7.
+* after fitting the 2:1 gears:
+  * record them with `fox_calib.py --gear-ratio 2`. `fox_pi.py` refuses a policy trained for another ratio, widens the
+    gear servos' default range to ±100°, and its `--stand` / `--balance` leg IK uses the ratio;
+  * recalibrate the homes to the CAD pose (`h`). At the v7 stance the rear gear servos sit 49.6° from home, so mesh
+    the teeth with that in mind: a gear servo whose home is at 90° stands at 40° / 140°;
+  * save a new stand pose (`S`) if `--stand` / `--balance` should use one.
 
 ## Regenerate
 Each `tools/fusion/*` folder is a one-shot add-in: copy it into Fusion's `API/AddIns`, start Fusion, wait for its result

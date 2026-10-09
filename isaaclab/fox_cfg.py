@@ -120,6 +120,18 @@ FOX_SERVO_CFG = FoxServoActuatorCfg(
 # 10-15 deg before the shin moved, i.e. about +-6 deg (0.11 rad) of free play; 0.15 covers it. Re-measure on the v7 build.
 FOX_SERVO_REAL_CFG = FOX_SERVO_CFG.replace(min_delay=1, max_delay=5, backlash=(0.02, 0.02, 0.15), torque_speed=True)
 
+def geared(servos: FoxServoActuatorCfg, n: float) -> FoxServoActuatorCfg:
+    """The servo cfg for an N:1 gear servo drive. The gear servo's rotor inertia reaches the crank N^2 times larger, as
+    its damping does, and acts on thigh + calf together (the shin's angle). PhysX armature is per joint, so it gets the
+    diagonal of that coupled inertia: thigh (1 + N^2) I, calf N^2 I (I = one servo's reflected inertia, hip I). With
+    I on every joint, the N^2 damping outran the explicit 200 Hz integration at 2:1 and the gear servo chattered at
+    100 Hz (stall torque, sign flips on 25 % of steps)."""
+    # ponytail: diagonal armature: exact for the pendulum and for the gear servo alone, (1 + 2 N^2)x too heavy for the
+    # pivot servo alone (crank held, 9x at 2:1); exact would be a crank body mimicking the calf joint, carrying N^2 I
+    i = servos.armature
+    return servos.replace(gear_ratio=n, armature={".*_hip_joint": i, ".*_thigh_joint": (1.0 + n * n) * i, ".*_calf_joint": n * n * i})
+
+
 FOX_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path=os.path.join(FOX_DIR, "usd", "fox.usd"),
@@ -165,6 +177,6 @@ def fox_model_cfg(model_dir: str):
     cfg = FOX_CFG.replace(
         spawn=FOX_CFG.spawn.replace(usd_path=os.path.join(model_dir, "usd", "fox.usd")),
         init_state=FOX_CFG.init_state.replace(pos=(0.0, 0.0, stance["base_height_m"] + 0.008), joint_pos=joints),
-        actuators={"servos": FOX_SERVO_CFG.replace(gear_ratio=n)},
+        actuators={"servos": geared(FOX_SERVO_CFG, n)},
     )
     return cfg, offsets

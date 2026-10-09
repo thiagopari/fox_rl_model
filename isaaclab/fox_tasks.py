@@ -32,7 +32,7 @@ from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import Lo
 
 import os
 
-from fox_cfg import FOX_CFG, FOX_DIR, FOX_SERVO_REAL_CFG, fox_model_cfg
+from fox_cfg import FOX_CFG, FOX_DIR, FOX_SERVO_REAL_CFG, fox_model_cfg, geared
 
 SERVO_JOINTS = [".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"]   # = hip / pivot / gear servo targets
 
@@ -191,7 +191,7 @@ class FoxBlindV7EnvCfg(FoxBlindEnvCfg):
         robot, offsets = fox_model_cfg(os.path.join(FOX_DIR, "v7"))
         n = robot.actuators["servos"].gear_ratio
         self.scene.robot = robot.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.robot.actuators = {"servos": FOX_SERVO_REAL_CFG.replace(gear_ratio=n)}
+        self.scene.robot.actuators = {"servos": geared(FOX_SERVO_REAL_CFG, n)}
         self.actions.joint_pos.use_default_offset = False
         self.actions.joint_pos.offset = offsets
         self.actions.joint_pos.scale = {".*_hip_joint": 0.25, ".*_thigh_joint": 0.25, ".*_calf_joint": 0.25 * n}

@@ -410,6 +410,13 @@ Servo load (`tools/servo_load.py`; trot: 0.75 kg on 2 feet × 1.5), as a share o
 * `Fox-V7-Velocity-Flat-Blind` and `Fox-V7-Velocity-Flat-Blind-Straight` use it (`isaaclab/fox_cfg.py`
   `fox_model_cfg()`): ratio 2, the stance as reset pose, and its servo angles as action offsets.
 * The gear servos' actions are scaled 0.5 rad (0.25 × the ratio), so an action moves the shin as much as at 1:1.
+* The gear servo's reflected rotor inertia scales with the ratio, as its damping does (`fox_cfg.geared`: thigh
+  (1 + N²)·I, calf N²·I).
+  * Without that, the explicit servo damping outran the 200 Hz physics: the 2:1 gear servo chattered at 100 Hz, and
+    the first v7 training run blew up at iteration 1100.
+  * `tools/check_servo_chatter.py` checks it.
+  * This is a diagonal approximation: exact for the pendulum and for the gear servo alone, 9× too heavy for the pivot
+    servo alone.
 * `-Straight` is forward / backward only (vx ±0.3 m/s, no sideways or turning), so the hips always hold the stance. It
   is for the first runs without hip servos.
 
@@ -489,6 +496,7 @@ All checks pass (reports in `validation/`):
 | Isaac Sim: stands 4 s with the servo map (GPU PhysX, 200 Hz) | base 0.155 → 0.14684 m, upright 0.999514 |
 | Isaac Sim: servo map in PhysX (held robot) + foot mimics | gear → shin −0.30, pivot → femur +0.30, pendulum; mimic error 0.0015 rad |
 | `FoxServoActuator.compute()` vs the servo map | 1e-8 N·m, power balance holds |
+| Servo chatter while standing (`tools/check_servo_chatter.py`, 200 Hz physics) | v7: torque sign flips on 2.3 % of steps, mean step change 0.019 N·m (25 % / 0.63 N·m before `fox_cfg.geared`); v6: 0.2 % / 0.008 N·m |
 | `FOX_SERVO_REAL_CFG`: latency, backlash, torque-speed line (`tools/test_fox_actuator.py`) | target delayed exactly N steps, no torque within the play, half the stall torque at half the no-load speed |
 | Pi code in the loop (`tools/check_policy_io.py`, v4 incl. the hip rule): `deploy/fox_pi.py`'s FoxPolicy + ONNX drive the sim | observation = Isaac Lab's (0 error), actions = PyTorch (3.6e-7), output order = servo joints; walks 0.17 m/s (cmd 0.2), turns 0.59 rad/s (cmd 0.6) |
 | v4 hips while walking straight (`fox_play.py --eval`) | hip target 0.0000 rad; hip joint ≤ 0.043 rad (play + compliance) |
@@ -499,5 +507,6 @@ Renders: `validation/mujoco_servo_roles.png` (rows: gear servo, pivot servo, pen
 `mujoco_front_left.png`, `mujoco_poses.png`, `isaacsim_stand.png`.
 Re-run: `~/.venvs/fox_rl/bin/python tools/validate_mujoco.py`, `tools/mechanism_mujoco.py`, `tools/pose_test_mujoco.py`,
 `tools/random_actions_mujoco.py`; `~/isaacenv/bin/python tools/test_fox_actuator.py`; Isaac Sim as above;
-`OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v4/model_2998.pt`
+`OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v4/model_2998.pt`;
+`~/.venvs/fox_rl/bin/python tools/test_fox_pi.py`; `tools/check_servo_chatter.py --task <a -Play task>` (Isaac Lab)
 (add `--device cpu` when the GPU is busy); `~/isaacenv/bin/python deploy/fox_pi.py policies/fox_flat_blind_v4/policy.onnx --dry-run`.

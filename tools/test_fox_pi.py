@@ -25,6 +25,8 @@ pol = fox_pi.FoxPolicy(lambda obs: out, c['scale'], c['offset_rad'])
 assert np.allclose(pol.reset(np.zeros(3), LEVEL, STRAIGHT), offset + scale * np.r_[np.zeros(4), out[4:]]), 'hips held'
 assert np.allclose(pol.step(np.zeros(3), LEVEL, SIDEWAYS), offset + scale * out), 'hips free'
 assert np.allclose(pol.clip(np.full(12, 10.0)) - offset, 0.8 * scale / 0.25), 'clamp: 0.8 rad at 0.25, 1.6 at 0.5'
+lim = fox_pi.FoxPolicy(lambda obs: np.full(12, 9.0), c['scale'], c['offset_rad'], [[-0.5, 0.3]] * 12)
+assert np.allclose(lim.reset(np.zeros(3), LEVEL, SIDEWAYS), 0.3), 'training limits replace the safety span'
 keys = fox_pi.Keys(c['command_ranges'])
 keys.close()
 assert np.allclose(keys.lo, [-0.3, 0.0, 0.0]) and np.allclose(keys.hi, [0.3, 0.0, 0.0]), 'command ranges'

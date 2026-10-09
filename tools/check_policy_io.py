@@ -59,7 +59,7 @@ runner.load(args.checkpoint)
 policy = runner.get_inference_policy(device=env.unwrapped.device)
 onnx_path = os.path.join(os.path.dirname(args.checkpoint), "policy.onnx")
 contract = policy_contract(onnx_path)
-pi = FoxPolicy(onnx_infer(onnx_path), contract["scale"], contract["offset_rad"])
+pi = FoxPolicy(onnx_infer(onnx_path), contract["scale"], contract["offset_rad"], contract.get("target_limits_rad"))
 
 u = env.unwrapped
 robot, cmd_term, act_term = u.scene["robot"], u.command_manager.get_term("base_velocity"), u.action_manager.get_term("joint_pos")

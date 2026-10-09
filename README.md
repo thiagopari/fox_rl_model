@@ -46,7 +46,7 @@ Knee range is limited where a loop would reach a dead point (pins in line, 10° 
 | `isaaclab/fox_tasks.py`, `fox_mdp.py`, `fox_train.py`, `fox_play.py` | RL walking tasks (`Fox-Velocity-Flat`, hardware-ready `Fox-Velocity-Flat-Blind`), PPO training, keyboard driving + eval |
 | `deploy/fox_calib.py` | interactive servo calibration over SSH (angles, home, range, direction, channel → `servo_calib.json`) |
 | `deploy/fox_pi.py` | runs a policy on the robot: Raspberry Pi + BNO055 + PCA9685, 50 Hz, keyboard over SSH; calibration modes |
-| `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`, `fox_flat_blind_v2`, `fox_flat_blind_v3`, `fox_flat_blind_v4` = current), each with its ONNX export and config |
+| `policies/` | trained policies (`fox_flat_v1`, `fox_flat_blind_v1`…`v4` for the 1:1 robot; `fox_v7_straight_v1` for the 2:1 robot, forward / backward), each with its ONNX export and config (v7: + `policy.json`) |
 | `mechanism.json` | servo map, four-bar fits, knee ranges |
 | `meshes/visual`, `meshes/collision` | per-part (`XX_femur.stl`…) and per-tree-link (`XX_thigh_reduced.stl`…) meshes, metres |
 | `print/FL_gear.stl` | the FL gear (CAD body "Spur Gear (15 teeth):2"), print-ready: mm, crank-arm face flat on the bed, gear centre at x = y = 0 |
@@ -221,8 +221,10 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
   | `fox_flat_blind_v2` | IMU only | realistic | 0.016 / 0.010 / 0.042 (0.3 → 0.26 m/s, 0.8 → 0.68 rad/s) | 0.059 | 0.104 s | stands (2.3 steps/s) |
   | `fox_flat_blind_v3` | IMU only | realistic | 0.008 / 0.006 / 0.025 (0.3 → 0.27 m/s, 0.8 → 0.83 rad/s) | 0.042 | 0.132 s | stands (0.5 steps/s, 0.2 cm/s) |
   | **`fox_flat_blind_v4`** | IMU only | realistic, hips held when straight | 0.023 / 0.006 / 0.026 (0.2 → 0.16, 0.3 → 0.23 m/s; 0.8 → 0.79 rad/s) | 0.040 | 0.137 s | stands (0.7 steps/s) |
+  | **`fox_v7_straight_v1`** (2:1 robot) | IMU only | realistic, hips always held | 0.025 m/s / – / 0.019 (forward / backward only: 0.2 → 0.175, 0.3 → 0.247, −0.2 → −0.219 m/s) | 0.069 | 0.100 s | shuffles in place (2.4 steps/s, 6 mm lifts, ≤ 2 cm drift in 4 s) |
 
-  No policy fell in any eval. Why each version changed:
+  No policy fell in any eval. `fox_v7_straight_v1` is scored on its four straight commands (`fox_play.py --eval` skips
+  what a task does not train). Why each version changed:
   * Blind v1 trotted at 7 Hz. The trot term's timing error is in seconds, so short phases score best, and its
     step-length term was mostly silent (bug below).
   * v2's first try drifted at 0.13 m/s at zero command, just above the 0.1 m/s "moving" threshold, to keep the
@@ -279,6 +281,12 @@ Status: verified only against the simulator (`tools/check_policy_io.py`); it has
      Policies without one (v1–v4) mean 0.25 × output around home, 1:1 gears.
    * **Smoke test:** `python3 fox_pi.py policy.onnx --dry-run` (no hardware) must report 0 steps over the 20 ms budget.
      On the robot it prints the same count. If the servo writes push the loop over budget, the I2C bus is too slow.
+   * **v7 (2:1 robot):** `scp policies/fox_v7_straight_v1/{policy.onnx,policy.onnx.data,policy.json} fox-wifi:fox/v7_straight/`.
+     Run `fox_calib.py --gear-ratio 2` once (done 2026-10-09). Then hold the robot and run
+     `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_pi.py v7_straight/policy.onnx'`:
+     * W / S step the forward command by 0.1 m/s (±0.3), space stops, Ctrl-C goes limp;
+     * at start the servos jump to the v7 stance (rear legs ~25° back);
+     * add `--seconds 20 --log run.csv` for a timed, logged run.
 1. **Calibrate** with `fox_calib.py`, an interactive tool: `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_calib.py'`.
    * **Moving:** select a servo, then arrows move it ±1° (A/D ±5°) and `g` types an exact angle.
    * **Recording:** `h` sets home (the CAD stance), `<` and `>` the safe range, `r` the direction, `#` the channel.
@@ -419,6 +427,16 @@ Servo load (`tools/servo_load.py`; trot: 0.75 kg on 2 feet × 1.5), as a share o
     servo alone.
 * `-Straight` is forward / backward only (vx ±0.3 m/s, no sideways or turning), so the hips always hold the stance. It
   is for the first runs without hip servos.
+* Servo targets are clamped where the robot can follow (`actions.joint_pos.clip`, rad from home): hips ±0.5, pivots
+  ±50° (`fox_pi.py`'s default range), gear servos ±90° (their travel with home at 90°). `policy.json` carries the limits
+  to the Pi.
+* Spot's joint position penalty holds the stance (weight −0.2, 5× when commanded to stand). Without it, the policy
+  stood crouched 33 mm low with the rear gear servos parked on their −90° clamp.
+* `fox_play.py --eval` reports the standing posture (body height, targets vs the stance) and how often a target sits
+  on its clamp. `fox_v7_straight_v1`:
+  * stands at 0.143 m (stance 0.151);
+  * targets within 2–6° of the stance at the front and 9–15° at the rear;
+  * 0.0 % of servo-steps on a clamp.
 
 On the robot:
 * print `print/v7_crank_gear_24T.stl` (4) and `v7_rear_hip_spacer.stl` (1). The spacer has M4 clearance holes (Ø4.6);
@@ -499,6 +517,8 @@ All checks pass (reports in `validation/`):
 | Servo chatter while standing (`tools/check_servo_chatter.py`, 200 Hz physics) | v7: torque sign flips on 2.3 % of steps, mean step change 0.019 N·m (25 % / 0.63 N·m before `fox_cfg.geared`); v6: 0.2 % / 0.008 N·m |
 | `FOX_SERVO_REAL_CFG`: latency, backlash, torque-speed line (`tools/test_fox_actuator.py`) | target delayed exactly N steps, no torque within the play, half the stall torque at half the no-load speed |
 | Pi code in the loop (`tools/check_policy_io.py`, v4 incl. the hip rule): `deploy/fox_pi.py`'s FoxPolicy + ONNX drive the sim | observation = Isaac Lab's (0 error), actions = PyTorch (3.6e-7), output order = servo joints; walks 0.17 m/s (cmd 0.2), turns 0.59 rad/s (cmd 0.6) |
+| Pi code in the loop, `fox_v7_straight_v1` (`--task Fox-V7-Velocity-Flat-Blind-Straight-Play`): FoxPolicy with `policy.json` | observation 0 error, actions 4.8e-7, servo targets = the env's processed actions (6e-8 rad), contract (order, 2:1) matches; walks +0.225 / −0.221 m/s (cmd ±0.2) |
+| `fox_v7_straight_v1` on the Pi (`--dry-run`, Thiago's calibration, 2:1) | 150 steps, 0 over budget; servos settle within 10–15° of the planned stance; a 1:1 calibration is refused |
 | v4 hips while walking straight (`fox_play.py --eval`) | hip target 0.0000 rad; hip joint ≤ 0.043 rad (play + compliance) |
 | `deploy/fox_pi.py --dry-run` (fake hardware, 150 steps at 50 Hz) | 0 steps over the 20 ms budget (ONNX via onnx's reference evaluator) |
 | Isaac Lab 3.0.0-beta2 (`isaaclab/fox_sim.py`, 4 robots, servo motions) | runs headless and in the Kit viewer; all upright (≥ 0.945) |

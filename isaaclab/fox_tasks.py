@@ -195,6 +195,15 @@ class FoxBlindV7EnvCfg(FoxBlindEnvCfg):
         self.actions.joint_pos.use_default_offset = False
         self.actions.joint_pos.offset = offsets
         self.actions.joint_pos.scale = {".*_hip_joint": 0.25, ".*_thigh_joint": 0.25, ".*_calf_joint": 0.25 * n}
+        # servo targets stay where the robot can follow (rad from home; policy.json carries them to deploy/fox_pi.py):
+        # hips their joint range, pivots fox_pi's +-50 deg default, gear servos +-90 deg (their travel, home at 90)
+        self.actions.joint_pos.clip = {".*_hip_joint": (-0.5, 0.5), ".*_thigh_joint": (-0.8727, 0.8727),
+                                       ".*_calf_joint": (-1.5708, 1.5708)}
+        # hold the stance: without this the v7 policy stood 33 mm crouched with the rear gear servos parked on their -90 deg
+        # clamp and stepped in place (2.8 steps/foot/s). Spot's joint position penalty: joint-angle distance from the
+        # stance (the default joint pos), 5x when commanded to stand
+        self.rewards.joint_pos = RewTerm(func=spot_mdp.joint_position_penalty, weight=-0.2, params={
+            "asset_cfg": SceneEntityCfg("robot"), "stand_still_scale": 5.0, "velocity_threshold": 0.1})
 
 
 @configclass

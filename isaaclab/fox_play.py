@@ -107,7 +107,8 @@ def main():
 
 def export_contract(env, path):
     """policy.json (deploy/fox_pi.py policy_contract): the servo order, each servo's action scale and offset (rad from
-    the CAD pose: servo target = offset + scale * output), the gear ratio and the command ranges it was trained on."""
+    the CAD pose: servo target = offset + scale * output, clamped to target_limits_rad when the task clips), the gear
+    ratio and the command ranges it was trained on."""
     u = env.unwrapped
     act = u.action_manager.get_term("joint_pos")
     row = lambda v: v[0].tolist() if torch.is_tensor(v) else [float(v)] * act.action_dim   # noqa: E731
@@ -116,6 +117,8 @@ def export_contract(env, path):
     c = {"task": TASK, "servos": ["%s_%s" % (j[:2], servo[j[3:-6]]) for j in act._joint_names],
          "scale": row(act._scale), "offset_rad": row(act._offset), "gear_ratio": float(u.cfg.scene.robot.actuators["servos"].gear_ratio),
          "command_ranges": {k: list(getattr(r, k)) for k in ("lin_vel_x", "lin_vel_y", "ang_vel_z")}}
+    if act.cfg.clip is not None:                            # the targets' limits (rad from home), as the env clamps them
+        c["target_limits_rad"] = act._clip[0].tolist()
     with open(path, "w") as f:
         json.dump(c, f, indent=1)
     print("[INFO] wrote %s: gears %g:1, commands %s" % (path, c["gear_ratio"], c["command_ranges"]))
@@ -134,6 +137,8 @@ def evaluate(env, policy, term):
     act = u.action_manager.get_term("joint_pos")
     hip_a, hip_j = [i for i, n in enumerate(act._joint_names) if n.endswith("_hip_joint")], robot.find_joints(".*_hip_joint")[0]
     hip_target = hip_angle = 0.0
+    t_lo = t_hi = None                                      # servo targets (rad from home) the policy sends
+    stand_t, stand_z, pinned, n_t = [], [], 0, 0             # standing posture; targets sitting on the clamp
     r = u.cfg.commands.base_velocity.ranges                 # only what the task trains (a straight task: no turns)
     inside = lambda c: all(lo - 1e-6 <= v <= hi + 1e-6 for v, (lo, hi) in zip(c, (r.lin_vel_x, r.lin_vel_y, r.ang_vel_z)))  # noqa: E731
     for c in filter(inside, ((0.0, 0.0, 0.0), (0.2, 0.0, 0.0), (0.3, 0.0, 0.0), (-0.2, 0.0, 0.0), (0.0, 0.15, 0.0),
@@ -155,6 +160,15 @@ def evaluate(env, policy, term):
                 hip_target = max(hip_target, float(act.processed_actions[:, hip_a].abs().max()))
                 hip_angle = max(hip_angle, float(robot.data.joint_pos.torch[:, hip_j].abs().max()))
             if k >= 100:
+                t = act.processed_actions
+                t_lo = t.min(0).values if t_lo is None else torch.minimum(t_lo, t.min(0).values)
+                t_hi = t.max(0).values if t_hi is None else torch.maximum(t_hi, t.max(0).values)
+                if act.cfg.clip is not None:
+                    pinned += int(((t - act._clip[:, :, 0]).abs() < 1e-4).logical_or((t - act._clip[:, :, 1]).abs() < 1e-4).sum())
+                n_t += t.numel()
+                if not any(c):
+                    stand_t.append((t - act._offset).abs().mean(0))
+                    stand_z.append(float(robot.data.root_pos_w.torch[:, 2].mean()))
                 acc.append(torch.cat([robot.data.root_lin_vel_b.torch[:, :2], robot.data.root_ang_vel_b.torch[:, 2:]], 1).mean(0))
         got = torch.stack(acc).mean(0).cpu().numpy()
         errs.append(np.abs(got - np.array(c)))
@@ -165,6 +179,16 @@ def evaluate(env, policy, term):
     print("[EVAL] SMOOTH mean servo-command change %.4f rad/step | mean foot swing %.3f s (%d steps) | at zero command %.1f steps/foot/s"
           % (np.mean(steps), np.mean(swings) if swings else 0.0, len(swings), taps / (u.num_envs * len(feet) * 100 * u.step_dt)), flush=True)
     print("[EVAL] HIPS forward/backward: max hip target %.4f rad | max hip joint angle %.4f rad" % (hip_target, hip_angle), flush=True)
+    servo = {"hip": "hip", "thigh": "pivot", "calf": "gear"}
+    if stand_t:
+        dev = np.degrees(torch.stack(stand_t).mean(0).cpu().numpy())
+        print("[EVAL] STAND body height %.3f m (stance %.3f) | mean |target - stance| deg: %s" % (
+            np.mean(stand_z), u.cfg.scene.robot.init_state.pos[2] - 0.008, ", ".join(
+                "%s_%s %.0f" % (j[:2], servo[j[3:-6]], v) for j, v in zip(act._joint_names, dev) if not j.endswith("_hip_joint"))), flush=True)
+    print("[EVAL] CLAMP targets sitting on a limit: %.1f %% of servo-steps" % (100.0 * pinned / max(n_t, 1)), flush=True)
+    print("[EVAL] TARGETS servo deg from home (min / max, all commands): %s" % ", ".join(
+        "%s_%s %+.0f/%+.0f" % (j[:2], servo[j[3:-6]], np.degrees(float(a)), np.degrees(float(b)))
+        for j, a, b in zip(act._joint_names, t_lo, t_hi) if not j.endswith("_hip_joint")), flush=True)
     env.close()
 
 

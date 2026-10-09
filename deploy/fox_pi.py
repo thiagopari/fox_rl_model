@@ -203,17 +203,21 @@ class FoxPolicy:
     """policy.onnx's contract, checked in Isaac Lab by tools/check_policy_io.py. Observation (105 floats): per term the
     last 5 readings, oldest first: gyro (rad/s, body), gravity direction (unit, (0, 0, -1) level), command (vx, vy m/s,
     yaw rad/s), its own previous output as sent (12). Output: servo targets = offset + scale * output (rad from home),
-    SERVOS order; scale / offset come from the policy.json exported with the ONNX (policy_contract), 0.25 / 0 for the
-    v1-v4 policies. For straight commands (no sideways, no turning) the hip outputs are set to 0: the hips hold the
+    clamped to the training limits (or, for v1-v4, a safety span), SERVOS order; scale / offset / limits come from the policy.json
+    exported with the ONNX (policy_contract), 0.25 / 0 / none for the v1-v4 policies. For straight commands (no sideways, no turning) the hip outputs are set to 0: the hips hold the
     stance."""
 
     H = 5
 
-    def __init__(self, infer, scale=0.25, offset=0.0):
+    def __init__(self, infer, scale=0.25, offset=0.0, limits=None):
         self.infer = infer
         self.scale, self.offset = np.broadcast_to(np.asarray(scale, float), (12,)), np.broadcast_to(np.asarray(offset, float), (12,))
-        span = MAX_TARGET * self.scale / 0.25           # the safety clamp, wider for a servo with a larger scale
-        self.lo, self.hi = self.offset - span, self.offset + span
+        if limits is not None:                          # the limits the env clamped targets to in training: the same clamp
+            lim = np.asarray(limits, float)
+            self.lo, self.hi = lim[:, 0].copy(), lim[:, 1].copy()
+        else:                                           # v1-v4: a safety clamp around the stance
+            span = MAX_TARGET * self.scale / 0.25
+            self.lo, self.hi = self.offset - span, self.offset + span
 
     def reset(self, gyro, gravity, command):
         self.hist = [collections.deque([np.array(x, np.float32)] * self.H, maxlen=self.H)    # copies: callers may
@@ -230,7 +234,7 @@ class FoxPolicy:
         self.action = np.array(self.infer(self.obs), np.float32).reshape(12)     # as sent: what the policy observes next
         if not hips_free(command):
             self.action[:4] = 0.0
-        return self.offset + self.scale * self.action
+        return self.clip(self.offset + self.scale * self.action)
 
     def clip(self, targets):
         return np.clip(targets, self.lo, self.hi)
@@ -238,7 +242,8 @@ class FoxPolicy:
 
 def policy_contract(path):
     """policy.json next to policy.onnx (written by isaaclab/fox_play.py): servo order, per-servo scale and offset (rad
-    from home), the gear ratio it was trained for and its command ranges. Without one: the v1-v4 contract."""
+    from home), target limits (if the task clamped them), the gear ratio it was trained for and its command ranges.
+    Without one: the v1-v4 contract."""
     meta = os.path.join(os.path.dirname(os.path.abspath(path)), "policy.json")
     c = {"servos": SERVOS, "scale": [0.25] * 12, "offset_rad": [0.0] * 12, "gear_ratio": 1.0,
          "command_ranges": {"lin_vel_x": [-0.3, 0.3], "lin_vel_y": [-0.2, 0.2], "ang_vel_z": [-1.0, 1.0]}}
@@ -395,7 +400,7 @@ def walk(robot, policy, ranges, steps=None, hold_at_end=False, log=None):
         targets = policy.reset(*read_retry(robot), keys.cmd)
         tick = time.perf_counter()
         while steps is None or k < steps:
-            robot.write(policy.clip(targets))
+            robot.write(targets)
             tick += DT
             late = tick - time.perf_counter()
             if late > 0:
@@ -412,7 +417,7 @@ def walk(robot, policy, ranges, steps=None, hold_at_end=False, log=None):
             if out:
                 out.write("%.4f,%s,%s,%s,%s\n" % (time.perf_counter(), ",".join("%.4f" % v for v in gyro),
                           ",".join("%.4f" % v for v in down), ",".join("%.2f" % v for v in cmd),
-                          ",".join("%.1f" % servo_deg(n, t) for n, t in zip(SERVOS, policy.clip(targets)))))
+                          ",".join("%.1f" % servo_deg(n, t) for n, t in zip(SERVOS, targets))))
             k += 1
         finished = steps is not None and k >= steps
     finally:
@@ -522,7 +527,7 @@ def main():
     print("policy %s: gears %g:1, commands vx %s vy %s yaw %s" % (a.policy, GEAR_RATIO, *(c["command_ranges"][k] for k in
           ("lin_vel_x", "lin_vel_y", "ang_vel_z"))), flush=True)
     steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
-    walk(robot, FoxPolicy(onnx_infer(a.policy), c["scale"], c["offset_rad"]), c["command_ranges"], steps=steps,
+    walk(robot, FoxPolicy(onnx_infer(a.policy), c["scale"], c["offset_rad"], c.get("target_limits_rad")), c["command_ranges"], steps=steps,
          hold_at_end=bool(a.seconds), log=a.log)
 
 

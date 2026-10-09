@@ -128,12 +128,44 @@ def gear_ratio(J):
     return float(ns[0])
 
 
+MAX_FOOT_TILT = np.radians(30.0)   # sole tilt from its flat CAD pose (a tilted sole stands on an edge). v7 rear feet:
+# 15 / 20 / 25 deg cap -> worst servo 66 / 55 / 43 %; uncapped it settles at 25.7 deg (41 %), so 30 is a sanity bound
+
+
+def foot_collision_geom(m, leg):
+    return next(i for i in range(m.ngeom) if m.geom_bodyid[i] == m.body(leg + '_foot').id and m.geom_contype[i])
+
+
+def sole_edges(m, d, g):
+    """The flat sole's two end edges (midpoints across its width) in geom g's frame, from a pose with the sole flat."""
+    mid = m.geom_dataid[g]
+    R = d.geom_xmat[g].reshape(3, 3)
+    w = d.geom_xpos[g] + m.mesh_vert[m.mesh_vertadr[mid]:m.mesh_vertadr[mid] + m.mesh_vertnum[mid]] @ R.T
+    flat = w[w[:, 2] < w[:, 2].min() + 0.0005]                  # the flat bottom: its lowest 0.5 mm
+    out = []
+    for end in (flat[flat[:, 0] < flat[:, 0].min() + 0.0005], flat[flat[:, 0] > flat[:, 0].max() - 0.0005]):
+        c = end.mean(axis=0)
+        c[2] = w[:, 2].min()
+        out.append(R.T @ (c - d.geom_xpos[g]))
+    return out
+
+
+FLAT_SOLE = 0.0001   # m: a sole whose edges' heights differ by less stands flat (~0.4 deg), else on its lower edge
+
+
+def sole_contact(d, g, edges):
+    """Where a foot stands (world): its sole's lower edge, or the sole's centre while it is flat (FLAT_SOLE)."""
+    a, b = (d.geom_xpos[g] + d.geom_xmat[g].reshape(3, 3) @ e for e in edges)
+    return (a + b) / 2 if abs(a[2] - b[2]) < FLAT_SOLE else min(a, b, key=lambda p: p[2])
+
+
 def level_stance(xml, legs, mech, n):
-    """Standing pose of the reduced model: base level, every sole (centre of the foot's flat bottom) at the front feet's
-    CAD height, and each foot placed fore-aft where the larger of its pitch servos' static loads (vertical force at the
-    sole, through the servo map) is smallest. With 1:1 gears that is the foot under the hip; with N:1 the foot moves so the
-    pivot servo takes a share of the load the geared servo no longer needs. Returns joint angles, the base origin height
-    above the soles and per leg the foot offset and both servos' levers (m of torque per N of foot force)."""
+    """Standing pose of the reduced model: base level, every foot standing (sole_contact: on a sole edge, or on the
+    whole sole while flat) at the front feet's CAD height with its sole tilted < MAX_FOOT_TILT, and placed fore-aft where
+    the larger of its pitch servos' static loads (vertical force at the contact, through the servo map) is smallest.
+    With 1:1 gears that is the foot under the hip; with N:1 the foot moves so the pivot servo takes a share of the load
+    the geared servo no longer needs. Returns joint angles, the base origin height above the contacts and per leg the
+    foot offset, tilt, contact and both servos' levers (m of torque per N of foot force)."""
     import mujoco
     from scipy.optimize import least_squares
     m = mujoco.MjModel.from_xml_path(xml)
@@ -150,63 +182,76 @@ def level_stance(xml, legs, mech, n):
         mujoco.mj_comPos(m, d)
 
     sole, foot_geom = {}, {}
-    for leg in legs:                                         # sole point, in the foot geom's mesh frame
-        g = next(i for i in range(m.ngeom) if m.geom_bodyid[i] == m.body(leg + '_foot').id and m.geom_contype[i])
-        mid = m.geom_dataid[g]
-        v = m.mesh_vert[m.mesh_vertadr[mid]:m.mesh_vertadr[mid] + m.mesh_vertnum[mid]]
+    for leg in legs:                                         # sole edges, in the foot geom's mesh frame (CAD pose: flat)
+        g = foot_geom[leg] = foot_collision_geom(m, leg)
         set_leg(leg, 0.0, 0.0)
-        w = d.geom_xpos[g] + v @ d.geom_xmat[g].reshape(3, 3).T
-        flat = w[:, 2] < w[:, 2].min() + 0.0005                  # the sole is flat: centre of its lowest 0.5 mm
-        c = w[flat].mean(axis=0)
-        c[2] = w[:, 2].min()
-        sole[leg], foot_geom[leg] = d.geom_xmat[g].reshape(3, 3).T @ (c - d.geom_xpos[g]), g
+        sole[leg] = sole_edges(m, d, g)
 
-    def sole_world(leg):
+    def at(leg, local):                                      # a point of the foot geom (its frame) in the world
         g = foot_geom[leg]
-        return d.geom_xpos[g] + d.geom_xmat[g].reshape(3, 3) @ sole[leg]
+        return d.geom_xpos[g] + d.geom_xmat[g].reshape(3, 3) @ local
 
-    def levers(leg):                                         # pivot / gear servo torque per N of vertical sole force
+    def candidate(leg, k):                                   # where the foot may stand: heel edge, toe edge, whole sole
+        return sole[leg][k] if k < 2 else (sole[leg][0] + sole[leg][1]) / 2
+
+    def stands_on(leg, k):                                   # candidate k is where the foot really stands (sole_contact)
+        za, zb = (at(leg, e)[2] for e in sole[leg])
+        return abs(za - zb) < FLAT_SOLE if k == 2 else abs(za - zb) >= FLAT_SOLE and (za < zb) == (k == 0)
+
+    def foot_tilt(leg, th, ca):                              # sole pitch from the CAD pose: all pitch axes are parallel
+        return th + ca + P.polyval(ca, mech['legs'][leg]['foot_poly'])
+
+    def levers(leg, p):                                      # pivot / gear servo torque per N of vertical force at p
         jp = np.zeros((3, m.nv))
-        mujoco.mj_jac(m, d, jp, None, sole_world(leg), m.body(leg + '_foot').id)
+        mujoco.mj_jac(m, d, jp, None, p, m.body(leg + '_foot').id)
         slope = P.polyval(d.qpos[qadr(leg + '_calf_joint')], P.polyder(mech['legs'][leg]['foot_poly']))
         t_th = jp[2, dof(leg + '_thigh_joint')]
         t_ca = jp[2, dof(leg + '_calf_joint')] + slope * jp[2, dof(leg + '_foot_joint')]
         return abs(t_th - t_ca), abs(t_ca) / n
-    z_feet = np.mean([sole_world(leg)[2] for leg in legs if leg[0] == 'F'])
+    z_feet = np.mean([at(leg, candidate(leg, 2))[2] for leg in legs if leg[0] == 'F'])   # CAD pose: soles flat
     out, info = {}, {}
     for leg in legs:
         hx = d.xanchor[jid(leg + '_thigh_joint')][0]
         lo, hi = mech['legs'][leg]['knee_range_rad']
 
-        def solve(dx, q0):
+        def solve(dx, q0, k):                                # put candidate k at (hx + dx, z_feet)
+            pt = candidate(leg, k)
+
             def err(q):
                 set_leg(leg, *q)
-                p = sole_world(leg)
+                p = at(leg, pt)
                 return [p[0] - hx - dx, p[2] - z_feet]
             r = least_squares(err, q0, xtol=1e-12, ftol=1e-12)
             set_leg(leg, *r.x)
-            ok = np.abs(r.fun).max() < 1e-6 and lo + 0.05 < r.x[1] < hi - 0.05 and abs(r.x[0]) < 1.15
-            return r.x, ok, max(levers(leg)), float(np.abs(r.fun).max())
-        best = None
-        for sgn in (1.0, -1.0):                              # walk the foot out from under the hip both ways
-            q = np.zeros(2)
-            for dx in sgn * np.arange(0.0, 0.0401, 0.001):
-                q, ok, worst, res = solve(dx, q)
-                if not ok:
-                    break
-                if best is None or worst < best[0]:
-                    best = (worst, dx, q.copy())
+            ok = (np.abs(r.fun).max() < 1e-6 and lo + 0.05 < r.x[1] < hi - 0.05 and abs(r.x[0]) < 1.15
+                  and abs(foot_tilt(leg, *r.x)) < MAX_FOOT_TILT and stands_on(leg, k))
+            return r.x, ok, max(levers(leg, at(leg, pt))), float(np.abs(r.fun).max())
+        best = None                                          # (worst lever, dx, q, candidate)
+        for k in range(3):                                   # each contact point is its own smooth problem
+            for sgn in (1.0, -1.0):                          # walk the foot out from under the hip both ways
+                q = np.zeros(2)
+                for dx in sgn * np.arange(0.0, 0.0401, 0.001):
+                    q1, ok, worst, res = solve(dx, q, k)
+                    if not ok:                               # past a limit, or not standing there: skip, keep the start
+                        continue
+                    q = q1
+                    if best is None or worst < best[0]:
+                        best = (worst, dx, q.copy(), k)
+        if best is None:
+            raise ValueError('%s: no foot position within the knee range and MAX_FOOT_TILT (%.0f deg)' % (leg, np.degrees(MAX_FOOT_TILT)))
+        k = best[3]
         for dx in best[1] + np.arange(-0.001, 0.00101, 0.0001):   # refine around the best millimetre
-            q, ok, worst, res = solve(dx, best[2])
+            q, ok, worst, res = solve(dx, best[2], k)
             if ok and worst < best[0]:
-                best = (worst, dx, q.copy())
-        q, ok, worst, res = solve(best[1], best[2])
+                best = (worst, dx, q.copy(), k)
+        q, ok, worst, res = solve(best[1], best[2], k)
         th, ca = q
         out.update({leg + '_thigh_joint': float(th), leg + '_calf_joint': float(ca),
                     leg + '_foot_joint': float(P.polyval(ca, mech['legs'][leg]['foot_poly']))})
-        lp, lg = levers(leg)
+        lp, lg = levers(leg, at(leg, candidate(leg, k)))
         info[leg] = {'foot_ahead_of_hip_mm': round(1000 * best[1], 2), 'pivot_lever_mm': round(1000 * lp, 2),
-                     'gear_lever_mm': round(1000 * lg, 2), 'residual_m': res}
+                     'gear_lever_mm': round(1000 * lg, 2), 'foot_tilt_deg': round(float(np.degrees(foot_tilt(leg, th, ca))), 2),
+                     'stands_on': ('heel edge', 'toe edge', 'whole sole')[k], 'residual_m': res}
     for leg in legs:
         set_leg(leg, out[leg + '_thigh_joint'], out[leg + '_calf_joint'])
     return out, float(d.xpos[m.body('base').id][2] - z_feet), info

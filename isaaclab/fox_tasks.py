@@ -15,6 +15,7 @@ outputs the 12 SERVO targets (hip, pivot, gear servo angles around the stance, s
 Train with isaaclab/fox_train.py, drive with isaaclab/fox_play.py.
 """
 import gymnasium as gym
+import torch
 
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -26,7 +27,7 @@ from isaaclab.utils.configclass import configclass
 from isaaclab.utils.noise import UniformNoiseCfg as Unoise
 from isaaclab.utils.string import ResolvableString
 from isaaclab_physx.physics import PhysxCfg
-from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg
+from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg, RslRlSymmetryCfg
 import isaaclab_tasks.manager_based.locomotion.velocity.config.spot.mdp as spot_mdp
 import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
 from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
@@ -34,6 +35,7 @@ from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import Lo
 import os
 
 from fox_cfg import FOX_CFG, FOX_DIR, FOX_SERVO_REAL_CFG, fox_model_cfg, geared
+from fox_symmetry import compute_symmetric_states
 
 SERVO_JOINTS = [".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"]   # = hip / pivot / gear servo targets
 
@@ -268,6 +270,47 @@ class FoxBlindV7HomeEnvCfg_PLAY(FoxBlindV7HomeEnvCfg):
         _blind_play(self)
 
 
+FOOT_Z0 = {"F": 0.0179, "R": 0.0279}   # foot body origin height (m) standing at home, front / rear (v7 MuJoCo model)
+
+
+def foot_lift_reward(env, asset_cfg, lift, std, tanh_mult):
+    """Spot's foot_clearance_reward with a target per foot (its standing height + lift): exp(-sum((z - target)^2 *
+    tanh(tanh_mult * |v_xy|)) / std), so only feet moving horizontally (swinging) are asked to be up."""
+    asset = env.scene[asset_cfg.name]
+    z0 = torch.tensor([FOOT_Z0[asset.body_names[i][0]] for i in asset_cfg.body_ids], device=env.device)
+    err = torch.square(asset.data.body_pos_w.torch[:, asset_cfg.body_ids, 2] - (z0 + lift))
+    swing = torch.tanh(tanh_mult * torch.norm(asset.data.body_lin_vel_w.torch[:, asset_cfg.body_ids, :2], dim=2))
+    return torch.exp(-torch.sum(err * swing, dim=1) / std)
+
+
+@configclass
+class FoxBlindV7NaturalEnvCfg(FoxBlindV7HomeEnvCfg):
+    """-Home with a natural walk (fox_v7_home_v1 skated: 5 steps/s, feet lifted 5-8 mm and sliding 130-180 mm/s, a
+    lopsided left / right, body 19 mm low): a slower trot (each phase ~0.25 s), feet lifted 25 mm, planted feet that do
+    not slide, smooth joints, the body at home height, tighter speed tracking. The runner adds left-right symmetry."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.air_time.params["mode_time"] = 0.25
+        self.rewards.gait.weight = 2.0
+        self.rewards.track_lin_vel_xy_exp.params["std"] = 0.15
+        feet = SceneEntityCfg("robot", body_names=".*_foot")
+        self.rewards.foot_lift = RewTerm(func=foot_lift_reward, weight=1.0, params={
+            "lift": 0.025, "std": 0.001, "tanh_mult": 2.0, "asset_cfg": feet})
+        self.rewards.foot_slip = RewTerm(func=spot_mdp.foot_slip_penalty, weight=-1.0, params={
+            "asset_cfg": feet, "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"), "threshold": 1.0})
+        self.rewards.joint_vel = RewTerm(func=spot_mdp.joint_velocity_penalty, weight=-0.01, params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names=SERVO_JOINTS)})
+        self.rewards.base_height = RewTerm(func=mdp.base_height_l2, weight=-100.0, params={"target_height": 0.1508})
+
+
+@configclass
+class FoxBlindV7NaturalEnvCfg_PLAY(FoxBlindV7NaturalEnvCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        _blind_play(self)
+
+
 @configclass
 class FoxBlindPPORunnerCfg(FoxFlatPPORunnerCfg):
     max_iterations = 2000                    # the realistic servos take longer to learn
@@ -290,6 +333,15 @@ class FoxBlindV7HomePPORunnerCfg(FoxBlindPPORunnerCfg):
     experiment_name = "fox_flat_blind_v7_home"
 
 
+@configclass
+class FoxBlindV7NaturalPPORunnerCfg(FoxBlindPPORunnerCfg):
+    experiment_name = "fox_flat_blind_v7_natural"
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.algorithm.symmetry_cfg = RslRlSymmetryCfg(use_data_augmentation=True, data_augmentation_func=compute_symmetric_states)
+
+
 for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Play", "FoxFlatEnvCfg_PLAY", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Blind", "FoxBlindEnvCfg", "FoxBlindPPORunnerCfg"),
@@ -299,7 +351,9 @@ for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunn
                           ("Fox-V7-Velocity-Flat-Blind-Straight", "FoxBlindV7StraightEnvCfg", "FoxBlindV7StraightPPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind-Straight-Play", "FoxBlindV7StraightEnvCfg_PLAY", "FoxBlindV7StraightPPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind-Home", "FoxBlindV7HomeEnvCfg", "FoxBlindV7HomePPORunnerCfg"),
-                          ("Fox-V7-Velocity-Flat-Blind-Home-Play", "FoxBlindV7HomeEnvCfg_PLAY", "FoxBlindV7HomePPORunnerCfg")):
+                          ("Fox-V7-Velocity-Flat-Blind-Home-Play", "FoxBlindV7HomeEnvCfg_PLAY", "FoxBlindV7HomePPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Natural", "FoxBlindV7NaturalEnvCfg", "FoxBlindV7NaturalPPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Natural-Play", "FoxBlindV7NaturalEnvCfg_PLAY", "FoxBlindV7NaturalPPORunnerCfg")):
     if _id not in gym.registry:
         gym.register(id=_id, entry_point="isaaclab.envs:ManagerBasedRLEnv", disable_env_checker=True,
                      kwargs={"env_cfg_entry_point": f"{__name__}:{_cfg}", "rsl_rl_cfg_entry_point": f"{__name__}:{_agent}"})

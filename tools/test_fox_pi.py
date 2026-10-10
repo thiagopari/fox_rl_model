@@ -53,4 +53,23 @@ problems, notes = fox_pi.reach(c)
 assert not problems and len(notes) == 1 and notes[0].startswith('RR_gear'), notes
 fox_pi.NEUTRAL_DEG['RR_gear'] = 40.0                       # the stance itself (-49.6 deg) out of reach
 assert fox_pi.reach(c)[0] and fox_pi.reach(c)[0][0].startswith('RR_gear'), 'stance out of reach'
-print('fox_pi: policy contract, hips held when straight, per-servo clamp, command ranges, gear ratio (limits, IK), servo reach - PASS')
+# IMU glitch filter, with the stand log's glitches (2026-10-09): a 35.6 rad/s gyro sample, a flipped gravity sample
+LVL, FLIP, Z3 = np.array([-0.09, -0.09, -0.992]), np.array([0.252, 0.046, 0.967]), np.zeros(3)
+def fresh():
+    imu = object.__new__(fox_pi.Imu)
+    imu.last, imu.held, imu.glitches = None, 0, 0
+    imu.filter(Z3, LVL)
+    return imu
+imu = fresh()
+assert np.allclose(imu.filter(np.array([0.0, 35.6, 0.0]), LVL)[0], 0.0), 'gyro spike held'
+assert np.allclose(imu.filter(Z3, FLIP)[1], LVL) and imu.glitches == 2, 'gravity flip held'
+imu = fresh()
+seen = [imu.filter(Z3, FLIP)[1] for _ in range(3)]
+assert np.allclose(seen[0], LVL) and np.allclose(seen[1], LVL) and np.allclose(seen[2], FLIP), 'a lasting tilt gets through'
+class Seq:                                                  # settle(): junk first, then steady readings
+    def __init__(self, rs): self.rs = list(rs)
+    def read(self): return self.rs.pop(0)
+fox_pi.DT = 0.0
+assert np.allclose(fox_pi.settle(Seq([(Z3, FLIP)] + [(Z3, LVL)] * 12))[1], LVL), 'settle waits out junk'
+print('fox_pi: policy contract, hips held when straight, per-servo clamp, command ranges, gear ratio (limits, IK), servo reach, '
+      'IMU glitch filter, settle - PASS')

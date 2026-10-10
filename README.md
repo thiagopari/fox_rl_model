@@ -284,8 +284,16 @@ Status: verified only against the simulator (`tools/check_policy_io.py`); it has
    * **v7 (2:1 robot):** `scp policies/fox_v7_straight_v1/{policy.onnx,policy.onnx.data,policy.json} fox-wifi:fox/v7_straight/`.
      Run `fox_calib.py --gear-ratio 2` once (done 2026-10-09). Then hold the robot and run
      `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_pi.py v7_straight/policy.onnx'`:
-     * W / S step the forward command by 0.1 m/s (±0.3), space stops, Ctrl-C goes limp;
-     * at start the servos jump to the v7 stance (rear legs ~25° back);
+     * W / S step the forward command by 0.05 m/s (±0.3), space stops, Ctrl-C goes limp. In the sim, 0.05 / 0.1 /
+       0.15 give 0.038 / 0.093 / 0.137 m/s; backward overshoots at low speed (−0.05 gives −0.095). The legs step about 5
+       times a second at any speed;
+     * at start it waits for steady IMU readings, ramps the servos from home to the v7 stance over 1 s (rear legs ~25°
+       back), and waits again;
+     * IMU glitches are filtered: a reading that rotates faster than 15 rad/s, or turns gravity more than 30° in one
+       step, is replaced by the last good one, at most twice in a row. On the stand the BNO055 gave single 35.6 rad/s
+       and upside-down readings amid level ones, likely servo current spikes resetting its fusion. The run's last line
+       counts them;
+     * `fox_pi.py` refuses a stance a servo can't reach, and warns when a training range runs past 0 / 180°;
      * add `--seconds 20 --log run.csv` for a timed, logged run.
 1. **Calibrate** with `fox_calib.py`, an interactive tool: `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_calib.py'`.
    * **Moving:** select a servo, then arrows move it ±1° (A/D ±5°) and `g` types an exact angle.

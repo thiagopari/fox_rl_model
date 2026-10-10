@@ -298,7 +298,11 @@ def servo_deg(name, rad):
 
 
 class Imu:
-    """The BNO055 alone (--check-imu, --level-imu): never touches the PCA9685, so servos held by another program stay."""
+    """The BNO055 alone (--check-imu, --level-imu): never touches the PCA9685, so servos held by another program stay.
+    Readings pass a glitch filter: on the stand (2026-10-09) the BNO055 gave single readings of 35.6 rad/s (its full
+    scale) and of exactly (0, 0, +9.81) in its own frame (its fusion's default after a reset), amid level ones."""
+
+    GYRO_MAX, JUMP_DEG, HOLD_MAX = 15.0, 30.0, 2   # rad/s; deg of gravity direction per reading; readings held at most
 
     def __init__(self, i2c=None):
         import adafruit_bno055
@@ -310,6 +314,19 @@ class Imu:
             self.imu.mode = adafruit_bno055.IMUPLUS_MODE    # motors. A mode write restarts the fusion (zeros, ~0.1 s): skip
                                                             # it when set, so a second program can't upset a running one
         self.rot = IMU_LEVEL @ np.array(IMU_TO_BODY, float)
+        self.last, self.held, self.glitches = None, 0, 0
+
+    def filter(self, gyro, down):
+        """A reading that rotates faster than GYRO_MAX or turns gravity more than JUMP_DEG since the last good reading
+        (1500 deg/s) is a glitch: the last good reading stands in, at most HOLD_MAX times in a row, so a real fall
+        still shows within 60 ms."""
+        if self.last is not None and self.held < self.HOLD_MAX and (
+                np.abs(gyro).max() > self.GYRO_MAX or float(down @ self.last[1]) < math.cos(math.radians(self.JUMP_DEG))):
+            self.held += 1
+            self.glitches += 1
+            return self.last
+        self.held, self.last = 0, (gyro, down)
+        return self.last
 
     def read(self):
         """(gyro rad/s, gravity unit vector pointing down), body frame; None when the BNO055 drops a reading."""
@@ -320,7 +337,7 @@ class Imu:
         if None in gyro or None in grav or not any(grav):
             return None
         down = -(self.rot @ np.array(grav, float))      # the BNO055 reports gravity pointing up (+z when level)
-        return self.rot @ np.array(gyro, float), down / np.linalg.norm(down)
+        return self.filter(self.rot @ np.array(gyro, float), down / np.linalg.norm(down))
 
 
 class Robot(Imu):
@@ -373,7 +390,7 @@ class FakeRobot:
 class Keys:
     """Keyboard over SSH: W/S, A/D, Q/E step the command (the sim's keys), space or L = stop."""
 
-    STEP = {"w": (0.1, 0, 0), "s": (-0.1, 0, 0), "a": (0, 0.1, 0), "d": (0, -0.1, 0), "q": (0, 0, 0.5), "e": (0, 0, -0.5)}
+    STEP = {"w": (0.05, 0, 0), "s": (-0.05, 0, 0), "a": (0, 0.1, 0), "d": (0, -0.1, 0), "q": (0, 0, 0.5), "e": (0, 0, -0.5)}
 
     def __init__(self, ranges):
         """ranges: the policy's training command ranges (policy_contract): commands are kept inside them."""
@@ -407,6 +424,27 @@ def read_retry(robot):
     raise RuntimeError("no IMU reading for 0.5 s")
 
 
+def settle(robot, n=10, tol_deg=3.0, timeout=2.0):
+    """Wait for n readings in a row whose gravity directions agree within tol_deg (the BNO055 can give junk for a
+    moment after start or a supply dip); returns the last one."""
+    good, end = [], time.perf_counter() + timeout
+    while time.perf_counter() < end:
+        r = read_retry(robot)
+        good = [g for g in good if float(g[1] @ r[1]) > math.cos(math.radians(tol_deg))] + [r]
+        if len(good) >= n:
+            return r
+        time.sleep(DT)
+    raise RuntimeError("IMU readings did not settle within %.0f s" % timeout)
+
+
+def ramp(robot, target, seconds=1.0):
+    """Move all servos from home to target (rad from home) over `seconds` instead of jumping there."""
+    k_max = max(1, int(seconds / DT))
+    for k in range(1, k_max + 1):
+        robot.write(np.asarray(target) * k / k_max)
+        time.sleep(DT)
+
+
 def walk(robot, policy, ranges, steps=None, hold_at_end=False, log=None):
     """50 Hz policy loop. Ends limp (Ctrl-C, tilt, errors); with hold_at_end a run that reaches `steps` instead ends
     at the policy's stance and leaves the servos holding (the PCA9685 keeps pulsing after the program exits). log: CSV
@@ -416,7 +454,9 @@ def walk(robot, policy, ranges, steps=None, hold_at_end=False, log=None):
     if out:
         out.write("t,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,cmd_vx,cmd_vy,cmd_yaw," + ",".join(SERVOS) + "\n")
     try:
-        targets = policy.reset(*read_retry(robot), keys.cmd)
+        settle(robot)
+        ramp(robot, policy.offset)                     # home -> the policy's stance in 1 s, not a 12-servo jump
+        targets = policy.reset(*settle(robot), keys.cmd)
         tick = time.perf_counter()
         while steps is None or k < steps:
             robot.write(targets)
@@ -446,7 +486,8 @@ def walk(robot, policy, ranges, steps=None, hold_at_end=False, log=None):
             print("time up: servos back at the stance and still holding (limp them with fox_calib.py L, or power)")
         else:
             robot.limp()
-        print("%d steps, %d over the 20 ms budget%s" % (k, overruns, "; log: " + log if log else ""))
+        print("%d steps, %d over the 20 ms budget, %d IMU glitches held%s" % (k, overruns, getattr(robot, "glitches", 0),
+              "; log: " + log if log else ""))
         if out:
             out.close()
 

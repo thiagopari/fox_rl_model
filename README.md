@@ -221,7 +221,8 @@ screw line, or sit on a servo's output spline, are one rigid part; leg-linkage p
   | `fox_flat_blind_v2` | IMU only | realistic | 0.016 / 0.010 / 0.042 (0.3 → 0.26 m/s, 0.8 → 0.68 rad/s) | 0.059 | 0.104 s | stands (2.3 steps/s) |
   | `fox_flat_blind_v3` | IMU only | realistic | 0.008 / 0.006 / 0.025 (0.3 → 0.27 m/s, 0.8 → 0.83 rad/s) | 0.042 | 0.132 s | stands (0.5 steps/s, 0.2 cm/s) |
   | **`fox_flat_blind_v4`** | IMU only | realistic, hips held when straight | 0.023 / 0.006 / 0.026 (0.2 → 0.16, 0.3 → 0.23 m/s; 0.8 → 0.79 rad/s) | 0.040 | 0.137 s | stands (0.7 steps/s) |
-  | **`fox_v7_straight_v1`** (2:1 robot) | IMU only | realistic, hips always held | 0.025 m/s / – / 0.019 (forward / backward only: 0.2 → 0.175, 0.3 → 0.247, −0.2 → −0.219 m/s) | 0.069 | 0.100 s | shuffles in place (2.4 steps/s, 6 mm lifts, ≤ 2 cm drift in 4 s) |
+  | **`fox_v7_home_v1`** (2:1 robot, around home) | IMU only | realistic, hips always held | 0.020 m/s / – / 0.042 (forward / backward only: 0.2 → 0.203, 0.3 → 0.247, −0.2 → −0.218 m/s) | 0.094 | 0.112 s | shuffles in place (3.1 steps/s) |
+  | `fox_v7_straight_v1` (2:1 robot) | IMU only | realistic, hips always held | 0.025 m/s / – / 0.019 (forward / backward only: 0.2 → 0.175, 0.3 → 0.247, −0.2 → −0.219 m/s) | 0.069 | 0.100 s | shuffles in place (2.4 steps/s, 6 mm lifts, ≤ 2 cm drift in 4 s) |
 
   No policy fell in any eval. `fox_v7_straight_v1` is scored on its four straight commands (`fox_play.py --eval` skips
   what a task does not train). Why each version changed:
@@ -281,7 +282,10 @@ Status: verified only against the simulator (`tools/check_policy_io.py`); it has
      Policies without one (v1–v4) mean 0.25 × output around home, 1:1 gears.
    * **Smoke test:** `python3 fox_pi.py policy.onnx --dry-run` (no hardware) must report 0 steps over the 20 ms budget.
      On the robot it prints the same count. If the servo writes push the loop over budget, the I2C bus is too slow.
-   * **v7 (2:1 robot):** `scp policies/fox_v7_straight_v1/{policy.onnx,policy.onnx.data,policy.json} fox-wifi:fox/v7_straight/`.
+   * **v7 (2:1 robot):** `scp policies/fox_v7_home_v1/{policy.onnx,policy.onnx.data,policy.json} fox-wifi:fox/v7_home/` (the
+     home-centred policy; `fox_v7_straight_v1` is in `~/fox/v7_straight/`). Re-level the IMU after rebuilding the casing
+     (`fox_pi.py <policy> --level-imu 5`, body level and still). A 15° stale reference made the first ground run read
+     8.8° nose-up, and the policy then held instead of stepping.
      Run `fox_calib.py --gear-ratio 2` once (done 2026-10-09). Then hold the robot and run
      `ssh -t fox-wifi 'cd ~/fox && venv/bin/python fox_pi.py v7_straight/policy.onnx'`:
      * W / S step the forward command by 0.05 m/s (±0.3), space stops, Ctrl-C goes limp. In the sim, 0.05 / 0.1 /
@@ -435,6 +439,12 @@ Servo load (`tools/servo_load.py`; trot: 0.75 kg on 2 feet × 1.5), as a share o
     servo alone.
 * `-Straight` is forward / backward only (vx ±0.3 m/s, no sideways or turning), so the hips always hold the stance. It
   is for the first runs without hip servos.
+* `-Home` (2026-10-10) is `-Straight` around home, the CAD pose, instead of the v7 stance. It resets at home, its zero
+  output is home, and the stance penalty pulls toward home. On the robot home stands steadier, and the v7 stance did not
+  hold under the weight.
+  * `fox_v7_home_v1` stands within 3–5° of home on the pivots (body 0.140 m, home 0.152).
+  * From a dead-still, level IMU it steps at once: at 0.05 m/s, pivots swing 15–20° and gears 25–59°.
+    `fox_v7_straight_v1` commanded only 1–4° on the robot when its IMU read 8.8° nose-up.
 * Servo targets are clamped where the robot can follow (`actions.joint_pos.clip`, rad from home): hips ±0.5, pivots
   ±50° (`fox_pi.py`'s default range), gear servos ±90° (their travel with home at 90°). `policy.json` carries the limits
   to the Pi.

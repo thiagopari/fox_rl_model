@@ -7,6 +7,7 @@ Registers  Fox-Velocity-Flat             training (2048 robots, randomized); pol
            Fox-V7-Velocity-Flat-Blind    the same on the v7 robot (2:1 gear servo drive, no spacer): model in v7/
                                          (tools/build_robot.py --out v7; its USD from tools/isaacsim_import.py)
            Fox-V7-...-Blind-Straight     v7, forward / backward only, hips held at the stance (no hip servos needed)
+           Fox-V7-...-Blind-Home         the same, but around home (the CAD pose) instead of the v7 stance
            Fox-...-Play variants         driving / evaluation (few robots, no pushes or noise)
 Built on Isaac Lab's quadruped velocity task (the Go1 recipe), re-scaled for a 0.54 kg, 15 cm tall robot. The policy
 outputs the 12 SERVO targets (hip, pivot, gear servo angles around the stance, scale 0.25 rad; v7 gear 0.5) that FoxServoActuator
@@ -248,6 +249,26 @@ class FoxBlindV7StraightEnvCfg_PLAY(FoxBlindV7StraightEnvCfg):
 
 
 @configclass
+class FoxBlindV7HomeEnvCfg(FoxBlindV7StraightEnvCfg):
+    """v7, forward / backward from home (the CAD pose): it resets there, the servo targets' zero is there and the stance
+    penalty pulls toward it. On the robot home stands steadier than the load-optimal v7 stance, whose start did not
+    hold under the weight (Thiago, 2026-10-10)."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        r = self.scene.robot
+        self.scene.robot = r.replace(init_state=r.init_state.replace(pos=(0.0, 0.0, 0.16), joint_pos={".*": 0.0}))
+        self.actions.joint_pos.offset = 0.0
+
+
+@configclass
+class FoxBlindV7HomeEnvCfg_PLAY(FoxBlindV7HomeEnvCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        _blind_play(self)
+
+
+@configclass
 class FoxBlindPPORunnerCfg(FoxFlatPPORunnerCfg):
     max_iterations = 2000                    # the realistic servos take longer to learn
     experiment_name = "fox_flat_blind"
@@ -264,6 +285,11 @@ class FoxBlindV7StraightPPORunnerCfg(FoxBlindPPORunnerCfg):
     experiment_name = "fox_flat_blind_v7_straight"
 
 
+@configclass
+class FoxBlindV7HomePPORunnerCfg(FoxBlindPPORunnerCfg):
+    experiment_name = "fox_flat_blind_v7_home"
+
+
 for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Play", "FoxFlatEnvCfg_PLAY", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Blind", "FoxBlindEnvCfg", "FoxBlindPPORunnerCfg"),
@@ -271,7 +297,9 @@ for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunn
                           ("Fox-V7-Velocity-Flat-Blind", "FoxBlindV7EnvCfg", "FoxBlindV7PPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind-Play", "FoxBlindV7EnvCfg_PLAY", "FoxBlindV7PPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind-Straight", "FoxBlindV7StraightEnvCfg", "FoxBlindV7StraightPPORunnerCfg"),
-                          ("Fox-V7-Velocity-Flat-Blind-Straight-Play", "FoxBlindV7StraightEnvCfg_PLAY", "FoxBlindV7StraightPPORunnerCfg")):
+                          ("Fox-V7-Velocity-Flat-Blind-Straight-Play", "FoxBlindV7StraightEnvCfg_PLAY", "FoxBlindV7StraightPPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Home", "FoxBlindV7HomeEnvCfg", "FoxBlindV7HomePPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Home-Play", "FoxBlindV7HomeEnvCfg_PLAY", "FoxBlindV7HomePPORunnerCfg")):
     if _id not in gym.registry:
         gym.register(id=_id, entry_point="isaaclab.envs:ManagerBasedRLEnv", disable_env_checker=True,
                      kwargs={"env_cfg_entry_point": f"{__name__}:{_cfg}", "rsl_rl_cfg_entry_point": f"{__name__}:{_agent}"})

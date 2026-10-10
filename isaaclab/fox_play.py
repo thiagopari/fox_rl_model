@@ -11,7 +11,7 @@ Click into the viewport first (the window needs keyboard focus), then hold:
     L                         stop (zero command)
 Keys add up while held. The camera follows robot 0; green/blue arrows show commanded vs actual velocity.
 Check without a keyboard: add --eval --headless --num_envs 16 (scripted commands, prints achieved velocities).
-Watch without a keyboard: add --demo (loops stand / forward / stop / backward in the viewer). --on-stand holds the body
+Watch without a keyboard: add --demo (loops stand / forward 0.05, 0.1 / stop / backward 0.05, 0.1 m/s in the viewer). --on-stand holds the body
 35 cm up with the legs free and starts from home (the CAD pose): what the robot does on its test stand. Commands stay inside the
 task's training ranges, as on the robot (deploy/fox_pi.py).
 Default checkpoint: the newest model_*.pt under logs/rsl_rl/<the task's experiment>. Also writes exported/policy.onnx next to it
@@ -31,7 +31,7 @@ parser.add_argument("--task", default="Fox-Velocity-Flat-Blind-Play", help="a Fo
 parser.add_argument("--checkpoint", default=None, help="model_*.pt (default: newest for the task's experiment)")
 parser.add_argument("--num_envs", type=int, default=1, help="robots in the scene (robot 0 is the one the camera follows)")
 parser.add_argument("--eval", action="store_true", help="no keyboard: run scripted commands and print commanded vs achieved velocity")
-parser.add_argument("--demo", action="store_true", help="no keyboard: loop stand / forward 0.2, 0.3 / stand / backward 0.2 in the viewer")
+parser.add_argument("--demo", action="store_true", help="no keyboard: loop stand / forward 0.05, 0.1 / stand / backward 0.05, 0.1")
 parser.add_argument("--on-stand", action="store_true", help="the robot held in the air by its body (legs free), starting from home "
                     "(the CAD pose), as on a test stand")
 AppLauncher.add_app_launcher_args(parser)
@@ -103,9 +103,10 @@ def main():
     r = env_cfg.commands.base_velocity.ranges              # the robot's remote stays inside these too
     lo, hi = (torch.tensor([getattr(r, k)[i] for k in ("lin_vel_x", "lin_vel_y", "ang_vel_z")], device=env.unwrapped.device)
               for i in (0, 1))
-    demo = [((0.0, 0.0, 0.0), 2.0), ((0.2, 0.0, 0.0), 4.0), ((0.3, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0), ((-0.2, 0.0, 0.0), 4.0)]
+    demo = [((0.0, 0.0, 0.0), 3.0), ((0.05, 0.0, 0.0), 3.0), ((0.1, 0.0, 0.0), 5.0), ((0.0, 0.0, 0.0), 3.0),   # the robot's
+            ((-0.05, 0.0, 0.0), 3.0), ((-0.1, 0.0, 0.0), 3.0)]                                                 # W/S steps
     if args.demo:
-        print("[INFO] %s with %s: looping %s" % (TASK, path, " / ".join("vx %+.1f for %.0f s" % (c[0], t) for c, t in demo)))
+        print("[INFO] %s with %s: looping %s" % (TASK, path, " / ".join("vx %+.2f for %.0f s" % (c[0], t) for c, t in demo)))
     else:
         keyboard = FoxKeyboard(Se2KeyboardCfg(v_x_sensitivity=0.3, v_y_sensitivity=0.2, omega_z_sensitivity=1.0, sim_device=env.unwrapped.device))
         print("[INFO] Driving %s with %s. Click the viewport, then W/A/S/D, Q/E (L = stop)." % (TASK, path))

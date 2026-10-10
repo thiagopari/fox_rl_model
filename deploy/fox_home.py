@@ -42,7 +42,7 @@ def deltas(leg, motion, deg, n):
 
 
 def check(n):
-    """A swing keeps the knee angle; a knee change keeps the shin's angle and lengthens the leg when + (fox_pi.leg_fk)."""
+    """A swing keeps the knee angle; a knee change keeps the shin's angle and lengthens the leg when + (leg_fk)."""
     for leg in LEGS:
         l1, l2, a1, a2 = fox_pi.LEG_GEOM[leg[0]]
         angle = lambda p, g: (a1 - math.radians(p), a2 + math.radians(g) / n)   # noqa: E731  femur, shin from down

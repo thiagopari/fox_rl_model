@@ -11,6 +11,8 @@ Click into the viewport first (the window needs keyboard focus), then hold:
     L                         stop (zero command)
 Keys add up while held. The camera follows robot 0; green/blue arrows show commanded vs actual velocity.
 Check without a keyboard: add --eval --headless --num_envs 16 (scripted commands, prints achieved velocities).
+Watch without a keyboard: add --demo (loops stand / forward / stop / backward in the viewer). Commands stay inside the
+task's training ranges, as on the robot (deploy/fox_pi.py).
 Default checkpoint: the newest model_*.pt under logs/rsl_rl/<the task's experiment>. Also writes exported/policy.onnx next to it
 (the file the Raspberry Pi would run) and exported/policy.json, how deploy/fox_pi.py turns its output into servo targets.
 """
@@ -28,6 +30,7 @@ parser.add_argument("--task", default="Fox-Velocity-Flat-Blind-Play", help="a Fo
 parser.add_argument("--checkpoint", default=None, help="model_*.pt (default: newest for the task's experiment)")
 parser.add_argument("--num_envs", type=int, default=1, help="robots in the scene (robot 0 is the one the camera follows)")
 parser.add_argument("--eval", action="store_true", help="no keyboard: run scripted commands and print commanded vs achieved velocity")
+parser.add_argument("--demo", action="store_true", help="no keyboard: loop stand / forward 0.2, 0.3 / stand / backward 0.2 in the viewer")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 if not args.headless and not args.visualizer:
@@ -89,13 +92,29 @@ def main():
     term = env.unwrapped.command_manager.get_term("base_velocity")
     if args.eval:
         return evaluate(env, policy, term)
-    keyboard = FoxKeyboard(Se2KeyboardCfg(v_x_sensitivity=0.3, v_y_sensitivity=0.2, omega_z_sensitivity=1.0, sim_device=env.unwrapped.device))
-    print("[INFO] Driving %s with %s. Click the viewport, then W/A/S/D, Q/E (L = stop)." % (TASK, path))
+    r = env_cfg.commands.base_velocity.ranges              # the robot's remote stays inside these too
+    lo, hi = (torch.tensor([getattr(r, k)[i] for k in ("lin_vel_x", "lin_vel_y", "ang_vel_z")], device=env.unwrapped.device)
+              for i in (0, 1))
+    demo = [((0.0, 0.0, 0.0), 2.0), ((0.2, 0.0, 0.0), 4.0), ((0.3, 0.0, 0.0), 3.0), ((0.0, 0.0, 0.0), 2.0), ((-0.2, 0.0, 0.0), 4.0)]
+    if args.demo:
+        print("[INFO] %s with %s: looping %s" % (TASK, path, " / ".join("vx %+.1f for %.0f s" % (c[0], t) for c, t in demo)))
+    else:
+        keyboard = FoxKeyboard(Se2KeyboardCfg(v_x_sensitivity=0.3, v_y_sensitivity=0.2, omega_z_sensitivity=1.0, sim_device=env.unwrapped.device))
+        print("[INFO] Driving %s with %s. Click the viewport, then W/A/S/D, Q/E (L = stop)." % (TASK, path))
     obs = env.get_observations()
-    last = None
+    last, k, period = None, 0, sum(t for _, t in demo)
     while simulation_app.is_running():
         with torch.inference_mode():
-            command = keyboard.advance()
+            if args.demo:
+                t, i = (k * env.unwrapped.step_dt) % period, 0
+                while t >= demo[i][1]:
+                    t -= demo[i][1]
+                    i += 1
+                command = torch.tensor(demo[i][0], device=env.unwrapped.device)
+                k += 1
+            else:
+                command = keyboard.advance()
+            command = torch.maximum(torch.minimum(command, hi), lo)
             term.vel_command_b[:] = command                 # read by the policy's velocity_commands observation
             obs, _, _, _ = env.step(policy(obs))
         now = tuple(np.round(command.cpu().numpy(), 2))

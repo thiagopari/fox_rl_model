@@ -106,12 +106,17 @@ def leg_reach(leg, pivot0=0.0, gear0=0.0):
     return math.sqrt(l1 * l1 + l2 * l2 + 2 * l1 * l2 * math.cos(math.radians(15.0))) - math.hypot(x0, z0)
 
 
-def leg_ik(leg, dh, pivot0=0.0, gear0=0.0):
+def leg_ik(leg, dh, pivot0=0.0, gear0=0.0, radial=False):
     """Pivot and gear targets (rad from home) that make a leg dh mm longer than in the base pose (pivot0, gear0; the
-    CAD stance by default), its ankle staying above the same point."""
+    CAD stance by default), its ankle staying above the same point, or with radial=True on the same line from the hip
+    (the leg keeps its angle)."""
     l1, l2, a1, a2 = LEG_GEOM[leg[0]]
     x, z = leg_fk(leg, pivot0, gear0)
-    z -= dh
+    if radial:
+        s = 1.0 + dh / math.hypot(x, z)
+        x, z = x * s, z * s
+    else:
+        z -= dh
     d = math.hypot(x, z)
     a = (l1 * l1 - l2 * l2 + d * d) / (2.0 * d)               # knee: where the circles |K| = l1 and |K - ankle| = l2 meet,
     h = math.sqrt(max(l1 * l1 - a * a, 0.0))                  # on the side the base pose's knee is on

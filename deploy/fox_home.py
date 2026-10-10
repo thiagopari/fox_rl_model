@@ -9,9 +9,11 @@ CAD pose, side view, angles from straight down (+ = toward the front), legs in v
     rear:  femur +30.5 deg (knee forward),                       shin -44.5 deg
 Both motions are fixed servo ratios, so they do the same whatever the current calibration (N = gear_ratio):
     swing a (+ = foot forward): pivot -a, gear +N a. The knee angle stays; the whole leg turns about the hip.
-    knee  k (+ = straighter):   the pivot servo alone, +-k (the sign flips front / rear, whose knees bend opposite
-                                ways), the gear servo holding: the femur turns and the shin keeps its angle (p / P in
-                                fox_leg_modes.py; moving the gear servo too was lost in its play, 10-15 deg).
+    extend r mm (+ = longer):   both servos, from the leg IK (fox_pi.leg_ik radial): the ankle moves along the line
+                                from the hip axis (where the crank gear turns) to it, so the leg keeps its angle and
+                                only its length changes. At home the front legs are ~97 % straight: they lengthen only
+                                ~2 mm (the IK keeps 15 deg of knee bend), the rear ones ~30 mm; both shorten freely.
+                                The gear servo's share can lag on a reversal by its play (10-15 deg of servo).
 Nothing moves until you pick a leg: its hip, pivot and gear servos jump to their saved homes. A leg you leave keeps
 holding. A move that would take a servo past 0-180 deg is refused.
 """
@@ -25,35 +27,39 @@ import tty
 
 import fox_pi
 from fox_calib import Servos
-from fox_pi import CALIB_FILE, CHANNEL, DIRECTION, LEGS, NEUTRAL_DEG, leg_fk
+from fox_pi import CALIB_FILE, CHANNEL, DIRECTION, LEGS, NEUTRAL_DEG, leg_fk, leg_ik, leg_reach
 
 HELP = """ 1 2 3 4  pick FL / FR / RL / RR (its servos jump to their homes)
- w / s    swing the leg forward / back 1 deg (W / S: 5 deg)    e / d   extend / retract the knee 1 deg (E / D: 5 deg)
+ w / s    swing the leg forward / back 1 deg (W / S: 5 deg)
+ e / d    leg 2 mm longer / shorter at the same angle (E / D: 10 mm)
  h        save this leg's pivot and gear angles as their homes  space   limp this leg     q   quit (all limp)"""
 KEYS = {"w": ("swing", 1.0), "s": ("swing", -1.0), "W": ("swing", 5.0), "S": ("swing", -5.0),
-        "e": ("knee", 1.0), "d": ("knee", -1.0), "E": ("knee", 5.0), "D": ("knee", -5.0)}
+        "e": ("extend", 2.0), "d": ("extend", -2.0), "E": ("extend", 10.0), "D": ("extend", -10.0)}
 
 
-def deltas(leg, motion, deg, n):
-    """(pivot, gear) servo targets in the policy's + sense (deg) for a swing or a knee change of `deg`."""
+def deltas(leg, motion, amount, n, pivot=0.0, gear=0.0):
+    """(pivot, gear) servo changes in the policy's + sense (deg): a swing of `amount` deg, or from the current pose
+    (pivot, gear deg from home) an extension of `amount` mm along the hip-ankle line (None past the leg's reach)."""
     if motion == "swing":
-        return -deg, n * deg
-    return (deg if leg[0] == "R" else -deg), 0.0      # rear knees point forward, front knees back
+        return -amount, n * amount
+    if amount > 0 and amount > leg_reach(leg, math.radians(pivot), math.radians(gear)):
+        return None
+    p, g = leg_ik(leg, amount, math.radians(pivot), math.radians(gear), radial=True)
+    return math.degrees(p) - pivot, math.degrees(g) - gear
 
 
 def check(n):
-    """A swing keeps the knee angle; a knee change keeps the shin's angle and lengthens the leg when + (leg_fk)."""
+    """A swing keeps the knee angle; an extension keeps the leg's angle (hip -> ankle) and changes its length by r."""
     for leg in LEGS:
         l1, l2, a1, a2 = fox_pi.LEG_GEOM[leg[0]]
         angle = lambda p, g: (a1 - math.radians(p), a2 + math.radians(g) / n)   # noqa: E731  femur, shin from down
         f, sh = angle(*deltas(leg, "swing", 5.0, n))
         assert abs((f - sh) - (a1 - a2)) < 1e-12, "swing keeps the knee"
-        f, sh = angle(*deltas(leg, "knee", 5.0, n))
-        assert abs(sh - a2) < 1e-12 and abs(abs(f - sh) - abs(a1 - a2)) > 0.08, \
-            "knee: the femur turns, the shin stays"
         x0, z0 = leg_fk(leg, 0.0, 0.0)
-        x, z = leg_fk(leg, *(math.radians(v) for v in deltas(leg, "knee", 5.0, n)))
-        assert math.hypot(x, z) > math.hypot(x0, z0), "knee + = longer leg"
+        for r in (-10.0, 1.0):
+            x, z = leg_fk(leg, *(math.radians(v) for v in deltas(leg, "extend", r, n)))
+            assert abs(math.atan2(x, -z) - math.atan2(x0, -z0)) < 1e-9, "extension keeps the leg's angle"
+            assert abs(math.hypot(x, z) - math.hypot(x0, z0) - r) < 1e-6, "extension changes the length by r"
 
 
 def save_homes(updates):
@@ -107,16 +113,20 @@ def main():
             elif leg is None:
                 print("pick a leg first (1-4)", flush=True)
             elif c in KEYS:
-                motion, deg = KEYS[c]
-                dp, dg = deltas(leg, motion, deg, n)
+                motion, amount = KEYS[c]
                 p, g = leg + "_pivot", leg + "_gear"
+                dl = deltas(leg, motion, amount, n, (now[p] - NEUTRAL_DEG[p]) * DIRECTION[p], (now[g] - NEUTRAL_DEG[g]) * DIRECTION[g])
+                if dl is None:
+                    print("refused: the leg can't get %.0f mm longer here (it keeps 15 deg of knee bend)" % amount, flush=True)
+                    continue
+                dp, dg = dl
                 tp, tg = now[p] + DIRECTION[p] * dp, now[g] + DIRECTION[g] * dg
                 if not (0.0 <= tp <= 180.0 and 0.0 <= tg <= 180.0):
                     print("refused: pivot %.1f / gear %.1f deg would leave 0-180" % (tp, tg), flush=True)
                     continue
                 go(p, round(tp, 2))
                 go(g, round(tg, 2))
-                status("%s %+.0f deg" % ("swing" if motion == "swing" else "knee", deg))
+                status("swing %+.0f deg" % amount if motion == "swing" else "leg %+.0f mm" % amount)
             elif c == "h":
                 upd = {leg + "_pivot": now[leg + "_pivot"], leg + "_gear": now[leg + "_gear"]}
                 save_homes(upd)

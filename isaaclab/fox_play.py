@@ -11,7 +11,8 @@ Click into the viewport first (the window needs keyboard focus), then hold:
     L                         stop (zero command)
 Keys add up while held. The camera follows robot 0; green/blue arrows show commanded vs actual velocity.
 Check without a keyboard: add --eval --headless --num_envs 16 (scripted commands, prints achieved velocities).
-Watch without a keyboard: add --demo (loops stand / forward / stop / backward in the viewer). Commands stay inside the
+Watch without a keyboard: add --demo (loops stand / forward / stop / backward in the viewer). --on-stand holds the body
+35 cm up with the legs free and starts from home (the CAD pose): what the robot does on its test stand. Commands stay inside the
 task's training ranges, as on the robot (deploy/fox_pi.py).
 Default checkpoint: the newest model_*.pt under logs/rsl_rl/<the task's experiment>. Also writes exported/policy.onnx next to it
 (the file the Raspberry Pi would run) and exported/policy.json, how deploy/fox_pi.py turns its output into servo targets.
@@ -31,6 +32,8 @@ parser.add_argument("--checkpoint", default=None, help="model_*.pt (default: new
 parser.add_argument("--num_envs", type=int, default=1, help="robots in the scene (robot 0 is the one the camera follows)")
 parser.add_argument("--eval", action="store_true", help="no keyboard: run scripted commands and print commanded vs achieved velocity")
 parser.add_argument("--demo", action="store_true", help="no keyboard: loop stand / forward 0.2, 0.3 / stand / backward 0.2 in the viewer")
+parser.add_argument("--on-stand", action="store_true", help="the robot held in the air by its body (legs free), starting from home "
+                    "(the CAD pose), as on a test stand")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 if not args.headless and not args.visualizer:
@@ -78,6 +81,11 @@ def main():
     cmd.resampling_time_range, cmd.rel_standing_envs, cmd.debug_vis = (1.0e9, 1.0e9), 0.0, True   # the keyboard owns it
     env_cfg.viewer.origin_type, env_cfg.viewer.asset_name = "asset_root", "robot"
     env_cfg.viewer.eye, env_cfg.viewer.lookat = (-0.55, -0.55, 0.35), (0.0, 0.0, 0.0)
+    if args.on_stand:                                       # body held in the air, legs free, starting at home
+        robot = env_cfg.scene.robot
+        robot.spawn.articulation_props = robot.spawn.articulation_props.replace(fix_root_link=True)
+        robot.articulation_root_prim_path = "/Geometry"     # fix_root_link moves the articulation root to the base's parent
+        robot.init_state = robot.init_state.replace(pos=(0.0, 0.0, 0.35), joint_pos={".*": 0.0})
     agent_cfg = handle_deprecated_rsl_rl_cfg(load_cfg_from_registry(TASK, "rsl_rl_cfg_entry_point"), metadata.version("rsl-rl-lib"))
     env = RslRlVecEnvWrapper(gym.make(TASK, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
     path = args.checkpoint or newest_checkpoint(agent_cfg.experiment_name)

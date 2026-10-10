@@ -13,7 +13,10 @@ Both motions are fixed servo ratios, so they do the same whatever the current ca
                                 from the hip axis (where the crank gear turns) to it, so the leg keeps its angle and
                                 only its length changes. At home the front legs are ~97 % straight: they lengthen only
                                 ~2 mm (the IK keeps 15 deg of knee bend), the rear ones ~30 mm; both shorten freely.
-                                The gear servo's share can lag on a reversal by its play (10-15 deg of servo).
+                                A longer step than the leg can take goes as far as it can.
+Gear-servo play compensation: the gear path has 10-15 deg of servo play, which swallowed small moves. When a gear
+servo reverses, it is commanded half the play (--gear-play, total, deg) extra in the new direction so the shin moves at
+once. The angles shown and saved are the play's centre, which is what the sim calls the target.
 Nothing moves until you pick a leg: its hip, pivot and gear servos jump to their saved homes. A leg you leave keeps
 holding. A move that would take a servo past 0-180 deg is refused.
 """
@@ -31,10 +34,10 @@ from fox_pi import CALIB_FILE, CHANNEL, DIRECTION, LEGS, NEUTRAL_DEG, leg_fk, le
 
 HELP = """ 1 2 3 4  pick FL / FR / RL / RR (its servos jump to their homes)
  w / s    swing the leg forward / back 1 deg (W / S: 5 deg)
- e / d    leg 2 mm longer / shorter at the same angle (E / D: 10 mm)
+ e / d    leg 5 mm longer / shorter at the same angle (E / D: 15 mm)
  h        save this leg's pivot and gear angles as their homes  space   limp this leg     q   quit (all limp)"""
 KEYS = {"w": ("swing", 1.0), "s": ("swing", -1.0), "W": ("swing", 5.0), "S": ("swing", -5.0),
-        "e": ("extend", 2.0), "d": ("extend", -2.0), "E": ("extend", 10.0), "D": ("extend", -10.0)}
+        "e": ("extend", 5.0), "d": ("extend", -5.0), "E": ("extend", 15.0), "D": ("extend", -15.0)}
 
 
 def deltas(leg, motion, amount, n, pivot=0.0, gear=0.0):
@@ -42,8 +45,10 @@ def deltas(leg, motion, amount, n, pivot=0.0, gear=0.0):
     (pivot, gear deg from home) an extension of `amount` mm along the hip-ankle line (None past the leg's reach)."""
     if motion == "swing":
         return -amount, n * amount
-    if amount > 0 and amount > leg_reach(leg, math.radians(pivot), math.radians(gear)):
-        return None
+    if amount > 0:
+        amount = min(amount, leg_reach(leg, math.radians(pivot), math.radians(gear)))
+        if amount < 0.5:
+            return None
     p, g = leg_ik(leg, amount, math.radians(pivot), math.radians(gear), radial=True)
     return math.degrees(p) - pivot, math.degrees(g) - gear
 
@@ -77,14 +82,17 @@ def save_homes(updates):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="no hardware")
+    ap.add_argument("--gear-play", type=float, default=12.0,
+                    help="gear servo play to take up on a reversal (total deg, 0 = off)")
     args = ap.parse_args()
     n = fox_pi.GEAR_RATIO                                  # servo_calib.json's gear_ratio (fox_calib.py --gear-ratio)
     check(n)
     hw, tty_in = Servos(args.dry_run), sys.stdin.isatty()
-    now, leg = {}, None                                   # servo -> deg sent (holding servos only)
+    now, leg = {}, None                                   # servo -> target deg (the play's centre; holding servos only)
+    comp = {}                                             # gear servo -> play taken up in its last direction (deg)
 
     def go(name, deg):
-        hw.move(CHANNEL[name], deg)
+        hw.move(CHANNEL[name], min(180.0, max(0.0, deg + comp.get(name, 0.0))))
         now[name] = deg
 
     def status(what):
@@ -115,18 +123,24 @@ def main():
             elif c in KEYS:
                 motion, amount = KEYS[c]
                 p, g = leg + "_pivot", leg + "_gear"
-                dl = deltas(leg, motion, amount, n, (now[p] - NEUTRAL_DEG[p]) * DIRECTION[p], (now[g] - NEUTRAL_DEG[g]) * DIRECTION[g])
+                pm, gm = (now[p] - NEUTRAL_DEG[p]) * DIRECTION[p], (now[g] - NEUTRAL_DEG[g]) * DIRECTION[g]   # policy + sense
+                short = motion == "extend" and amount > leg_reach(leg, math.radians(pm), math.radians(gm))
+                dl = deltas(leg, motion, amount, n, pm, gm)
                 if dl is None:
-                    print("refused: the leg can't get %.0f mm longer here (it keeps 15 deg of knee bend)" % amount, flush=True)
+                    print("refused: the leg can't get longer here (it keeps 15 deg of knee bend)", flush=True)
                     continue
                 dp, dg = dl
                 tp, tg = now[p] + DIRECTION[p] * dp, now[g] + DIRECTION[g] * dg
+                if abs(tg - now[g]) > 1e-6:                   # the gear servo moves: take up its play that way
+                    comp[g] = math.copysign(args.gear_play / 2.0, tg - now[g])
                 if not (0.0 <= tp <= 180.0 and 0.0 <= tg <= 180.0):
                     print("refused: pivot %.1f / gear %.1f deg would leave 0-180" % (tp, tg), flush=True)
                     continue
                 go(p, round(tp, 2))
                 go(g, round(tg, 2))
                 status("swing %+.0f deg" % amount if motion == "swing" else "leg %+.0f mm" % amount)
+                if short:
+                    print("  (only as far as it goes: the leg keeps 15 deg of knee bend)", flush=True)
             elif c == "h":
                 upd = {leg + "_pivot": now[leg + "_pivot"], leg + "_gear": now[leg + "_gear"]}
                 save_homes(upd)
@@ -137,6 +151,7 @@ def main():
                     name = "%s_%s" % (leg, s)
                     hw.limp(CHANNEL[name])
                     now.pop(name, None)
+                    comp.pop(name, None)
                 print("%s limp (pick it again to hold it at its home)" % leg, flush=True)
                 leg = None
     finally:

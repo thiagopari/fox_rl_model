@@ -27,6 +27,12 @@ assert np.allclose(pol.step(np.zeros(3), LEVEL, SIDEWAYS), offset + scale * out)
 assert np.allclose(pol.clip(np.full(12, 10.0)) - offset, 0.8 * scale / 0.25), 'clamp: 0.8 rad at 0.25, 1.6 at 0.5'
 lim = fox_pi.FoxPolicy(lambda obs: np.full(12, 9.0), c['scale'], c['offset_rad'], [[-0.5, 0.3]] * 12)
 assert np.allclose(lim.reset(np.zeros(3), LEVEL, SIDEWAYS), 0.3), 'training limits replace the safety span'
+walk = fox_pi.FoxPolicy(lambda obs: out, c['scale'], c['offset_rad'], gait_hz=1.5)
+walk.reset(np.zeros(3), LEVEL, STRAIGHT)
+for k in range(1, 8):
+    walk.step(np.zeros(3), LEVEL, STRAIGHT)
+a = 2 * np.pi * ((1.5 * 7 * fox_pi.DT) % 1.0)          # = fox_tasks.gait_phase after 7 steps: (sin, cos), newest last
+assert walk.obs.size == 115 and np.allclose(walk.obs[0, -2:], [np.sin(a), np.cos(a)], atol=1e-6), 'walk clock'
 keys = fox_pi.Keys(c['command_ranges'])
 keys.close()
 assert np.allclose(keys.lo, [-0.3, 0.0, 0.0]) and np.allclose(keys.hi, [0.3, 0.0, 0.0]), 'command ranges'
@@ -71,5 +77,5 @@ class Seq:                                                  # settle(): junk fir
     def read(self): return self.rs.pop(0)
 fox_pi.DT = 0.0
 assert np.allclose(fox_pi.settle(Seq([(Z3, FLIP)] + [(Z3, LVL)] * 12))[1], LVL), 'settle waits out junk'
-print('fox_pi: policy contract, hips held when straight, per-servo clamp, command ranges, gear ratio (limits, IK), servo reach, '
+print('fox_pi: policy contract, hips held when straight, walk clock, per-servo clamp, command ranges, gear ratio (limits, IK), servo reach, '
       'IMU glitch filter, settle - PASS')

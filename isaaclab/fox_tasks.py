@@ -17,6 +17,7 @@ Train with isaaclab/fox_train.py, drive with isaaclab/fox_play.py.
 import gymnasium as gym
 import torch
 
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
@@ -32,6 +33,7 @@ import isaaclab_tasks.manager_based.locomotion.velocity.config.spot.mdp as spot_
 import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
 from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
 
+import math
 import os
 
 from fox_cfg import FOX_CFG, FOX_DIR, FOX_SERVO_REAL_CFG, fox_model_cfg, geared
@@ -287,25 +289,116 @@ def foot_lift_reward(env, asset_cfg, lift, std, tanh_mult):
 class FoxBlindV7NaturalEnvCfg(FoxBlindV7HomeEnvCfg):
     """-Home with a natural walk (fox_v7_home_v1 skated: 5 steps/s, feet lifted 5-8 mm and sliding 130-180 mm/s, a
     lopsided left / right, body 19 mm low): a slower trot (each phase ~0.25 s), feet lifted 25 mm, planted feet that do
-    not slide, smooth joints, the body at home height, tighter speed tracking. The runner adds left-right symmetry."""
+    not slide, smooth joints, the body at home height, tight speed and heading tracking. The runner adds left-right
+    symmetry. Speeds +-0.15 m/s: the legs' stride at home height (the front legs are ~97 % straight there); asked for
+    +-0.3, the first runs crouched 20-27 mm to lengthen it, still topped out at 0.09-0.12 m/s, and slid their planted
+    feet at 40-110 mm/s (slip weight -1, height -100: ~1 % of the reward each), drifting ~3 deg/s in heading."""
 
     def __post_init__(self):
         super().__post_init__()
+        self.commands.base_velocity.ranges.lin_vel_x = (-0.15, 0.15)
         self.rewards.air_time.params["mode_time"] = 0.25
         self.rewards.gait.weight = 2.0
+        # two widths: 0.15 pulls from afar (the +-0.3 runs learned to walk on it), 0.05 makes accuracy pay. 0.1 alone over
+        # +-0.15 m/s left standing still worth ~2/3 of the term, and the robot stood (run c1, 600 iterations)
         self.rewards.track_lin_vel_xy_exp.params["std"] = 0.15
+        self.rewards.track_lin_fine = RewTerm(func=mdp.track_lin_vel_xy_exp, weight=1.0,
+                                              params={"command_name": "base_velocity", "std": 0.05})
+        self.rewards.track_ang_vel_z_exp.params["std"] = 0.15
         feet = SceneEntityCfg("robot", body_names=".*_foot")
+        # tanh_mult 10: a swinging foot here moves at 0.1-0.3 m/s (Spot's 2 counted it at 20-50 %)
         self.rewards.foot_lift = RewTerm(func=foot_lift_reward, weight=1.0, params={
-            "lift": 0.025, "std": 0.001, "tanh_mult": 2.0, "asset_cfg": feet})
-        self.rewards.foot_slip = RewTerm(func=spot_mdp.foot_slip_penalty, weight=-1.0, params={
+            "lift": 0.025, "std": 0.001, "tanh_mult": 10.0, "asset_cfg": feet})
+        # slip in m/s at 0.1 m/s walking: Spot's -0.5 against its 5.0 tracking at 2 m/s is ~-4 at this speed and weight
+        self.rewards.foot_slip = RewTerm(func=spot_mdp.foot_slip_penalty, weight=-5.0, params={
             "asset_cfg": feet, "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"), "threshold": 1.0})
         self.rewards.joint_vel = RewTerm(func=spot_mdp.joint_velocity_penalty, weight=-0.01, params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=SERVO_JOINTS)})
-        self.rewards.base_height = RewTerm(func=mdp.base_height_l2, weight=-100.0, params={"target_height": 0.1508})
+        # a level body: the runs walked 6-10 deg nose-up on crouched rear legs (a sitting dog) and stood 6 deg nose-up;
+        # flat_orientation_l2 squares the tilt (10 deg cost 0.07/s). Spot's term is the tilt itself: 10 deg, 0.5/s
+        self.rewards.flat_orientation_l2 = None
+        self.rewards.base_orientation = RewTerm(func=spot_mdp.base_orientation_penalty, weight=-3.0,
+                                                params={"asset_cfg": SceneEntityCfg("robot")})
+        # 10 mm low costs 0.15/s (the actor can't sense its height: this shapes its average targets)
+        self.rewards.base_height = RewTerm(func=mdp.base_height_l2, weight=-1500.0, params={"target_height": 0.1508})
+        # both come in once it walks: from the start they kept it standing still (runs c1, d1 at 300-600 iterations).
+        # The +-0.3 runs, at slip -1 and height -100, began walking between iterations 300 and 600 (24 env steps each)
+        for term, start in (("foot_slip", -1.0), ("base_height", -100.0)):
+            final = getattr(self.rewards, term).weight
+            getattr(self.rewards, term).weight = start
+            setattr(self.curriculum, term, CurrTerm(func=mdp.modify_reward_weight,
+                                                    params={"term_name": term, "weight": final, "num_steps": 700 * 24}))
 
 
 @configclass
 class FoxBlindV7NaturalEnvCfg_PLAY(FoxBlindV7NaturalEnvCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        _blind_play(self)
+
+
+WALK_OFFSETS = {"RL": 0.0, "FL": 0.25, "RR": 0.5, "FR": 0.75}   # lateral-sequence walk: each foot a quarter cycle later
+
+
+def gait_phase(env, hz):
+    """The walk's clock: (sin, cos) of 2 pi hz t, t = time since the episode began (deploy/fox_pi.py counts its steps)."""
+    a = 2.0 * math.pi * torch.frac(hz * env.episode_length_buf.float() * env.step_dt)
+    return torch.stack([torch.sin(a), torch.cos(a)], dim=1)
+
+
+def _schedule(env, names, hz, swing):
+    """Per foot: is it the walk's swing foot now (only while walking) and how far through its swing (0-1)."""
+    off = torch.tensor([WALK_OFFSETS[n[:2]] for n in names], device=env.device)
+    t = torch.frac(hz * env.episode_length_buf.float() * env.step_dt).unsqueeze(1)
+    s = torch.remainder(t - off, 1.0) / swing
+    moving = (torch.norm(env.command_manager.get_command("base_velocity")[:, :2], dim=1) > 0.0).unsqueeze(1)
+    return (s < 1.0) & moving, s.clamp(max=1.0)
+
+
+def walk_contact_reward(env, sensor_cfg, hz, swing):
+    """+1 while the scheduled swing foot is off the ground, -1 for each other foot off it (at zero command: all down)."""
+    cs = env.scene.sensors[sensor_cfg.name]
+    up = cs.data.current_air_time.torch[:, sensor_cfg.body_ids] > 0
+    sw, _ = _schedule(env, [cs.body_names[i] for i in sensor_cfg.body_ids], hz, swing)
+    return (up & sw).float().sum(dim=1) - (up & ~sw).float().sum(dim=1)
+
+
+def walk_swing_height_reward(env, asset_cfg, hz, swing, lift, std):
+    """The swing foot follows a lift * sin(pi progress) arc above its standing height: exp(-err^2 / std^2)."""
+    asset = env.scene[asset_cfg.name]
+    names = [asset.body_names[i] for i in asset_cfg.body_ids]
+    sw, s = _schedule(env, names, hz, swing)
+    z0 = torch.tensor([FOOT_Z0[n[0]] for n in names], device=env.device)
+    err = asset.data.body_pos_w.torch[:, asset_cfg.body_ids, 2] - z0 - lift * torch.sin(math.pi * s)
+    return (torch.exp(-torch.square(err) / std ** 2) * sw).sum(dim=1)
+
+
+@configclass
+class FoxBlindV7WalkEnvCfg(FoxBlindV7NaturalEnvCfg):
+    """-Natural with a walk instead of a trot, +-0.1 m/s. Trotting at home the rear pivot servos sat on their torque
+    limit 40-48 % of the time at 0.1 m/s (mean 55-62 % of stall) even with the rear legs crouched 20 mm, which the policy
+    did to unload them, walking 9 deg nose-up whatever the posture penalties. A walk keeps three feet down (each leg
+    carries about a third less), and it is what animals use at these speeds.
+    The policy gets the walk's clock (gait_phase, 1.5 Hz) and is rewarded for the schedule: one foot in the air at a
+    time, rear left, front left, rear right, front right, a quarter cycle each (0.17 s swing, 0.5 s stance), on a 20 mm
+    arc. Without a clock (air-time and one-foot-up terms only) every run stood still: imperfect steps cost more than
+    standing, from scratch and from a trot."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.commands.base_velocity.ranges.lin_vel_x = (-0.1, 0.1)
+        hz, swing = 1.5, 0.25
+        self.observations.policy.gait_phase = ObsTerm(func=gait_phase, params={"hz": hz})
+        self.observations.critic.gait_phase = ObsTerm(func=gait_phase, params={"hz": hz})
+        self.rewards.gait = self.rewards.air_time = self.rewards.foot_lift = None
+        self.rewards.walk_contact = RewTerm(func=walk_contact_reward, weight=2.0, params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"), "hz": hz, "swing": swing})
+        self.rewards.walk_height = RewTerm(func=walk_swing_height_reward, weight=2.0, params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*_foot"), "hz": hz, "swing": swing, "lift": 0.02, "std": 0.01})
+
+
+@configclass
+class FoxBlindV7WalkEnvCfg_PLAY(FoxBlindV7WalkEnvCfg):
     def __post_init__(self):
         super().__post_init__()
         _blind_play(self)
@@ -342,6 +435,11 @@ class FoxBlindV7NaturalPPORunnerCfg(FoxBlindPPORunnerCfg):
         self.algorithm.symmetry_cfg = RslRlSymmetryCfg(use_data_augmentation=True, data_augmentation_func=compute_symmetric_states)
 
 
+@configclass
+class FoxBlindV7WalkPPORunnerCfg(FoxBlindV7NaturalPPORunnerCfg):
+    experiment_name = "fox_flat_blind_v7_walk"
+
+
 for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Play", "FoxFlatEnvCfg_PLAY", "FoxFlatPPORunnerCfg"),
                           ("Fox-Velocity-Flat-Blind", "FoxBlindEnvCfg", "FoxBlindPPORunnerCfg"),
@@ -353,7 +451,9 @@ for _id, _cfg, _agent in (("Fox-Velocity-Flat", "FoxFlatEnvCfg", "FoxFlatPPORunn
                           ("Fox-V7-Velocity-Flat-Blind-Home", "FoxBlindV7HomeEnvCfg", "FoxBlindV7HomePPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind-Home-Play", "FoxBlindV7HomeEnvCfg_PLAY", "FoxBlindV7HomePPORunnerCfg"),
                           ("Fox-V7-Velocity-Flat-Blind-Natural", "FoxBlindV7NaturalEnvCfg", "FoxBlindV7NaturalPPORunnerCfg"),
-                          ("Fox-V7-Velocity-Flat-Blind-Natural-Play", "FoxBlindV7NaturalEnvCfg_PLAY", "FoxBlindV7NaturalPPORunnerCfg")):
+                          ("Fox-V7-Velocity-Flat-Blind-Natural-Play", "FoxBlindV7NaturalEnvCfg_PLAY", "FoxBlindV7NaturalPPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Walk", "FoxBlindV7WalkEnvCfg", "FoxBlindV7WalkPPORunnerCfg"),
+                          ("Fox-V7-Velocity-Flat-Blind-Walk-Play", "FoxBlindV7WalkEnvCfg_PLAY", "FoxBlindV7WalkPPORunnerCfg")):
     if _id not in gym.registry:
         gym.register(id=_id, entry_point="isaaclab.envs:ManagerBasedRLEnv", disable_env_checker=True,
                      kwargs={"env_cfg_entry_point": f"{__name__}:{_cfg}", "rsl_rl_cfg_entry_point": f"{__name__}:{_agent}"})

@@ -207,15 +207,16 @@ def balance(robot, capture=10.0, tol=1.0, gain=1.0, seconds=None, log=None):
 class FoxPolicy:
     """policy.onnx's contract, checked in Isaac Lab by tools/check_policy_io.py. Observation (105 floats): per term the
     last 5 readings, oldest first: gyro (rad/s, body), gravity direction (unit, (0, 0, -1) level), command (vx, vy m/s,
-    yaw rad/s), its own previous output as sent (12). Output: servo targets = offset + scale * output (rad from home),
+    yaw rad/s), its own previous output as sent (12), and for a walk (gait_hz in policy.json) its clock (sin, cos of
+    2 pi gait_hz t, t = steps since reset x DT; 115 floats). Output: servo targets = offset + scale * output (rad from home),
     clamped to the training limits (or, for v1-v4, a safety span), SERVOS order; scale / offset / limits come from the policy.json
     exported with the ONNX (policy_contract), 0.25 / 0 / none for the v1-v4 policies. For straight commands (no sideways, no turning) the hip outputs are set to 0: the hips hold the
     stance."""
 
     H = 5
 
-    def __init__(self, infer, scale=0.25, offset=0.0, limits=None):
-        self.infer = infer
+    def __init__(self, infer, scale=0.25, offset=0.0, limits=None, gait_hz=None):
+        self.infer, self.gait_hz = infer, gait_hz
         self.scale, self.offset = np.broadcast_to(np.asarray(scale, float), (12,)), np.broadcast_to(np.asarray(offset, float), (12,))
         if limits is not None:                          # the limits the env clamped targets to in training: the same clamp
             lim = np.asarray(limits, float)
@@ -225,14 +226,23 @@ class FoxPolicy:
             self.lo, self.hi = self.offset - span, self.offset + span
 
     def reset(self, gyro, gravity, command):
+        self.k = 0
         self.hist = [collections.deque([np.array(x, np.float32)] * self.H, maxlen=self.H)    # copies: callers may
-                     for x in (gyro, gravity, command, np.zeros(12))]                              # reuse their buffers
+                     for x in (gyro, gravity, command, np.zeros(12)) + self._clock()]              # reuse their buffers
         return self._act(command)
 
     def step(self, gyro, gravity, command):
-        for h, x in zip(self.hist, (gyro, gravity, command, self.action)):
+        self.k += 1
+        for h, x in zip(self.hist, (gyro, gravity, command, self.action) + self._clock()):
             h.append(np.array(x, np.float32))
         return self._act(command)
+
+    def _clock(self):
+        """The walk's clock as the last observation term (= isaaclab/fox_tasks.gait_phase), or nothing."""
+        if self.gait_hz is None:
+            return ()
+        a = 2.0 * math.pi * ((self.gait_hz * self.k * DT) % 1.0)
+        return ((math.sin(a), math.cos(a)),)
 
     def _act(self, command):
         self.obs = np.concatenate([np.concatenate(h) for h in self.hist])[None]
@@ -597,7 +607,8 @@ def main():
     if problems:
         raise SystemExit("can't reach the policy's stance: " + "; ".join(problems))
     steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
-    walk(robot, FoxPolicy(onnx_infer(a.policy), c["scale"], c["offset_rad"], c.get("target_limits_rad")), c["command_ranges"], steps=steps,
+    walk(robot, FoxPolicy(onnx_infer(a.policy), c["scale"], c["offset_rad"], c.get("target_limits_rad"), c.get("gait_hz")),
+         c["command_ranges"], steps=steps,
          hold_at_end=bool(a.seconds), log=a.log)
 
 

@@ -5,8 +5,9 @@ observation and runs the ONNX file (onnx's reference evaluator here, onnxruntime
 simulated robot. FoxPolicy takes its scale / offset from the policy.json next to policy.onnx, as on the Pi. Passes when
 FoxPolicy's observation equals Isaac Lab's, its actions equal the PyTorch policy's, its servo targets equal the env's
 processed actions, the contract's servo order and gear ratio match the env, and driven by it the robot walks forward
-(0.2 m/s commanded) and turns (0.6 rad/s), or for a straight task walks backward (-0.2 m/s), at least half as fast as
-commanded (how accurately is fox_play.py --eval's job).
+(0.2 m/s commanded, or the task's top speed if lower) and turns (0.6 rad/s), or for a straight task walks backward, at
+least half as fast as commanded (how accurately is fox_play.py --eval's job). A walk's clock (policy.json gait_hz) is
+part of the observation compared.
 
     OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/check_policy_io.py policies/fox_flat_blind_v3/model_1999.pt
     ... --task Fox-V7-Velocity-Flat-Blind-Straight-Play policies/<v7 policy>/model_*.pt
@@ -45,7 +46,8 @@ from fox_pi import SERVOS, FoxPolicy, hips_free, onnx_infer, policy_contract  # 
 env_cfg = parse_env_cfg(TASK, device=args.device, num_envs=1)
 cmd_cfg = env_cfg.commands.base_velocity
 straight = cmd_cfg.ranges.ang_vel_z == (0.0, 0.0) and cmd_cfg.ranges.lin_vel_y == (0.0, 0.0)
-COMMANDS = ((0.2, 0.0, 0.0), (-0.2, 0.0, 0.0)) if straight else ((0.2, 0.0, 0.0), (0.0, 0.0, 0.6))
+V = min(0.2, cmd_cfg.ranges.lin_vel_x[1])                    # 0.2 m/s, or the task's top speed (the walk's 0.1)
+COMMANDS = ((V, 0.0, 0.0), (-V, 0.0, 0.0)) if straight else ((V, 0.0, 0.0), (0.0, 0.0, 0.6))
 cmd_cfg.resampling_time_range, cmd_cfg.rel_standing_envs = (1.0e9, 1.0e9), 0.0
 # start on COMMANDS[0], so FoxPolicy and the sim's FoxServoAction apply the hip rule to the same command from step 0. (A
 # command changed between steps is gated again by the sim's action term; COMMANDS go straight -> turning, where that
@@ -59,7 +61,8 @@ runner.load(args.checkpoint)
 policy = runner.get_inference_policy(device=env.unwrapped.device)
 onnx_path = os.path.join(os.path.dirname(args.checkpoint), "policy.onnx")
 contract = policy_contract(onnx_path)
-pi = FoxPolicy(onnx_infer(onnx_path), contract["scale"], contract["offset_rad"], contract.get("target_limits_rad"))
+pi = FoxPolicy(onnx_infer(onnx_path), contract["scale"], contract["offset_rad"], contract.get("target_limits_rad"),
+               contract.get("gait_hz"))
 
 u = env.unwrapped
 robot, cmd_term, act_term = u.scene["robot"], u.command_manager.get_term("base_velocity"), u.action_manager.get_term("joint_pos")
@@ -101,10 +104,10 @@ print("CHECK FoxPolicy servo targets (policy.json scale / offset) vs the env's p
 print("CHECK output order = env servo joints (%s ... %s): %s; policy.json servo order and gear ratio %g: %s"
       % (SERVOS[0], SERVOS[-1], order_ok, float(contract["gear_ratio"]), contract_ok))
 if straight:
-    print("CHECK closed loop on FoxPolicy: forward %.3f m/s (cmd 0.2), backward %.3f m/s (cmd -0.2)" % (vel[0, 0], vel[1, 0]))
+    print("CHECK closed loop on FoxPolicy: forward %.3f m/s (cmd %.2f), backward %.3f m/s (cmd %.2f)" % (vel[0, 0], V, vel[1, 0], -V))
 else:
-    print("CHECK closed loop on FoxPolicy: forward %.3f m/s (cmd 0.2), turn %.3f rad/s (cmd 0.6)" % (vel[0, 0], vel[1, 1]))
-ok = pi.obs.size == 105 and obs_err < 1e-5 and act_err < 1e-4 and tgt_err < 1e-5 and order_ok and contract_ok and walks
+    print("CHECK closed loop on FoxPolicy: forward %.3f m/s (cmd %.2f), turn %.3f rad/s (cmd 0.6)" % (vel[0, 0], V, vel[1, 1]))
+ok = pi.obs.size == env.unwrapped.observation_manager.group_obs_dim["policy"][0] and obs_err < 1e-5 and act_err < 1e-4 and tgt_err < 1e-5 and order_ok and contract_ok and walks
 print("CHECK", "PASS" if ok else "FAIL")
 env.close()
 app.close()

@@ -6,9 +6,10 @@ last 2 s of 4 s, on the task's -Play variant (realistic servos, no pushes). Per 
     lift      mean peak foot rise per swing (mm; a dragging foot is < ~10 mm)
     slip      foot speed while in contact (mm/s; planted feet ~0)
     trot      contact correlation of the diagonal pairs FL-RR, FR-RL (+1) and of the front pair FL-FR (-1)
+    feet      mean number of feet down, and the share of time with 2 or fewer (a walk keeps 3-4 down)
     symmetry  left vs right legs: difference of mean joint angle and of swing amplitude (deg; 0 = mirror images)
-    body      pitch / roll std (deg), height mean and std (mm), heading drift (deg/s), smoothness (servo-target
-              change, rad/step)
+    body      pitch / roll mean and std (deg; pitch + = nose down, home is level), height mean and std (mm), heading
+              drift (deg/s), smoothness (servo-target change, rad/step)
 and saves robot 0's motion (--record npz) for tools/replay_gif.py.
 
     OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/gait_report.py --task Fox-V7-Velocity-Flat-Blind-Home-Play \\
@@ -109,10 +110,11 @@ for vx in (float(v) for v in args.commands.split(",")):
     print("cmd %+.2f | track %+.3f m/s | rhythm %.1f steps/foot/s, swing %.3f s, stance %.3f s, duty %.2f | lift %.0f mm | slip %.0f mm/s"
           % (vx, np.mean(H), len(swings) / (u.num_envs * len(feet_b) * T), sw, st, st / (sw + st) if sw + st > 0 else float("nan"),
              1000 * np.mean(lifts) if lifts else 0.0, 1000 * np.mean(S)))
-    print("          | trot corr FL-RR %+.2f FR-RL %+.2f FL-FR %+.2f | symmetry mean / amplitude diff deg: front thigh %.0f/%.0f calf %.0f/%.0f"
-          "  rear thigh %.0f/%.0f calf %.0f/%.0f" % (corr("FL", "RR"), corr("FR", "RL"), corr("FL", "FR"), *[x for s in sym for x in s]))
-    print("          | body pitch std %.1f roll std %.1f deg, height %.0f +- %.1f mm, heading drift %.1f deg/s | target change %.3f rad/step"
-          % (PR[:, :, 0].std(0).mean(), PR[:, :, 1].std(0).mean(), 1000 * np.mean(Z), 1000 * np.std(Z, 0).mean(),
+    print("          | trot corr FL-RR %+.2f FR-RL %+.2f FL-FR %+.2f | feet down %.1f, <= 2 down %.0f %% | symmetry mean / amplitude diff deg:"
+          " front thigh %.0f/%.0f calf %.0f/%.0f  rear thigh %.0f/%.0f calf %.0f/%.0f" % (corr("FL", "RR"), corr("FR", "RL"), corr("FL", "FR"),
+          C.sum(2).mean(), 100 * (C.sum(2) <= 2).mean(), *[x for s in sym for x in s]))
+    print("          | body pitch %+.1f +- %.1f roll %+.1f +- %.1f deg, height %.0f +- %.1f mm, heading drift %.1f deg/s | target change %.3f rad/step"
+          % (PR[:, :, 0].mean(), PR[:, :, 0].std(0).mean(), PR[:, :, 1].mean(), PR[:, :, 1].std(0).mean(), 1000 * np.mean(Z), 1000 * np.std(Z, 0).mean(),
              np.degrees(np.abs(np.mean(YAW, 0))).mean(), np.mean(DA)))
 if args.record:
     np.savez(args.record, pos=np.array(rec["pos"]), quat=np.array(rec["quat"]), joints=np.array(rec["joints"]),

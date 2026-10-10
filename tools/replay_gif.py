@@ -42,6 +42,8 @@ def pose(i):
 
 def frame(i, label=True):
     pose(i)
+    x, y, z, w = rec["quat"][i]
+    cam.azimuth = 90.0 + np.degrees(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))   # side view as it turns
     cam.lookat[:] = [pos[i][0], pos[i][1], 0.08]
     r.update_scene(d, camera=cam)
     img = Image.fromarray(r.render())

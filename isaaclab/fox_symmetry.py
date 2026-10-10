@@ -2,7 +2,8 @@
 is trained on itself and on its mirror image, so left and right legs learn mirror-image motions). The left and right
 legs share joint conventions (servo map, stance offsets), so mirroring swaps FL <-> FR and RL <-> RR and negates the hip
 (abduction) angles; in the body frame y flips: velocities (x, -y, z), rates (-x, y, -z), gravity (x, -y, z), command
-(vx, -vy, -yaw). Front-back is no symmetry here: front and rear legs differ. Terms are found by name in the
+(vx, -vy, -yaw); the walk's clock (fox_tasks.WALK_OFFSETS: left feet half a cycle from the right ones) shifts half a
+cycle. Front-back is no symmetry here: front and rear legs differ. Terms are found by name in the
 observation manager, so history stacking does not matter."""
 import torch
 
@@ -47,6 +48,8 @@ def mirror_group(env, group, obs):
             out[:, start:start + size] = (block.view(n, -1, len(jp))[:, :, jp] * js).view(n, size)
         elif name == "actions":
             out[:, start:start + size] = (block.view(n, -1, len(ap))[:, :, ap] * asg).view(n, size)
+        elif name == "gait_phase":      # the walk's mirror image is the same walk half a cycle on: (sin, cos) -> -(sin, cos)
+            out[:, start:start + size] = -block
         else:
             raise KeyError("fox_symmetry: no mirror rule for observation term %r" % name)
     return out

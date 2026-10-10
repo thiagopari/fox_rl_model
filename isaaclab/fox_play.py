@@ -136,7 +136,7 @@ def main():
 def export_contract(env, path):
     """policy.json (deploy/fox_pi.py policy_contract): the servo order, each servo's action scale and offset (rad from
     the CAD pose: servo target = offset + scale * output, clamped to target_limits_rad when the task clips), the gear
-    ratio and the command ranges it was trained on."""
+    ratio and the command ranges it was trained on, and a walk's clock frequency (gait_hz)."""
     u = env.unwrapped
     act = u.action_manager.get_term("joint_pos")
     row = lambda v: v[0].tolist() if torch.is_tensor(v) else [float(v)] * act.action_dim   # noqa: E731
@@ -147,6 +147,9 @@ def export_contract(env, path):
          "command_ranges": {k: list(getattr(r, k)) for k in ("lin_vel_x", "lin_vel_y", "ang_vel_z")}}
     if act.cfg.clip is not None:                            # the targets' limits (rad from home), as the env clamps them
         c["target_limits_rad"] = act._clip[0].tolist()
+    clock = getattr(u.cfg.observations.policy, "gait_phase", None)
+    if clock is not None:                                   # the walk's clock (fox_tasks.gait_phase), last observation term
+        c["gait_hz"] = float(clock.params["hz"])
     with open(path, "w") as f:
         json.dump(c, f, indent=1)
     print("[INFO] wrote %s: gears %g:1, commands %s" % (path, c["gear_ratio"], c["command_ranges"]))

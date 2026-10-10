@@ -34,7 +34,7 @@ pos, dt = rec["pos"], float(rec["dt"])
 
 def pose(i):
     d.qpos[:] = m.qpos0
-    d.qpos[0:3], d.qpos[3:7] = pos[i], rec["quat"][i]
+    d.qpos[0:3], d.qpos[3:7] = pos[i], np.roll(rec["quat"][i], 1)   # Isaac Lab 3 quaternions are (x, y, z, w), MuJoCo's (w, x, y, z)
     for k, q in zip(adr, rec["joints"][i]):
         d.qpos[k] = q
     mujoco.mj_forward(m, d)

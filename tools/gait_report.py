@@ -7,7 +7,8 @@ last 2 s of 4 s, on the task's -Play variant (realistic servos, no pushes). Per 
     slip      foot speed while in contact (mm/s; planted feet ~0)
     trot      contact correlation of the diagonal pairs FL-RR, FR-RL (+1) and of the front pair FL-FR (-1)
     symmetry  left vs right legs: difference of mean joint angle and of swing amplitude (deg; 0 = mirror images)
-    body      pitch / roll std (deg), height mean and std (mm), smoothness (servo-target change, rad/step)
+    body      pitch / roll std (deg), height mean and std (mm), heading drift (deg/s), smoothness (servo-target
+              change, rad/step)
 and saves robot 0's motion (--record npz) for tools/replay_gif.py.
 
     OMNI_KIT_ACCEPT_EULA=YES ~/isaacenv/bin/python tools/gait_report.py --task Fox-V7-Velocity-Flat-Blind-Home-Play \\
@@ -61,7 +62,7 @@ idx = {n: fnames.index(n) for n in ("FL", "FR", "RL", "RR")}
 print("%s  %s" % (args.task, args.checkpoint))
 for vx in (float(v) for v in args.commands.split(",")):
     down = cs.data.current_contact_time.torch[:, feet_s] > 0
-    C, Z, S, J, PR, H, DA, swings, stances, lifts = [], [], [], [], [], [], [], [], [], []
+    C, Z, S, J, PR, H, DA, YAW, swings, stances, lifts = [], [], [], [], [], [], [], [], [], [], []
     peak = torch.zeros(u.num_envs, len(feet_b), device=u.device)
     prev_a = u.action_manager.action.clone()
     for k in range(200):
@@ -83,6 +84,7 @@ for vx in (float(v) for v in args.commands.split(",")):
             g = robot.data.projected_gravity_b.torch
             PR.append(np.degrees(np.stack([torch.asin(g[:, 0].clamp(-1, 1)).cpu().numpy(), torch.asin(g[:, 1].clamp(-1, 1)).cpu().numpy()], 1)))
             H.append(robot.data.root_lin_vel_b.torch[:, 0].cpu().numpy())
+            YAW.append(robot.data.root_ang_vel_w.torch[:, 2].cpu().numpy())
             DA.append(float(((u.action_manager.action - prev_a) * act._scale).abs().mean()))
             if td.any():
                 lifts += (peak_prev[td] - fz[td]).tolist()
@@ -109,8 +111,9 @@ for vx in (float(v) for v in args.commands.split(",")):
              1000 * np.mean(lifts) if lifts else 0.0, 1000 * np.mean(S)))
     print("          | trot corr FL-RR %+.2f FR-RL %+.2f FL-FR %+.2f | symmetry mean / amplitude diff deg: front thigh %.0f/%.0f calf %.0f/%.0f"
           "  rear thigh %.0f/%.0f calf %.0f/%.0f" % (corr("FL", "RR"), corr("FR", "RL"), corr("FL", "FR"), *[x for s in sym for x in s]))
-    print("          | body pitch std %.1f roll std %.1f deg, height %.0f +- %.1f mm | target change %.3f rad/step"
-          % (PR[:, :, 0].std(0).mean(), PR[:, :, 1].std(0).mean(), 1000 * np.mean(Z), 1000 * np.std(Z, 0).mean(), np.mean(DA)))
+    print("          | body pitch std %.1f roll std %.1f deg, height %.0f +- %.1f mm, heading drift %.1f deg/s | target change %.3f rad/step"
+          % (PR[:, :, 0].std(0).mean(), PR[:, :, 1].std(0).mean(), 1000 * np.mean(Z), 1000 * np.std(Z, 0).mean(),
+             np.degrees(np.abs(np.mean(YAW, 0))).mean(), np.mean(DA)))
 if args.record:
     np.savez(args.record, pos=np.array(rec["pos"]), quat=np.array(rec["quat"]), joints=np.array(rec["joints"]),
              names=np.array(robot.joint_names), cmd=np.array(rec["cmd"]), dt=u.step_dt,

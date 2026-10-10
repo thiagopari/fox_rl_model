@@ -9,8 +9,9 @@ CAD pose, side view, angles from straight down (+ = toward the front), legs in v
     rear:  femur +30.5 deg (knee forward),                       shin -44.5 deg
 Both motions are fixed servo ratios, so they do the same whatever the current calibration (N = gear_ratio):
     swing a (+ = foot forward): pivot -a, gear +N a. The knee angle stays; the whole leg turns about the hip.
-    knee  k (+ = straighter):   femur and shin each turn k/2 toward each other (pivot +-k/2, gear +-N k/2; the sign
-                                flips front / rear, whose knees bend opposite ways). The leg's direction stays.
+    knee  k (+ = straighter):   the pivot servo alone, +-k (the sign flips front / rear, whose knees bend opposite
+                                ways), the gear servo holding: the femur turns and the shin keeps its angle (p / P in
+                                fox_leg_modes.py; moving the gear servo too was lost in its play, 10-15 deg).
 Nothing moves until you pick a leg: its hip, pivot and gear servos jump to their saved homes. A leg you leave keeps
 holding. A move that would take a servo past 0-180 deg is refused.
 """
@@ -37,19 +38,19 @@ def deltas(leg, motion, deg, n):
     """(pivot, gear) servo targets in the policy's + sense (deg) for a swing or a knee change of `deg`."""
     if motion == "swing":
         return -deg, n * deg
-    s = 1.0 if leg[0] == "R" else -1.0              # rear knees point forward, front knees back
-    return s * deg / 2.0, s * n * deg / 2.0
+    return (deg if leg[0] == "R" else -deg), 0.0      # rear knees point forward, front knees back
 
 
 def check(n):
-    """A swing keeps the knee angle; a knee change keeps the leg's direction and lengthens it when + (fox_pi.leg_fk)."""
+    """A swing keeps the knee angle; a knee change keeps the shin's angle and lengthens the leg when + (fox_pi.leg_fk)."""
     for leg in LEGS:
         l1, l2, a1, a2 = fox_pi.LEG_GEOM[leg[0]]
         angle = lambda p, g: (a1 - math.radians(p), a2 + math.radians(g) / n)   # noqa: E731  femur, shin from down
         f, sh = angle(*deltas(leg, "swing", 5.0, n))
         assert abs((f - sh) - (a1 - a2)) < 1e-12, "swing keeps the knee"
         f, sh = angle(*deltas(leg, "knee", 5.0, n))
-        assert abs((f + sh) - (a1 + a2)) < 1e-12, "knee keeps the leg's direction"
+        assert abs(sh - a2) < 1e-12 and abs(abs(f - sh) - abs(a1 - a2)) > 0.08, \
+            "knee: the femur turns, the shin stays"
         x0, z0 = leg_fk(leg, 0.0, 0.0)
         x, z = leg_fk(leg, *(math.radians(v) for v in deltas(leg, "knee", 5.0, n)))
         assert math.hypot(x, z) > math.hypot(x0, z0), "knee + = longer leg"

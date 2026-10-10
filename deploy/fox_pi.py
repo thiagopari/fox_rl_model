@@ -253,6 +253,25 @@ def policy_contract(path):
     return c
 
 
+def reach(contract):
+    """Each servo's stance and training target limits in servo degrees with this calibration. Returns (problems, notes):
+    a stance outside the servo's 0-180 travel (refuse), and the part of a training range past it (gets clamped: a
+    servo there sits pinned at its end). One pinion tooth moves a gear servo's home 30 deg."""
+    problems, notes = [], []
+    lim = contract.get("target_limits_rad")
+    for i, n in enumerate(SERVOS):
+        h, d = NEUTRAL_DEG[n], DIRECTION[n]
+        st = h + d * DEG_PER_RAD * contract["offset_rad"][i]
+        if not 0.0 <= st <= 180.0:
+            problems.append("%s: the stance needs %.0f deg (home %.0f), past the servo's 0-180" % (n, st, h))
+        if lim and not n.endswith("_hip"):
+            lo, hi = sorted(h + d * DEG_PER_RAD * v for v in lim[i])
+            if lo < -0.5 or hi > 180.5:                 # (1.5708 rad is 90.0002 deg: no alarm for a home at 90)
+                notes.append("%s: training range %.0f..%.0f deg, the servo stops at %s (home %.0f)" % (
+                    n, lo, hi, "0" if lo < -0.5 else "180", h))
+    return problems, notes
+
+
 def hips_free(command):
     """Sideways or turning asked for; otherwise the hips hold the stance (= isaaclab/fox_mdp.py hips_free)."""
     return abs(command[1]) > 1e-3 or abs(command[2]) > 1e-3
@@ -526,6 +545,11 @@ def main():
                          % (a.policy, float(c["gear_ratio"]), GEAR_RATIO))
     print("policy %s: gears %g:1, commands vx %s vy %s yaw %s" % (a.policy, GEAR_RATIO, *(c["command_ranges"][k] for k in
           ("lin_vel_x", "lin_vel_y", "ang_vel_z"))), flush=True)
+    problems, notes = reach(c)
+    for line in notes:
+        print("WARNING " + line + ": targets past it are clamped (re-mesh a tooth to centre it)", flush=True)
+    if problems:
+        raise SystemExit("can't reach the policy's stance: " + "; ".join(problems))
     steps = int(a.seconds / DT) if a.seconds else 150 if a.dry_run else None
     walk(robot, FoxPolicy(onnx_infer(a.policy), c["scale"], c["offset_rad"], c.get("target_limits_rad")), c["command_ranges"], steps=steps,
          hold_at_end=bool(a.seconds), log=a.log)

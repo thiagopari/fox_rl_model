@@ -45,4 +45,12 @@ for leg in ('FL', 'RR'):
     p1, g1 = fox_pi.leg_ik(leg, -10.0)
     fox_pi.GEAR_RATIO = 2.0
     assert abs(p1 - piv) < 1e-12 and abs(2.0 * g1 - gear) < 1e-12, '2:1: same pivot angle, twice the gear servo angle'
-print('fox_pi: policy contract, hips held when straight, per-servo clamp, command ranges, gear ratio (limits, IK) - PASS')
+c = {'offset_rad': [0.0] * 11 + [-0.865], 'target_limits_rad': [[-0.5, 0.5]] * 4 + [[-0.8727, 0.8727]] * 4 + [[-1.5708, 1.5708]] * 4}
+fox_pi.NEUTRAL_DEG.update({n: 90.0 for n in fox_pi.SERVOS}); fox_pi.DIRECTION.update({n: 1 for n in fox_pi.SERVOS})
+assert fox_pi.reach(c) == ([], []), 'homes at 90: stance and ranges reachable'
+fox_pi.NEUTRAL_DEG['RR_gear'] = 60.0                       # 2026-10-09: RR gear pinned at 0 deg on the stand
+problems, notes = fox_pi.reach(c)
+assert not problems and len(notes) == 1 and notes[0].startswith('RR_gear'), notes
+fox_pi.NEUTRAL_DEG['RR_gear'] = 40.0                       # the stance itself (-49.6 deg) out of reach
+assert fox_pi.reach(c)[0] and fox_pi.reach(c)[0][0].startswith('RR_gear'), 'stance out of reach'
+print('fox_pi: policy contract, hips held when straight, per-servo clamp, command ranges, gear ratio (limits, IK), servo reach - PASS')

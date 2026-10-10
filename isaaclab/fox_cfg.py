@@ -53,6 +53,9 @@ class FoxServoActuator(ActuatorBase):
         self._delay = DelayBuffer(cfg.max_delay, self._num_envs, device=self._device)
         self._play = torch.zeros(self._num_envs, 3 * len(LEGS), device=self._device)   # backlash of each servo, this episode
         self._play_max = torch.tensor(cfg.backlash, device=self._device).repeat_interleave(len(LEGS))
+        self._play_min = torch.tensor(cfg.backlash_min, device=self._device).repeat_interleave(len(LEGS))
+        self._stic = torch.zeros_like(self._play)                                    # stiction of each servo, this episode
+        self._stic_max = torch.tensor(cfg.stiction, device=self._device).repeat_interleave(len(LEGS))
 
     def reset(self, env_ids):
         n = self._num_envs if env_ids is None or env_ids == slice(None) else len(env_ids)
@@ -60,7 +63,8 @@ class FoxServoActuator(ActuatorBase):
         self._delay.set_time_lag(torch.randint(self.cfg.min_delay, self.cfg.max_delay + 1, (n,), dtype=torch.int,
                                                device=self._device), env_ids)
         self._delay.reset(env_ids)
-        self._play[ids] = torch.rand(n, 3 * len(LEGS), device=self._device) * self._play_max
+        self._play[ids] = self._play_min + torch.rand(n, 3 * len(LEGS), device=self._device) * (self._play_max - self._play_min)
+        self._stic[ids] = torch.rand(n, 3 * len(LEGS), device=self._device) * self._stic_max
 
     def servo_angles(self, joint_pos: torch.Tensor) -> torch.Tensor:
         """(num_envs, 12) servo angles [hip, pivot, gear] x legs from joint angles (also for observations / hardware)."""
@@ -74,6 +78,7 @@ class FoxServoActuator(ActuatorBase):
         s, v = self.servo_angles(joint_pos), self.servo_angles(joint_vel)
         e = tgt[:, idx] - s
         t = torch.where(e.abs() < self._play, 0.0, kp * (e - torch.sign(e) * self._play) - kd * v)   # free play: no torque
+        t = torch.sign(t) * torch.clamp(t.abs() - self._stic, min=0.0)   # stiction: torque spent before the output moves
         if self.cfg.torque_speed:                       # DC motor: stall torque at rest, none at the no-load speed
             t = torch.clamp(t, -lim * torch.clamp(1.0 + v / vmax, 0.0, 1.0), lim * torch.clamp(1.0 - v / vmax, 0.0, 1.0))
         else:
@@ -97,7 +102,10 @@ class FoxServoActuatorCfg(ActuatorBaseCfg):
     class_type: type = FoxServoActuator
     min_delay: int = 0                  # command latency in physics steps (5 ms), drawn per episode in [min, max]
     max_delay: int = 0
-    backlash: tuple = (0.0, 0.0, 0.0)   # max free play of the hip / pivot / gear servos (rad), drawn per episode in [0, max]
+    backlash: tuple = (0.0, 0.0, 0.0)   # max free play of the hip / pivot / gear servos (rad), drawn per episode in [min, max]
+    backlash_min: tuple = (0.0, 0.0, 0.0)
+    stiction: tuple = (0.0, 0.0, 0.0)   # max torque (N m) each servo spends before its output moves (friction, load
+                                        # stiction), drawn per episode in [0, max]
     torque_speed: bool = False          # limit torque by speed: stall torque at rest, 0 at velocity_limit (no-load speed)
     gear_ratio: float = 1.0             # pinion turns per crank-gear turn: v6 12:12 = 1, v7 12:24 = 2
 

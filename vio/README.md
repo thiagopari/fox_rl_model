@@ -43,6 +43,39 @@ the synthetic robot walks at a constant 0.2 m/s.
   | Bias random walk | 1e-3 m/s³/√Hz | 1e-4 rad/s²/√Hz | **assumed**: the datasheet gives no figure |
   | Quantisation | 0.01 m/s² | 1/16 °/s | BNO055 output LSB |
 
+## Where it breaks: degradation sweep (round 2, 2026-10-12)
+
+`vio/sweep.py` re-runs OpenVINS on modified copies of the same `sim_v1` images and IMU, with no
+re-render. There is one seed per level and the bag plays at 2x. The best case is 0.0152 m ATE.
+The results are in [`results/sweep.csv`](results/sweep.csv).
+
+![sweep](figures/sweep.png)
+
+1. **Camera-IMU time offset is the biggest calibration risk.**
+   - When the offset is missing from the calibration, ATE is 0.29 m at 5 ms and 0.59 m at 10 ms.
+   - At 20 ms it diverges (1007 m).
+   - With OpenVINS's online time-offset calibration turned on, a 40 ms offset still comes back to
+     0.062 m. Measure the offset with Kalibr, or leave online calibration on.
+2. **Mounting-angle error is milder.**
+   - Rotation error in T_cam_imu: 1 deg gives 0.014 m, 2 deg 0.017 m, 5 deg 0.073 m.
+   - With online extrinsic calibration, 5 deg comes back to 0.028 m.
+3. **Foot-strike vibration breaks it first.**
+   - The model is a damped 25 Hz ring at every trot touchdown, in the IMU only.
+   - A 2 m/s^2 accelerometer envelope gives 0.025 m. 5 m/s^2 diverges (5.7 m) and 10 m/s^2 gives 720 m.
+   - On the real robot, measure the vibration (`record_euroc.py`'s IMU-only mode while walking)
+     before trusting VIO. If it is large, isolate the IMU or the camera-IMU bracket.
+4. **Bias drift, image noise and blur barely matter at these levels.**
+   - A 10x stronger bias random walk than assumed: 0.021 m.
+   - Shot and read noise up to gain 4: 0.029 m. The VO baseline goes from 0.028 to 0.039 m over the same range.
+   - Rotation-only motion blur up to a 33 ms exposure: 0.010-0.016 m.
+   - With one seed per level, differences of about 1 cm are within run-to-run noise.
+
+Not covered yet:
+- The vibration is applied to the IMU only, so the camera does not shake.
+- There is no rolling shutter, and the speed is constant.
+- Not checked: whether robot parts appear in the camera view. The bottom of `figures/cam0_sample.png`
+  shows dark shapes, so check and mask them before using real data.
+
 ## How to run
 ```bash
 python3 -m venv ~/.venvs/fox_vio && ~/.venvs/fox_vio/bin/pip install mujoco==3.15.0 numpy scipy \

@@ -73,8 +73,10 @@ The results are in [`results/sweep.csv`](results/sweep.csv).
 Not covered yet:
 - The vibration is applied to the IMU only, so the camera does not shake.
 - There is no rolling shutter, and the speed is constant.
-- Not checked: whether robot parts appear in the camera view. The bottom of `figures/cam0_sample.png`
-  shows dark shapes, so check and mask them before using real data.
+- Robot in view: checked with MuJoCo segmentation over 40 frames spread across the run. No robot geom ever
+  appears (0.00 % of pixels); the dark shapes at the bottom of `figures/cam0_sample.png` are floor texture. The
+  legs stay at the home pose in this kinematic sim, so a swinging front leg may still clip the bottom edge on the
+  real robot. Check the first real recording and add a mask if it does.
 
 ## How to run
 ```bash

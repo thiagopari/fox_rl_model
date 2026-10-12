@@ -39,7 +39,7 @@ ACC_LSB, GYR_LSB = 0.01, np.radians(1 / 16)          # BNO055 output resolution 
 # Trajectory: stand, ramp to 0.2 m/s, then (duration s, yaw change deg) segments. Trot-like overlay scaled by speed:
 # 6 mm peak-to-peak bob and 1 deg pitch at 3 Hz, 1.5 deg roll at 1.5 Hz (chosen, not measured from a policy run;
 # the v7 policies walk straight only, so the turns are an assumption).
-STAND, RAMP, V, Z0 = 2.0, 1.0, 0.2, 0.147            # Z0: Isaac Sim standing height of the base (README)
+STAND, RAMP, V, Z0 = 5.0, 1.0, 0.2, 0.147            # 5 s stand: OpenVINS static init needs ~3 s still. Z0: README
 PLAN = [(12, 0), (4, 90), (10, 0), (4, 90), (12, 0), (4, 90), (5, 0)]
 START = np.array([-1.3, -1.5])
 BOB, F_BOB, PITCH_A, ROLL_A = 0.003, 3.0, np.radians(1.0), np.radians(1.5)

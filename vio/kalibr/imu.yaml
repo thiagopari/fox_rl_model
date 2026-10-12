@@ -1,0 +1,12 @@
+# Kalibr IMU noise model, BNO055 (raw ACCGYRO mode, ~200 Hz polling by vio/pi/record_euroc.py).
+# Noise densities: BNO055 datasheet BST-BNO055-DS000 rev 1.8, Table 0-2, typical values:
+#   accel 150 ug/sqrt(Hz) = 150e-6 * 9.80665 m/s^2/sqrt(Hz); gyro 0.014 deg/s/sqrt(Hz).
+# Random walks: the datasheet has NO bias-instability / random-walk figure -> ASSUMED below. Replace all four with an
+# Allan-variance fit of a >= 2 h static log (record_euroc.py --no-camera --seconds 7200). On a walking robot servo
+# vibration adds broadband noise: if Kalibr's IMU residuals look too large, inflate the noise values.
+accelerometer_noise_density: 1.471e-03   # [m/s^2/sqrt(Hz)]   datasheet typ
+accelerometer_random_walk:   1.0e-03     # [m/s^3/sqrt(Hz)]   ASSUMED
+gyroscope_noise_density:     2.443e-04   # [rad/s/sqrt(Hz)]   datasheet typ
+gyroscope_random_walk:       1.0e-04     # [rad/s^2/sqrt(Hz)] ASSUMED
+rostopic: /imu0
+update_rate: 200.0                       # [Hz] set to the rate record_euroc.py reports

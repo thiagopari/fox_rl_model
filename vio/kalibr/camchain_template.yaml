@@ -1,0 +1,19 @@
+# Kalibr camera chain for the Fox nose camera. kalibr_calibrate_cameras fills intrinsics + distortion;
+# kalibr_calibrate_imu_camera then adds T_cam_imu and timeshift_cam_imu (-> camchain-imucam.yaml).
+# Model: pinhole-radtan for lenses up to ~90-100 deg HFOV; pinhole-equi (equidistant) for wider fisheye lenses.
+cam0:
+  camera_model: pinhole
+  distortion_model: radtan
+  intrinsics: [FU, FV, PU, PV]            # filled in by Kalibr
+  distortion_coeffs: [K1, K2, R1, R2]     # filled in by Kalibr
+  resolution: [640, 480]
+  rostopic: /cam0/image_raw
+  cam_overlaps: []
+# Sanity prior to compare Kalibr's T_cam_imu against (CAD mount used by vio/make_dataset.py: camera centred on the
+# nose 0.125 m ahead of the base origin, 0.015 m up, pitched 10 deg down; BNO055 upside down = deploy/fox_pi.py
+# IMU_TO_BODY; IMU assumed at the base origin, so expect the translation to differ by the BNO055's real offset):
+# T_cam_imu:
+#   - [ 0.000000,  1.000000, 0.000000,  0.000000]
+#   - [-0.173648,  0.000000, 0.984808,  0.036478]
+#   - [ 0.984808,  0.000000, 0.173648, -0.120496]
+#   - [ 0.000000,  0.000000, 0.000000,  1.000000]

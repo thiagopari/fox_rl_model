@@ -1,0 +1,8 @@
+# Kalibr AprilGrid for the Fox nose camera (640x480, ~77 deg HFOV): 6x6 tags printed on A3, glued FLAT to a rigid board.
+# Make the PDF with:  kalibr_create_target_pdf --type apriltag --nx 6 --ny 6 --tsize 0.035 --tspace 0.3
+# Printers rescale: MEASURE one tag's black square edge after printing and put that here (metres).
+target_type: 'aprilgrid'
+tagCols: 6
+tagRows: 6
+tagSize: 0.035      # [m] PLACEHOLDER until measured
+tagSpacing: 0.3     # gap between tags / tagSize
